@@ -1,0 +1,549 @@
+.container {
+    padding: 28px 36px 40px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.topSection {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 48px;
+    align-items: start;
+}
+
+/* --- Left Column: Mission Summary --- */
+.summary {
+    display: flex;
+    flex-direction: column;
+}
+
+.sectionTag {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--icon-color);
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
+}
+
+.droneCode {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--icon-color);
+    margin: 0 0 6px 0;
+    letter-spacing: 1px;
+}
+
+.missionTitle {
+    font-size: 46px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0 0 16px 0;
+    color: var(--text-color);
+    line-height: 1.1;
+}
+
+.metaRow {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    color: var(--icon-color);
+    margin-bottom: 28px;
+}
+
+.activeStatus {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color);
+}
+
+.greenDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 28px;
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+}
+
+.locationCol {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.locationMain {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.locationSub {
+    font-size: 12px;
+    color: var(--icon-color);
+}
+
+.locationRegion {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--icon-color);
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.descriptionText {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Alert Box */
+.alertCard {
+    background: var(--alert-bg);
+    border-left: 2px solid #ef4444;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    border-radius: 2px;
+}
+
+.alertHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.criticalBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.redDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+}
+
+.alertTime {
+    color: var(--icon-color);
+}
+
+.alertMessage {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-color);
+    margin: 0 0 12px 0;
+}
+
+.ackBtn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--icon-color);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.ackBtn:hover {
+    color: var(--text-color);
+}
+
+/* Action Buttons */
+.actionRow {
+    display: flex;
+    gap: 16px;
+}
+
+.btnPrimary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 10px 18px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.btnPrimary:hover {
+    border-color: var(--icon-hover);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.btnDanger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #ef4444;
+    padding: 10px 18px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.btnDanger:hover {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+/* --- Right Column: Live Map --- */
+.mapWrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.mapHeaderLine {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--icon-color);
+    margin-bottom: 12px;
+}
+
+.mapFrame {
+    position: relative;
+    border: 1px solid var(--border-color);
+    background-color: #0b0d0c;
+    border-radius: 3px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.mapOverlayHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    color: var(--icon-color);
+    z-index: 5;
+    position: relative;
+}
+
+.mapOverlayLeft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mapOverlayRight {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.liveBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    background: rgba(34, 197, 94, 0.08);
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: #4ade80;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.compass {
+    position: absolute;
+    top: 50px;
+    left: 18px;
+    color: var(--icon-color);
+    font-size: 11px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.compassLine {
+    width: 1px;
+    height: 18px;
+    background-color: var(--icon-color);
+}
+
+.svgCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.mapOverlayFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--icon-color);
+    z-index: 5;
+    position: relative;
+}
+
+.scaleBar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #5a5750;
+}
+
+.sectorBadge {
+    border: 1px solid var(--border-color);
+    padding: 4px 8px;
+    border-radius: 2px;
+    font-size: 9px;
+    color: var(--icon-color);
+    letter-spacing: 1px;
+}
+
+.mapCoordsBar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--icon-color);
+    letter-spacing: 1.2px;
+    margin-top: 10px;
+}
+
+/* Markers */
+.markerFlame {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translate(-50%, -50%);
+    z-index: 6;
+    pointer-events: auto;
+}
+
+.markerFlameBox {
+    border: 1px solid #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 1px 5px;
+    border-radius: 2px;
+}
+
+.markerFlameRing {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ef4444;
+    border-radius: 50%;
+    margin-top: 2px;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    animation: pulseFlame 2s infinite ease-in-out;
+}
+
+.markerSmoke {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translate(-50%, -50%);
+    z-index: 6;
+}
+
+.markerSmokeBox {
+    border: 1px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 1px 5px;
+    border-radius: 2px;
+}
+
+.markerSmokeRing {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #f59e0b;
+    border-radius: 50%;
+    margin-top: 2px;
+}
+
+.markerDrone {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translate(-50%, -50%);
+    z-index: 7;
+}
+
+.droneAltText {
+    font-size: 9px;
+    color: #38bdf8;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.markerModule {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transform: translate(-50%, -50%);
+    z-index: 6;
+}
+
+.moduleBox {
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid #edeae3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.moduleDot {
+    width: 3px;
+    height: 3px;
+    background: #edeae3;
+}
+
+.moduleLabel {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #edeae3;
+    line-height: 1.2;
+}
+
+.moduleSub {
+    font-size: 8px;
+    color: var(--icon-color);
+}
+
+@keyframes pulseFlame {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.3;
+    }
+}
+
+/* --- Bottom Section: Drone & Module Status --- */
+.statusSection {
+    border-top: 1px solid var(--border-color);
+    padding-top: 28px;
+    display: flex;
+    flex-direction: column;
+}
+
+.statusGrid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 48px;
+    margin-top: 16px;
+}
+
+.statusColTitle {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--icon-color);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.statusTable {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.statusRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+}
+
+.statusLabel {
+    color: var(--icon-color);
+    text-transform: uppercase;
+}
+
+.statusValue {
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.valNominal {
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.greenStatusDot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #22c55e;
+}
+
+@media (max-width: 1024px) {
+    .topSection {
+        grid-template-columns: 1fr;
+    }
+    .statusGrid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}

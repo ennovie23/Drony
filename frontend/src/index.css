@@ -1,0 +1,36 @@
+:root {
+  /* Dark mode (default) */
+  --bg-color: #111312;
+  --text-color: #EDEAE3;
+  --text-secondary: #9ca3af;
+  --border-color: #272928;
+  --icon-color: #7C7972;
+  --icon-hover: #ffffff;
+  --alert-bg: rgba(239, 68, 68, 0.05);
+}
+
+:root[data-theme='light'] {
+  /* Light mode */
+  --bg-color: #ffffff;
+  --text-color: #111312;
+  --text-secondary: #4b5563;
+  --border-color: #e5e5e5;
+  --icon-color: #71717a;
+  --icon-hover: #111312;
+  --alert-bg: rgba(239, 68, 68, 0.06);
+}
+
+body {
+  margin: 0;
+  padding: 0;  
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  font-family: 'IBM Plex Mono', monospace;
+  overflow: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root,
+.root {
+  display: flex;
+}
