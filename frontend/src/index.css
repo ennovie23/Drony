@@ -7,6 +7,7 @@
   --icon-color: #7C7972;
   --icon-hover: #ffffff;
   --alert-bg: rgba(239, 68, 68, 0.05);
+  --video-container: #0b0d0c;
 }
 
 :root[data-theme='light'] {
@@ -18,6 +19,7 @@
   --icon-color: #71717a;
   --icon-hover: #111312;
   --alert-bg: rgba(239, 68, 68, 0.06);
+  --video-container: #dad9d9;
 }
 
 body {

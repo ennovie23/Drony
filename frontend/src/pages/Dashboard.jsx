@@ -1,5 +1,9 @@
 import { ArrowUpRight, X } from 'lucide-react';
 import styles from './Dashboard.module.css';
+import AlertCard from '../components/shared/AlertCard';
+import DroneTelemetry from '../components/shared/DroneTelemetry';
+import ModuleDetails from '../components/shared/ModuleDetails';
+import DeviceDetails from '../components/shared/DeviceDetails';
 
 export default function Dashboard() {
     return (
@@ -32,19 +36,7 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className={styles.alertCard}>
-                        <div className={styles.alertHeader}>
-                            <div className={styles.criticalBadge}>
-                                <span className={styles.redDot}></span>
-                                <span>CRITICAL</span>
-                            </div>
-                            <span className={styles.alertTime}>2 MIN AGO</span>
-                        </div>
-                        <p className={styles.alertMessage}>
-                            Flame front spreading toward the Package 6 access road — 2 confirmed detections.
-                        </p>
-                        <button className={styles.ackBtn}>ACKNOWLEDGE</button>
-                    </div>
+                    <AlertCard/>
 
                     {/* Action Buttons */}
                     <div className={styles.actionRow}>
@@ -219,106 +211,13 @@ export default function Dashboard() {
 
                 <div className={styles.statusGrid}>
                     {/* Drone Column */}
-                    <div>
-                        <div className={styles.statusColTitle}>
-                            <span>DRONE</span>
-                            <span>DRMS-01</span>
-                        </div>
-                        <div className={styles.statusTable}>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>BATTERY</span>
-                                <span className={styles.statusValue}>74%</span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>GPS</span>
-                                <span className={styles.valNominal}>
-                                    <span className={styles.greenStatusDot}></span>
-                                    <span>FIXED</span>
-                                </span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>LINK</span>
-                                <span className={styles.valNominal}>
-                                    <span className={styles.greenStatusDot}></span>
-                                    <span>GOOD</span>
-                                </span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>STATUS</span>
-                                <span className={styles.valNominal}>
-                                    <span className={styles.greenStatusDot}></span>
-                                    <span>CONNECTED</span>
-                                </span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>FLIGHT</span>
-                                <span className={styles.valNominal}>
-                                    <span className={styles.greenStatusDot}></span>
-                                    <span>AIRBORNE</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    <DroneTelemetry/>
 
                     {/* Module Column */}
-                    <div>
-                        <div className={styles.statusColTitle}>
-                            <span>MODULE</span>
-                            <span>FIRE</span>
-                        </div>
-                        <div className={styles.statusTable}>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>CONNECTION</span>
-                                <span className={styles.valNominal}>
-                                    <span className={styles.greenStatusDot}></span>
-                                    <span>CONNECTED</span>
-                                </span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>ESP32</span>
-                                <span className={styles.valNominal}>
-                                    <span className={styles.greenStatusDot}></span>
-                                    <span>CONNECTED</span>
-                                </span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>LORA</span>
-                                <span className={styles.valNominal}>
-                                    <span className={styles.greenStatusDot}></span>
-                                    <span>GOOD</span>
-                                </span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>BATTERY</span>
-                                <span className={styles.statusValue}>61%</span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>SENSOR</span>
-                                <span className={styles.valNominal}>
-                                    <span className={styles.greenStatusDot}></span>
-                                    <span>ACTIVE</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    <ModuleDetails/>
 
                     {/* Devices Column */}
-                    <div>
-                        <div className={styles.statusColTitle}>
-                            <span>FIRE DEVICES</span>
-                            <span>IN USE</span>
-                        </div>
-                        <div className={styles.statusTable}>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>CAMERA</span>
-                                <span className={styles.statusValue}>STREAMING</span>
-                            </div>
-                            <div className={styles.statusRow}>
-                                <span className={styles.statusLabel}>ML MODEL</span>
-                                <span className={styles.statusValue}>ACTIVE</span>
-                            </div>
-                        </div>
-                    </div>
+                    <DeviceDetails/>
                 </div>
             </div>
         </div>

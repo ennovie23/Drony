@@ -1,0 +1,60 @@
+/* Alert Box */
+.alertCard {
+    background: var(--alert-bg);
+    border-left: 2px solid #ef4444;
+    padding: 16px 20px;
+    border-radius: 2px;
+}
+
+.alertHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.criticalBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.redDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+}
+
+.alertTime {
+    color: var(--icon-color);
+}
+
+.alertMessage {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-color);
+    margin: 0 0 12px 0;
+}
+
+.ackBtn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--icon-color);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.ackBtn:hover {
+    color: var(--text-color);
+}

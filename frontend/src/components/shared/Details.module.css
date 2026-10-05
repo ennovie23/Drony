@@ -1,0 +1,52 @@
+
+.statusColTitle {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--icon-color);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.statusTable {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.statusRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+}
+
+.statusLabel {
+    color: var(--icon-color);
+    text-transform: uppercase;
+}
+
+.statusValue {
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.valNominal {
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.greenStatusDot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #22c55e;
+}
