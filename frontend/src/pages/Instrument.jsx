@@ -1,23 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import styles from './Instrument.module.css';
-
-const BASE_STATE = {
-    heading: 62,
-    battery: 76,
-    voltage: 15.2,
-    minutesLeft: 11,
-    satellites: 15,
-    hdop: 0.8,
-    distanceHome: 680,
-    nextWaypoint: 240,
-    altitudeRel: 42.0,
-    velocity: 8.4,
-    climb: 0.3,
-    signal: -72,
-    heartbeat: 0.4,
-    loss: 1.2,
-};
+import { useAppData } from '../context/AppDataContext';
+import DroneDock from '../components/flood/DroneDock';
 
 const CARDINALS = [
     { label: 'N', angle: 0 },
@@ -26,8 +11,6 @@ const CARDINALS = [
     { label: 'W', angle: 270 },
 ];
 
-// Home point elevation, added to relative altitude for AMSL.
-const HOME_ELEVATION = 15;
 const CENTER = 300;
 const RING_RADIUS = 280;
 const CELL_COUNT = 6;
@@ -178,7 +161,12 @@ function DroneView({ heading }) {
 }
 
 export default function Instrument() {
-    const [telemetry, setTelemetry] = useState(BASE_STATE);
+    const { drone } = useAppData();
+    return <InstrumentView drone={drone} />;
+}
+
+function InstrumentView({ drone }) {
+    const [telemetry, setTelemetry] = useState(drone);
     const [demo, setDemo] = useState(false);
 
     useEffect(() => {
@@ -204,15 +192,15 @@ export default function Instrument() {
     const filledCells = Math.round((t.battery / 100) * CELL_COUNT);
 
     const leftStats = [
-        { label: 'ARM STATE', value: 'ARMED', icon: <Check size={18} className={styles.checkIcon} />, sub: 'FLIGHT CONTROLLER' },
+        { label: 'ARM STATE', value: t.armed ? 'ARMED' : 'DISARMED', icon: t.armed && <Check size={18} className={styles.checkIcon} />, sub: 'FLIGHT CONTROLLER' },
         { label: 'BATTERY', value: `${t.battery}% · ${t.voltage.toFixed(1)} V`, sub: `${t.minutesLeft} MIN EST. REMAINING` },
-        { label: 'GPS FIX', value: '3D FIX', sub: `${t.satellites} SAT · HDOP ${t.hdop.toFixed(1)}` },
+        { label: 'GPS FIX', value: t.satellites >= 6 ? '3D FIX' : t.gps, sub: `${t.satellites} SAT · HDOP ${t.hdop.toFixed(1)}` },
         { label: 'DISTANCE TO HOME', value: t.distanceHome, unit: 'm', sub: `NEXT WAYPOINT · ${t.nextWaypoint} m` },
     ];
 
     const rightStats = [
-        { label: 'FLIGHT MODE', value: 'AUTO', sub: 'ARMED · YES' },
-        { label: 'ALTITUDE', value: t.altitudeRel.toFixed(1), unit: 'm REL', sub: `${(t.altitudeRel + HOME_ELEVATION).toFixed(1)} m AMSL` },
+        { label: 'FLIGHT MODE', value: t.mode, sub: `ARMED · ${t.armed ? 'YES' : 'NO'}` },
+        { label: 'ALTITUDE', value: t.altitudeRel.toFixed(1), unit: 'm REL', sub: `${(t.altitudeRel + t.homeElevation).toFixed(1)} m AMSL` },
         { label: 'VELOCITY', value: t.velocity.toFixed(1), unit: 'm/s', sub: `CLIMB ${t.climb.toFixed(1)} m/s` },
         { label: 'TELEMETRY LINK', value: t.signal, unit: 'dBm', sub: `HB ${t.heartbeat.toFixed(1)} s · LOSS ${t.loss.toFixed(1)}%` },
     ];
@@ -221,10 +209,10 @@ export default function Instrument() {
         <div className={styles.container}>
             <div className={styles.topSection}>
                 <div>
-                    <p className={styles.breadcrumb}>AIRCRAFT / DR-01</p>
+                    <p className={styles.breadcrumb}>AIRCRAFT / {t.id}</p>
                     <h1 className={styles.title}>FLIGHT INSTRUMENT</h1>
                 </div>
-                <span className={styles.modeBadge}>AUTO</span>
+                <span className={styles.modeBadge}>{t.mode}</span>
             </div>
 
             <div className={styles.instrumentGrid}>
@@ -235,7 +223,7 @@ export default function Instrument() {
                 </div>
 
                 <div className={styles.centerColumn}>
-                    <p className={styles.viewLabel}>DR-01 / TOP VIEW</p>
+                    <p className={styles.viewLabel}>{t.id} / TOP VIEW</p>
                     <DroneView heading={t.heading} />
 
                     <div className={styles.cellBar}>
@@ -253,6 +241,10 @@ export default function Instrument() {
                         <Stat key={stat.label} side="right" {...stat} />
                     ))}
                 </div>
+            </div>
+
+            <div className={styles.dockSection}>
+                <DroneDock />
             </div>
 
             <div className={styles.footer}>

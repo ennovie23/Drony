@@ -36,17 +36,3 @@
     align-items: center;
     gap: 6px;
 }
-
-.valNominal {
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.greenStatusDot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background-color: #22c55e;
-}

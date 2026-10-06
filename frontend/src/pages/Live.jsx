@@ -1,88 +1,93 @@
-import styles from "./Live.module.css";
-import fireImg from "../assets/fire.webp";
-import AlertCard from '../components/shared/AlertCard';
-import DroneTelemetry from '../components/shared/DroneTelemetry';
-import ModuleDetails from '../components/shared/ModuleDetails';
-import DeviceDetails from '../components/shared/DeviceDetails';
+import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import styles from './Live.module.css';
+import ui from '../components/shared/ui.module.css';
+import PageHeader from '../components/shared/PageHeader';
+import CameraFeed from '../components/shared/CameraFeed';
+import TacticalMap from '../components/shared/TacticalMap';
+import StatusDot from '../components/shared/StatusDot';
+import { useAppData } from '../context/AppDataContext';
+import { formatElapsed } from '../utils/format';
+import useNow from '../hooks/useNow';
+
+// Flight map shows only where the drone is and where it has flown.
+const FLIGHT_LAYERS = { path: true, fire: false, flood: false };
 
 export default function Live() {
-  return (
-    <div className={styles.container}>
-      <div className={styles.topSection}>
-        <div className={styles.topLeft}>
-          <div className={styles.droneCodeRow}>
-            <p className={styles.droneCode}>DR-024</p>
-            <div className={styles.activeStatus}>
-              <span className={styles.greenDot}></span>
-              <span>ACTIVE</span>
-            </div>
-          </div>
+    useNow();
+    const { drone, site } = useAppData();
+    const [mode, setMode] = useState('rgb');
+    const [showDetections, setShowDetections] = useState(true);
 
-          <h1 className={styles.missionTitle}>FIRE ASSESSMENT</h1>
-          <p className={styles.droneLocation}>
-            BARANGAY BAGONG SILANG · CALOOCAN CITY, METRO MANILA
-          </p>
-        </div>
+    const status = [
+        { label: 'BATTERY', value: `${drone.battery}%` },
+        { label: 'ALTITUDE', value: `${drone.altitudeRel} m` },
+        { label: 'SPEED', value: `${drone.velocity} m/s` },
+        { label: 'HEADING', value: `${String(drone.heading).padStart(3, '0')}°` },
+        { label: 'GPS', value: drone.gps, dot: true },
+        { label: 'LINK', value: drone.link, dot: true },
+    ];
 
-        <div className={styles.topRight}>
-          <div className={styles.topRightItem}>
-            <p className={styles.droneLocation}>MODULE</p>
-            <p className={styles.topRightValue}>FIRE</p>
-          </div>
+    return (
+        <div className={styles.container}>
+            <PageHeader
+                eyebrow={
+                    <>
+                        <span>{drone.id}</span>
+                        <span className={ui.status}>
+                            <StatusDot value={drone.flight} pulse />
+                            {drone.flight}
+                        </span>
+                    </>
+                }
+                title="LIVE FEED"
+                subtitle={`${site.area} · ${site.city}`}
+                stats={[{ label: 'ELAPSED', value: formatElapsed(site.startedAt) }]}
+            />
 
-          <div className={styles.topRightItem}>
-            <p className={styles.droneLocation}>ELAPSED</p>
-            <p className={styles.topRightValue}>T+00:46:12</p>
-          </div>
-
-          <div className={styles.topRightItem}>
-            <p className={styles.droneLocation}>STARTED</p>
-            <p className={styles.topRightValue}>14:22 PHT</p>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.middleSection}>
-        <div className={styles.middleLeftSection}>
-            <div className={styles.videoContainer}>
-              <img className={styles.videoFeed} src={fireImg} alt="video_placeholder" />
-            </div>
-            <div className={styles.data}>
-                <div className={styles.info}>
-                    <p className={styles.infoLabel}>DETECTED</p>
-                    <p className={styles.infoValue}>FIRE</p>
+            <div className={styles.layout}>
+                <div className={styles.feedColumn}>
+                    <div className={styles.toolbar}>
+                        <div className={ui.segment}>
+                            <button className={mode === 'rgb' ? ui.segmentOn : ''} onClick={() => setMode('rgb')}>RGB</button>
+                            <button className={mode === 'thermal' ? ui.segmentOn : ''} onClick={() => setMode('thermal')}>THERMAL</button>
+                        </div>
+                        <button className={`${ui.btn} ${ui.btnSmall}`} onClick={() => setShowDetections(!showDetections)}>
+                            {showDetections ? <Eye size={12} /> : <EyeOff size={12} />}
+                            <span>DETECTIONS {showDetections ? 'ON' : 'OFF'}</span>
+                        </button>
+                    </div>
+                    <div className={styles.feed}>
+                        <CameraFeed mode={mode} showDetections={showDetections} />
+                    </div>
                 </div>
-                <div className={styles.info}>
-                    <p className={styles.infoLabel}>DETECTION CONFIDENCE</p>
-                    <p className={styles.infoValue}>96%</p>
-                </div>
-                <div className={styles.info}>
-                    <p className={styles.infoLabel}>SEVERITY</p>
-                    <p className={styles.infoValue}>MODERATE</p>
-                </div>
-                <div className={styles.info}>
-                    <p className={styles.infoLabel}>BEHAVIOR</p>
-                    <p className={styles.infoValue}>GROWING</p>
-                </div>
+
+                <aside className={styles.side}>
+                    <section className={styles.section}>
+                        <p className={styles.sectionLabel}>— DRONE STATUS</p>
+                        <div className={styles.statusGrid}>
+                            {status.map((s) => (
+                                <div key={s.label} className={styles.statusItem}>
+                                    <p className={ui.label}>{s.label}</p>
+                                    <p className={styles.statusValue}>
+                                        {s.dot && <StatusDot value={s.value} />}
+                                        {s.value}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className={styles.section}>
+                        <p className={styles.sectionLabel}>— FLIGHT MAP</p>
+                        <TacticalMap layers={FLIGHT_LAYERS} compact />
+                        <div className={styles.mapFoot}>
+                            <span>{site.coords}</span>
+                            <span>{drone.distanceHome} M FROM HOME</span>
+                        </div>
+                    </section>
+                </aside>
             </div>
         </div>
-        
-        <div className={styles.middleRightSection}>
-            <div className={styles.panelCard}>
-                <p className={styles.panelLabel}>— ACTIVE ALERTS</p>
-                <AlertCard styles={{margin: 0}}/>
-            </div>
-            <div className={styles.panelCard}>
-                <DroneTelemetry/>
-            </div>
-            <div className={styles.panelCard}>
-                <ModuleDetails/>
-            </div>
-            <div className={styles.panelCard}>
-                <DeviceDetails/>
-            </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }

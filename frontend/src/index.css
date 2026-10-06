@@ -8,6 +8,17 @@
   --icon-hover: #ffffff;
   --alert-bg: rgba(239, 68, 68, 0.05);
   --video-container: #0b0d0c;
+  --map-bg: #0b0d0c;
+  --map-line: rgba(255, 255, 255, 0.08);
+  --panel-hover: rgba(255, 255, 255, 0.03);
+
+  /* Status & hazard tones (shared by both themes) */
+  --ok: #22c55e;
+  --warn: #f0a514;
+  --danger: #ef4444;
+  --fire: #f97316;
+  --flood: #38bdf8;
+  --teal: #2dd4bf;
 }
 
 :root[data-theme='light'] {
@@ -20,6 +31,9 @@
   --icon-hover: #111312;
   --alert-bg: rgba(239, 68, 68, 0.06);
   --video-container: #dad9d9;
+  --map-bg: #f4f3f0;
+  --map-line: rgba(17, 19, 18, 0.10);
+  --panel-hover: rgba(17, 19, 18, 0.03);
 }
 
 body {

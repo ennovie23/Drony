@@ -1,0 +1,197 @@
+/* Shared building blocks reused across pages. */
+
+/* ── Labels ────────────────────────────────────────────── */
+.sectionTag {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--icon-color);
+    margin: 0 0 14px 0;
+    text-transform: uppercase;
+}
+
+.label {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    color: var(--icon-color);
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.value {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.bigValue {
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--text-color);
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.muted {
+    color: var(--text-secondary);
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.btn,
+.btnDanger,
+.btnAccent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 10px 18px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 3px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    border-color: var(--icon-hover);
+    background: var(--panel-hover);
+}
+
+.btnDanger {
+    border-color: rgba(239, 68, 68, 0.35);
+    color: var(--danger);
+}
+
+.btnDanger:hover {
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.btnAccent {
+    border-color: rgba(240, 165, 20, 0.4);
+    color: var(--warn);
+}
+
+.btnAccent:hover {
+    border-color: var(--warn);
+    background: rgba(240, 165, 20, 0.08);
+}
+
+.btn:disabled,
+.btnDanger:disabled,
+.btnAccent:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btnSmall {
+    padding: 6px 10px;
+    font-size: 10px;
+}
+
+/* Segmented toggle (e.g. RGB / THERMAL) */
+.segment {
+    display: inline-flex;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.segment button {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border-color);
+    color: var(--icon-color);
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    padding: 6px 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.segment button:last-child {
+    border-right: none;
+}
+
+.segment button:hover {
+    color: var(--text-color);
+}
+
+.segment .segmentOn {
+    color: var(--text-color);
+    background: var(--panel-hover);
+}
+
+/* ── Dots & tags ───────────────────────────────────────── */
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background-color: var(--icon-color);
+}
+
+.ok { background-color: var(--ok); box-shadow: 0 0 8px rgba(34, 197, 94, 0.6); }
+.warn { background-color: var(--warn); box-shadow: 0 0 8px rgba(240, 165, 20, 0.6); }
+.danger { background-color: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.7); }
+.info { background-color: var(--flood); box-shadow: 0 0 8px rgba(56, 189, 248, 0.6); }
+.off { background-color: var(--icon-color); }
+
+.pulse {
+    animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-color);
+    text-transform: uppercase;
+}
+
+
+
+
+/* ── Panels ────────────────────────────────────────────── */
+.panel {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.empty {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--icon-color);
+    padding: 24px 0;
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pulse {
+        animation: none;
+    }
+}
