@@ -3,6 +3,7 @@ import SideBar from "./components/shared/Sidebar";
 import Header from "./components/shared/Header";
 import Dashboard from "./pages/Dashboard";
 import Live from "./pages/Live";
+import Instrument from "./pages/Instrument";
 import History from "./pages/History";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <main style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'live' && <Live />}
+          {activeTab === 'instrument' && <Instrument />}
           {activeTab === 'history' && <History />}
         </main>
       </div>

@@ -1,4 +1,4 @@
-import { Gauge, Radio, RotateCcwClock, Sun, Moon } from 'lucide-react';
+import { Gauge, Radio, Drone, RotateCcwClock, Sun, Moon } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import { useState, useEffect } from 'react';
 
@@ -27,6 +27,13 @@ export default function SideBar({ activeTab, setActiveTab }) {
         onClick={() => setActiveTab('live')}>
         <Radio />
         <span className={styles.iconText}>Live</span>
+      </div>
+
+      <div
+        className={`${styles.iconBox} ${activeTab === 'instrument' ? styles.active : ''}`}
+        onClick={() => setActiveTab('instrument')}>
+        <Drone />
+        <span className={styles.iconText}>Flight</span>
       </div>
 
       <div
