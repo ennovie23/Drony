@@ -10,15 +10,15 @@
   --text: #3A3B3E;
   --text-strong: #141517;
   --text-muted: #5B5F64;
-  --text-faint: #6F7378;
+  --text-faint: #63666B;
 
   --attention: #E6A52A;
-  --attention-text: #9A6410;
+  --attention-text: #8C5B0F;
   --on-attention: #141517;
   --warn-soft: #F6EAD2;
-  --bad: #B9442A;
+  --bad: #B04128;
   --bad-soft: #F8E4DE;
-  --ok: #2E7A47;
+  --ok: #2B7343;
   --ok-soft: #E0EFE4;
   --water: #2C6A91;
   --water-fill: #8DB6CF;
@@ -29,24 +29,6 @@
 
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-
-  /* legacy aliases — removed in Task 10 */
-  --bg-color: var(--bg);
-  --text-color: var(--text-strong);
-  --text-secondary: var(--text-muted);
-  --border-color: var(--line);
-  --icon-color: var(--text-faint);
-  --icon-hover: var(--text-strong);
-  --alert-bg: var(--bad-soft);
-  --video-container: var(--surface-sunken);
-  --map-bg: var(--surface-sunken);
-  --map-line: var(--line);
-  --panel-hover: var(--surface-sunken);
-  --warn: var(--attention);
-  --danger: var(--bad);
-  --fire: var(--bad);
-  --flood: var(--water);
-  --teal: var(--water);
 }
 
 :root[data-theme='dark'] {
@@ -59,7 +41,7 @@
   --text: #D8D5CE;
   --text-strong: #F2EFE8;
   --text-muted: #9A9DA2;
-  --text-faint: #7F8389;
+  --text-faint: #888C91;
 
   --attention: #F5B83D;
   --attention-text: #F5B83D;
