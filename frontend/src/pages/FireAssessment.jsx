@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { Camera } from 'lucide-react';
-import base from './Assessment.module.css';
 import styles from './FireAssessment.module.css';
-import ui from '../components/shared/ui.module.css';
-import PageHeader from '../components/shared/PageHeader';
-import StatusDot from '../components/shared/StatusDot';
+import table from '../components/ui/Table.module.css';
+import TopBar from '../components/shared/TopBar';
 import MlFrame from '../components/fire/MlFrame';
+import { Card, Readout, Chip, KeyValue, Button } from '../components/ui';
+import { SEVERITY_TONE, BEHAVIOR_TONE, toneFor } from '../components/ui/tones';
+import { formatStatus } from '../components/ui/format';
 import { useAppData } from '../context/AppDataContext';
 import { formatTime, timeAgo } from '../utils/format';
 import useNow from '../hooks/useNow';
-
-const SEVERITY_TONE = { LOW: 'ok', MODERATE: 'warn', SEVERE: 'danger' };
-const BEHAVIOR_TONE = { DECLINING: 'ok', STABLE: 'warn', GROWING: 'danger' };
 
 export default function FireAssessment() {
     useNow(5000);
@@ -30,145 +28,127 @@ export default function FireAssessment() {
     };
 
     return (
-        <div className={base.container}>
-            <PageHeader
-                eyebrow={<span>{drone.id} · ML FIRE DETECTION</span>}
-                title="FIRE ASSESSMENT"
-                subtitle={`${site.area} · ${site.city}`}
+        <div className={styles.page}>
+            <TopBar
+                title="Fire assessment"
+                subtitle={`${site.area}, ${site.city}`}
                 actions={
-                    <button className={ui.btnAccent} onClick={captureSnapshot} disabled={analyzing}>
-                        <Camera size={14} />
-                        <span>{analyzing ? 'ANALYZING…' : 'CAPTURE SNAPSHOT'}</span>
-                    </button>
+                    <Button variant="primary" onClick={captureSnapshot} disabled={analyzing}>
+                        <Camera />
+                        {analyzing ? 'Analysing…' : 'Capture snapshot'}
+                    </Button>
                 }
             />
 
-            <div className={base.body}>
-                <div className={base.grid}>
-                    <div className={base.column}>
-                        <div>
-                            <div className={base.cardHead}>
-                                <p className={ui.sectionTag}>— ANALYZED SNAPSHOT · FRAME {snap.frame}</p>
-                                <span className={ui.label}>
-                                    {isLatest ? 'LATEST · ' : ''}
-                                    {formatTime(snap.capturedAt)}
-                                </span>
-                            </div>
-                            <div className={base.mediaFrame}>
-                                <MlFrame snapshot={snap} highlightId={highlightId} />
-                            </div>
-                        </div>
+            <div className={styles.body}>
+                <div className={styles.grid}>
+                    <div className={styles.column}>
+                        <MlFrame
+                            snapshot={snap}
+                            highlightId={highlightId}
+                            tag={`Frame ${snap.frame}${isLatest ? ' · latest' : ''} · ${formatTime(snap.capturedAt)}`}
+                        />
 
-                        <div>
-                            <p className={ui.sectionTag}>— DETECTIONS ({detections.length})</p>
+                        <Card title={`Detections (${detections.length})`}>
                             {detections.length === 0 ? (
-                                <p className={ui.empty}>NO FIRE DETECTED IN THIS FRAME</p>
+                                <p className={table.empty}>No fire detected in this frame</p>
                             ) : (
-                                <div className={base.table}>
-                                    <div className={`${styles.detRow} ${base.th}`}>
-                                        <span>BOX</span>
-                                        <span>LABEL</span>
-                                        <span>SCORE</span>
-                                        <span>POSITION (X, Y)</span>
-                                        <span>SIZE (W × H)</span>
-                                    </div>
-                                    {detections.map((d) => (
-                                        <div
-                                            key={d.id}
-                                            className={`${styles.detRow} ${base.trBody} ${highlightId === d.id ? base.trActive : ''}`}
-                                            onMouseEnter={() => setHighlightId(d.id)}
-                                            onMouseLeave={() => setHighlightId(null)}>
-                                            <span>{d.id}</span>
-                                            <span className={styles.fireLabel}>{d.label}</span>
-                                            <span className={styles.score}>
-                                                <span className={base.barTrack}>
-                                                    <span className={base.barFill} style={{ display: 'block', width: `${d.confidence * 100}%` }}></span>
-                                                </span>
-                                                <span>{d.confidence.toFixed(2)}</span>
-                                            </span>
-                                            <span className={base.muted}>{d.box.x}%, {d.box.y}%</span>
-                                            <span className={base.muted}>{d.box.w}% × {d.box.h}%</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                <table className={table.table}>
+                                    <thead>
+                                        <tr>
+                                            <th>Box</th>
+                                            <th>Label</th>
+                                            <th>Score</th>
+                                            <th>Position (x, y)</th>
+                                            <th>Size (w × h)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {detections.map((d) => (
+                                            <tr
+                                                key={d.id}
+                                                className={highlightId === d.id ? table.active : ''}
+                                                onMouseEnter={() => setHighlightId(d.id)}
+                                                onMouseLeave={() => setHighlightId(null)}>
+                                                <td className="mono">{d.id}</td>
+                                                <td className={table.muted}>{d.label}</td>
+                                                <td className="mono">
+                                                    <span className={table.bar}>
+                                                        <span style={{ width: `${d.confidence * 100}%` }}></span>
+                                                    </span>
+                                                    {d.confidence.toFixed(2)}
+                                                </td>
+                                                <td className="mono">{d.box.x}%, {d.box.y}%</td>
+                                                <td className="mono">{d.box.w}% × {d.box.h}%</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             )}
-                        </div>
+                        </Card>
                     </div>
 
-                    <div className={base.column}>
-                        <div className={base.card}>
-                            <div className={base.cardHead}>
-                                <p className={ui.sectionTag}>— INTELLIGENCE REPORT</p>
-                                <span className={ui.label}>FRAME: {snap.frame}</span>
+                    <div className={styles.column}>
+                        <Card title="Model result" meta={<span>Frame <span className="mono">{snap.frame}</span></span>}>
+                            <Readout label="Active fire front" value={snap.fireConfidence} unit="% confidence" size="hero" />
+                            <div className={styles.verdict}>
+                                <KeyValue
+                                    rows={[
+                                        { label: 'Severity', value: <Chip tone={toneFor(SEVERITY_TONE, snap.severity)} value={snap.severity} /> },
+                                        { label: 'Behaviour', value: <Chip tone={toneFor(BEHAVIOR_TONE, snap.behavior)} value={snap.behavior} /> },
+                                        {
+                                            label: 'Smoke plume',
+                                            value: snap.smoke.detected ? (
+                                                <Chip tone="warn">Plume detected · {snap.smoke.confidence.toFixed(2)}</Chip>
+                                            ) : (
+                                                <Chip tone="ok">Clear air</Chip>
+                                            ),
+                                        },
+                                    ]}
+                                />
                             </div>
+                        </Card>
 
-                            <div className={styles.reportBlock}>
-                                <p className={ui.label}>ACTIVE FIRE FRONT</p>
-                                <p className={styles.confidence}>{snap.fireConfidence}% CONFIDENCE</p>
-                                <div className={base.kv}>
-                                    <div className={base.kvRow}>
-                                        <span>SEVERITY LABEL</span>
-                                        <span className={`${styles.badge} ${styles[SEVERITY_TONE[snap.severity]]}`}>{snap.severity}</span>
-                                    </div>
-                                    <div className={base.kvRow}>
-                                        <span>BEHAVIOR TREND</span>
-                                        <span className={`${styles.badge} ${styles[BEHAVIOR_TONE[snap.behavior]]}`}>{snap.behavior}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={styles.reportBlock}>
-                                <p className={ui.label}>SMOKE PLUME TRACKING</p>
-                                {snap.smoke.detected ? (
-                                    <p className={`${styles.smokeStatus} ${styles.smokeOn}`}>
-                                        PLUME DETECTED · {snap.smoke.confidence.toFixed(2)}
-                                    </p>
-                                ) : (
-                                    <p className={styles.smokeStatus}>CLEAR AIR</p>
-                                )}
-                            </div>
-
-                            <div className={base.kv}>
-                                <div className={base.kvRow}><span>CAPTURED</span><span>{timeAgo(snap.capturedAt)}</span></div>
-                                <div className={base.kvRow}><span>BOXES</span><span>{snap.detections.length}</span></div>
-                                <div className={base.kvRow}><span>SOURCE</span><span>{drone.id} CAMERA</span></div>
-                            </div>
-                        </div>
+                        <Card>
+                            <KeyValue
+                                rows={[
+                                    { label: 'Captured', value: formatStatus(timeAgo(snap.capturedAt)) },
+                                    { label: 'Boxes', value: snap.detections.length },
+                                    { label: 'Source', value: `${drone.id} camera` },
+                                ]}
+                            />
+                        </Card>
                     </div>
                 </div>
 
-                <div>
-                    <div className={base.cardHead}>
-                        <p className={ui.sectionTag}>— DRONE SNAPSHOTS ({fireSnapshots.length})</p>
-                        <span className={ui.label}>CLICK A SNAPSHOT TO VIEW ITS RESULT</span>
-                    </div>
-                    <div className={styles.gallery}>
+                <Card title={`Snapshots (${fireSnapshots.length})`} meta="Click a snapshot to view its result">
+                    <div className={styles.strip}>
                         {analyzing && (
-                            <div className={`${styles.snapCard} ${styles.pending}`}>
-                                <div className={styles.pendingThumb}>
-                                    <StatusDot tone="warn" pulse /> ANALYZING…
-                                </div>
-                                <span className={styles.snapMeta}>NEW SNAPSHOT</span>
+                            <div className={`${styles.snap} ${styles.pending}`}>
+                                <div className={styles.pendingThumb}>Analysing…</div>
+                                <span className={styles.snapMeta}>New snapshot</span>
                             </div>
                         )}
                         {fireSnapshots.map((s) => (
                             <button
                                 key={s.id}
-                                className={`${styles.snapCard} ${s.id === snap.id ? styles.snapOn : ''}`}
+                                type="button"
+                                className={`${styles.snap} ${s.id === snap.id ? styles.snapOn : ''}`}
                                 onClick={() => selectSnapshot(s.id)}>
                                 <MlFrame snapshot={s} small />
                                 <span className={styles.snapHead}>
-                                    <span>FRAME {s.frame}</span>
-                                    {s.id === latest.id && <span className={styles.latestTag}>LATEST</span>}
+                                    <span>Frame <span className="mono">{s.frame}</span></span>
+                                    {s.id === latest.id && <Chip tone="off">Latest</Chip>}
                                 </span>
                                 <span className={styles.snapMeta}>
-                                    {s.fireConfidence}% · <span className={styles[SEVERITY_TONE[s.severity]]}>{s.severity}</span>
+                                    <span className="mono">{s.fireConfidence}%</span> ·{' '}
+                                    <span className={styles[toneFor(SEVERITY_TONE, s.severity)]}>{formatStatus(s.severity)}</span>
                                 </span>
-                                <span className={styles.snapMeta}>{timeAgo(s.capturedAt)}</span>
+                                <span className={styles.snapMeta}>{formatStatus(timeAgo(s.capturedAt))}</span>
                             </button>
                         ))}
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     );
