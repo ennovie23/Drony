@@ -1,176 +1,85 @@
-/* ── Container ─────────────────────────────────────────── */
-.container {
-    --accent: #f0a514;
-    --teal: #2dd4bf;
-    --drone-line: #7a7c76;
-
+.page {
     display: flex;
     flex-direction: column;
-    color: var(--text-color);
-    background-color: var(--bg-color);
-    box-sizing: border-box;
-    width: 100%;
     min-height: 100%;
-    padding: 0 28px;
 }
 
-/* ── Top Section ───────────────────────────────────────── */
-.topSection {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 1px solid var(--border-color);
-    padding: 20px 0;
-}
-
-.breadcrumb {
-    font-size: 12px;
-    letter-spacing: 1.5px;
-    color: var(--text-secondary);
-    margin: 0 0 10px 0;
-}
-
-.title {
-    font-size: 42px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin: 0;
-    line-height: 1.1;
-}
-
-.modeBadge {
-    font-size: 12px;
-    letter-spacing: 1.5px;
-    color: var(--accent);
-    border: 1px solid var(--border-color);
-    padding: 8px 12px;
-    margin-bottom: 6px;
-}
-
-/* ── Instrument Grid ───────────────────────────────────── */
-.instrumentGrid {
-    flex: 1;
-    display: grid;
-    grid-template-columns: minmax(200px, 1fr) minmax(360px, 1.4fr) minmax(200px, 1fr);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.statColumn {
+.content {
     display: flex;
     flex-direction: column;
-    padding-top: 58px;
+    gap: 14px;
+    padding: 14px;
 }
 
-.stat {
-    position: relative;
-    flex: 1;
-    min-height: 140px;
-    border-top: 1px solid var(--border-color);
-    padding: 20px 12px;
+.demoActive {
+    border-color: var(--attention);
+    color: var(--attention-text);
 }
 
-.connector {
-    position: absolute;
-    top: 52px;
-    right: -48px;
-    width: 48px;
-    height: 1px;
-    background-color: var(--border-color);
+/* ── Instrument grid: telemetry cards around the drone view ── */
+.instrumentGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 460px) minmax(0, 1fr);
+    gap: 14px;
 }
 
-.connector::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: -2px;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background-color: var(--accent);
-}
-
-.statRight .connector {
-    right: auto;
-    left: -48px;
-}
-
-.statRight .connector::after {
-    right: auto;
-    left: 0;
-}
-
-.statLabel {
-    font-size: 12px;
-    letter-spacing: 1.5px;
-    color: var(--text-secondary);
-    margin: 0 0 8px 0;
-}
-
-.statValue {
+.side {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
-    font-size: 22px;
-    font-weight: 500;
-    margin: 0 0 8px 0;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
 }
 
-.statUnit {
-    font-size: 12px;
-    color: var(--text-secondary);
+.side > section {
+    flex: 1;
 }
 
-.checkIcon {
-    align-self: center;
-    margin-right: 6px;
+.kv {
+    margin-top: 8px;
 }
 
-.statSub {
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: var(--text-secondary);
-    margin: 0;
+.pair {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
 }
 
-/* ── Center Column ─────────────────────────────────────── */
 .centerColumn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px 24px 16px;
     min-width: 0;
 }
 
 .viewLabel {
     align-self: flex-start;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    color: var(--text-secondary);
-    margin: 0 0 12px 0;
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
+/* ── Drone view (same geometry, quiet palette) ─────────── */
 .droneSvg {
     width: 100%;
-    max-width: 620px;
+    max-width: 440px;
     height: auto;
     overflow: visible;
 }
 
 .satellite {
-    fill: var(--teal);
+    fill: var(--text-faint);
+    opacity: 0.6;
 }
 
 .ringOuter {
     fill: none;
-    stroke: var(--drone-line);
-    stroke-opacity: 0.6;
+    stroke: var(--text-muted);
     stroke-width: 1.2;
 }
 
 .ringDotted {
     fill: none;
-    stroke: var(--drone-line);
-    stroke-opacity: 0.6;
+    stroke: var(--text-faint);
     stroke-width: 1;
     stroke-dasharray: 1 5;
 }
@@ -180,57 +89,55 @@
 }
 
 .tick {
-    stroke: var(--drone-line);
+    stroke: var(--text-faint);
     stroke-width: 1;
-    opacity: 0.5;
 }
 
 .tickMajor {
-    stroke: var(--text-color);
+    stroke: var(--text-strong);
     stroke-width: 2;
 }
 
 .cardinal {
-    fill: var(--text-secondary);
-    font-size: 11px;
+    fill: var(--text-strong);
+    font-size: 13px;
+    font-weight: 600;
     text-anchor: middle;
     dominant-baseline: middle;
 }
 
 .headingArrow {
-    fill: var(--accent);
+    fill: var(--attention);
 }
 
 .headingText {
-    fill: var(--accent);
-    font-size: 16px;
+    fill: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: 18px;
     text-anchor: middle;
-    letter-spacing: 1px;
 }
 
 .proximityRing {
     fill: none;
-    stroke: var(--teal);
-    stroke-opacity: 0.25;
+    stroke: var(--line);
     stroke-width: 1.2;
 }
 
 .arm {
-    stroke: var(--drone-line);
+    stroke: var(--text-faint);
     stroke-width: 9;
     stroke-linecap: round;
 }
 
 .rotorGuard {
-    fill: var(--bg-color);
-    fill-opacity: 0.7;
-    stroke: var(--drone-line);
+    fill: var(--surface-sunken);
+    stroke: var(--text-faint);
     stroke-width: 1.2;
 }
 
 .rotorArc {
     fill: none;
-    stroke: var(--drone-line);
+    stroke: var(--text-faint);
     stroke-width: 5;
     stroke-linecap: round;
 }
@@ -243,68 +150,70 @@
 
 .propBlade {
     fill: none;
-    stroke: var(--text-secondary);
+    stroke: var(--text-muted);
     stroke-width: 3;
 }
 
 .propShaft {
-    stroke: var(--text-secondary);
+    stroke: var(--text-muted);
     stroke-width: 2;
 }
 
 .propHub {
-    fill: var(--text-secondary);
+    fill: var(--text-muted);
 }
 
 .body {
-    stroke: #8a8c86;
+    fill: var(--surface-sunken);
+    stroke: var(--text-muted);
     stroke-width: 1.5;
 }
 
 .bodyPanel {
     fill: none;
-    stroke: #a3a59f;
+    stroke: var(--text-faint);
     stroke-width: 1.5;
 }
 
 .ledFront {
-    fill: #f4f4f0;
+    fill: var(--ok);
 }
 
 .ledRear {
-    fill: #ef5a3c;
+    fill: var(--bad);
 }
 
 .tail {
-    fill: var(--accent);
+    fill: var(--text-muted);
 }
 
 .payloadFrame {
     fill: none;
-    stroke: var(--accent);
+    stroke: var(--line);
     stroke-width: 1.5;
     stroke-dasharray: 4 3;
 }
 
 .payloadBox {
-    fill: #2b2a22;
-    stroke: var(--accent);
+    fill: var(--surface);
+    stroke: var(--text-faint);
     stroke-width: 1.5;
 }
 
 .payloadCore {
-    fill: var(--teal);
+    fill: var(--line);
 }
 
 .payloadWheel {
     fill: none;
-    stroke: var(--teal);
+    stroke: var(--text-faint);
     stroke-width: 1.5;
 }
 
 .payloadLabel {
-    fill: var(--accent);
-    font-size: 9px;
+    fill: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
     text-anchor: middle;
 }
 
@@ -321,15 +230,14 @@
     }
 }
 
-/* ── Cell Capacity Bar ─────────────────────────────────── */
+/* ── Cell capacity bar ─────────────────────────────────── */
 .cellBar {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-top: 24px;
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: var(--text-secondary);
+    gap: 12px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
 .cells {
@@ -338,54 +246,16 @@
 }
 
 .cell {
-    position: relative;
-    width: 40px;
-    height: 14px;
-    border: 1px solid var(--drone-line);
-    box-sizing: border-box;
-}
-
-.cell::after {
-    content: '';
-    position: absolute;
-    right: -4px;
-    top: 4px;
-    width: 3px;
-    height: 4px;
-    background-color: var(--drone-line);
+    width: 30px;
+    height: 10px;
+    border-radius: 2px;
+    background-color: var(--line);
 }
 
 .cellFilled {
-    background-color: var(--teal);
-    border-color: var(--teal);
+    background-color: var(--ok);
 }
 
-/* ── Payload dock ──────────────────────────────────────── */
-.dockSection {
-    padding: 24px 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-/* ── Footer ────────────────────────────────────────────── */
-.footer {
-    display: flex;
-    justify-content: center;
-}
-
-.demoBtn {
-    font-family: inherit;
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--accent);
-    background-color: transparent;
-    border: 1px solid var(--border-color);
-    border-top: none;
-    padding: 12px 76px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.demoBtn:hover,
-.demoActive {
-    background-color: rgba(240, 165, 20, 0.08);
+.cellLow {
+    background-color: var(--attention);
 }
