@@ -1,22 +1,21 @@
 .container {
     height: 100vh;
-    width: 76px;
+    width: 64px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    border-right: 2px solid var(--border-color);
+    padding: 14px 0;
+    box-sizing: border-box;
+    background: var(--rail);
+    border-right: 1px solid var(--line);
 }
 
-#titleBox {
-    height: 64px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    padding: 0 15px;
-    border-bottom: 2px solid var(--border-color);
+.mark {
     text-align: center;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-strong);
+    padding-bottom: 18px;
 }
 
 .nav {
@@ -25,31 +24,56 @@
     overflow-y: auto;
 }
 
-.iconBox {
+.item {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 14px 10px;
-    font-size: 10px;
-    row-gap: 5px;
-    color: var(--icon-color);
-    border: none;
-    border-left: 2px solid transparent;
-    background: none;
+    gap: 4px;
+    padding: 10px 0;
     font-family: inherit;
+    font-size: 10.5px;
+    color: var(--text-muted);
     text-decoration: none;
-    transition: color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    background: none;
+    border: none;
+    cursor: pointer;
 }
+
+.item svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.75;
+}
+
+.item:hover {
+    color: var(--text-strong);
+}
+
+.active {
+    background: var(--surface);
+    color: var(--text-strong);
+    box-shadow: inset 2px 0 0 var(--attention);
+}
+
+.active svg {
+    color: var(--attention-text);
+}
+
+.dot {
+    position: absolute;
+    top: 7px;
+    right: 13px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+.ok { background: var(--ok); }
+.warn { background: var(--attention); }
+.danger { background: var(--bad); }
+.water { background: var(--water); }
 
 .bottom {
     margin-top: auto;
-    border-top: 2px solid var(--border-color);
-}
-
-.iconBox:hover,
-.iconBox.active,
-.active {
-    cursor: pointer;
-    color: var(--icon-hover);
-    border-left-color: var(--icon-hover);
 }
