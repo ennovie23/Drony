@@ -4,6 +4,7 @@ import table from '../components/ui/Table.module.css';
 import TopBar from '../components/shared/TopBar';
 import TacticalMap from '../components/shared/TacticalMap';
 import LineChart from '../components/shared/LineChart';
+import { chartWindow } from '../components/shared/chartScale';
 import { Card, Readout, Chip, KeyValue } from '../components/ui';
 import { formatStatus } from '../components/ui/format';
 import { useAppData } from '../context/AppDataContext';
@@ -14,11 +15,11 @@ import useNow from '../hooks/useNow';
 
 // History keeps one distance sample every 5 minutes.
 const SAMPLE_MINUTES = 5;
-const SERIES_COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)'];
+const SERIES_COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-5)'];
 const MAP_LAYERS = { path: false, fire: false, flood: true };
-// Chart window (cm). Inverted, so water rising (distance falling) draws upward.
-const CHART_MIN = 120;
-const CHART_MAX = 210;
+// Default chart window (cm), widened when readings leave it. Inverted, so water rising
+// (distance falling) draws upward.
+const CHART_WINDOW = { min: 120, max: 210, pad: 10 };
 const LOW_BATTERY = 50;
 
 const ago = (iso) => formatStatus(timeAgo(iso));
@@ -34,6 +35,7 @@ export default function FloodAssessment() {
     const latest = sensors.reduce((top, m) => (m.lastReadingAt > (top?.lastReadingAt ?? '') ? m : top), null);
     const weakest = sensors.reduce((low, m) => (m.battery < (low?.battery ?? Infinity) ? m : low), null);
     const selected = sensors.find((m) => m.id === selectedId) ?? sensors[0];
+    const range = chartWindow(sensors.flatMap((m) => m.history), CHART_WINDOW);
     const colorOf = (id) => SERIES_COLORS[sensors.findIndex((m) => m.id === id) % SERIES_COLORS.length];
 
     return (
@@ -79,8 +81,8 @@ export default function FloodAssessment() {
                     <Card title="Distance to water" meta={`cm · every ${SAMPLE_MINUTES} min`} className={styles.stretch}>
                         <LineChart
                             series={sensors.map((m) => ({ id: m.id, values: m.history, color: colorOf(m.id) }))}
-                            min={CHART_MIN}
-                            max={CHART_MAX}
+                            min={range.min}
+                            max={range.max}
                             invert
                             height={190}
                         />
@@ -154,8 +156,18 @@ export default function FloodAssessment() {
                                                 className={`${table.clickable} ${selected?.id === m.id ? table.active : ''}`}
                                                 onClick={() => setSelectedId(m.id)}>
                                                 <td className="mono">
-                                                    <span className={styles.swatch} style={{ backgroundColor: colorOf(m.id) }}></span>
-                                                    {m.id}
+                                                    {/* Real button so the row can be selected from the keyboard. */}
+                                                    <button
+                                                        type="button"
+                                                        className={styles.rowButton}
+                                                        aria-pressed={selected?.id === m.id}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedId(m.id);
+                                                        }}>
+                                                        <span className={styles.swatch} style={{ backgroundColor: colorOf(m.id) }}></span>
+                                                        {m.id}
+                                                    </button>
                                                 </td>
                                                 <td className={table.muted}>{m.place}</td>
                                                 <td className="mono">{m.distance} cm</td>

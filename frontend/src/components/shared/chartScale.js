@@ -7,3 +7,12 @@ export function makeYScale({ min, max, top, height, invert }) {
         return invert ? top + t * height : top + height - t * height;
     };
 }
+
+// Default y-range, widened (with padding) only when readings fall outside it.
+export function chartWindow(values, { min, max, pad }) {
+    if (values.length === 0) return { min, max };
+    return {
+        min: Math.min(min, Math.min(...values) - pad),
+        max: Math.max(max, Math.max(...values) + pad),
+    };
+}

@@ -26,6 +26,8 @@
   --series-1: #2C6A91;
   --series-2: #7A5FB0;
   --series-3: #9A7B3C;
+  --series-4: #3E8478;
+  --series-5: #8A6A80;
 
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -57,6 +59,8 @@
   --series-1: #7FB7D9;
   --series-2: #B9A6E0;
   --series-3: #C9B48A;
+  --series-4: #86C6B9;
+  --series-5: #D3A8C4;
 }
 
 body {
