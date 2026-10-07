@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Radio, Flame, Waves, Drone, Map, Sun, Moon } from 'lucide-react';
 import styles from './Sidebar.module.css';
-import { useState, useEffect } from 'react';
+import useTheme from '../../hooks/useTheme';
 
 const NAV_ITEMS = [
   { to: '/live', label: 'Live', icon: Radio },
@@ -12,11 +12,8 @@ const NAV_ITEMS = [
 ];
 
 export default function SideBar() {
-  const [isLightMode, setIsLightMode] = useState(false);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isLightMode ? 'light' : 'dark');
-  }, [isLightMode]);
+  const [theme, toggleTheme] = useTheme();
+  const isLightMode = theme === 'light';
 
   return (
     <aside className={styles.container}>
@@ -41,7 +38,7 @@ export default function SideBar() {
 
       <button
         className={`${styles.iconBox} ${styles.bottom}`}
-        onClick={() => setIsLightMode(!isLightMode)}>
+        onClick={toggleTheme}>
         {isLightMode ? <Sun /> : <Moon />}
         <span className={styles.iconText}>{isLightMode ? 'Light' : 'Dark'}</span>
       </button>
