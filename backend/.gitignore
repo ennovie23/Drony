@@ -1,0 +1,9 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+# AI & IDE tool configs (local only)
+.agents/
+.claude/
+.windsurf/
+skills-lock.json

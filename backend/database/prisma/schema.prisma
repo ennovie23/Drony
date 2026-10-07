@@ -1,0 +1,20 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model TelemetryLog {
+  id            Int      @id @default(autoincrement())
+  droneCode     String   @map("drone_code")
+  hazardType    String   @map("hazard_type")    // 'fire', 'flood', 'landslide', 'beacon'
+  latitude      Decimal? @db.Decimal(10, 8)
+  longitude     Decimal? @db.Decimal(11, 8)
+  batteryLevel  Int      @map("battery_level")
+  payload       Json?    // Flexible: stores ML confidence/bounding boxes for fire, or water level / sensor metrics for others
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("telemetry_logs")
+}
