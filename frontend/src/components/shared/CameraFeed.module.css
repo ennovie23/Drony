@@ -1,0 +1,133 @@
+.feed {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background-color: #0b0d0c;
+    overflow: hidden;
+    color: #edeae3;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+}
+
+.media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: filter 0.3s ease;
+}
+
+/* Approximation of an iron-palette thermal camera. */
+.thermal .media {
+    filter: grayscale(1) contrast(1.5) sepia(1) hue-rotate(-40deg) saturate(3.5) brightness(0.95);
+}
+
+.scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+}
+
+.corner {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 0 solid rgba(237, 234, 227, 0.7);
+}
+
+.tl { top: 14px; left: 14px; border-top-width: 1.5px; border-left-width: 1.5px; }
+.tr { top: 14px; right: 14px; border-top-width: 1.5px; border-right-width: 1.5px; }
+.bl { bottom: 14px; left: 14px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.br { bottom: 14px; right: 14px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+
+.hudTop,
+.hudBottom {
+    position: absolute;
+    left: 40px;
+    right: 40px;
+    display: flex;
+    justify-content: space-between;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.hudTop { top: 22px; }
+.hudBottom { bottom: 22px; }
+
+.rec {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #ef4444;
+}
+
+.recOn {
+    animation: blink 1s steps(2, start) infinite;
+}
+
+.crosshair {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 28px;
+    height: 28px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(237, 234, 227, 0.35);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.crosshair::before,
+.crosshair::after {
+    content: '';
+    position: absolute;
+    background-color: rgba(237, 234, 227, 0.5);
+}
+
+.crosshair::before { left: 50%; top: -8px; bottom: -8px; width: 1px; }
+.crosshair::after { top: 50%; left: -8px; right: -8px; height: 1px; }
+
+.box {
+    position: absolute;
+    border: 1.5px solid #ef4444;
+    background-color: rgba(239, 68, 68, 0.08);
+}
+
+.boxLabel {
+    position: absolute;
+    top: -18px;
+    left: -1.5px;
+    padding: 1px 6px;
+    background-color: #ef4444;
+    color: #fff;
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.box {
+    transition: opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.boxHighlight {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+
+.boxDim {
+    opacity: 0.3;
+}
+
+@keyframes blink {
+    to { visibility: hidden; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .recOn { animation: none; }
+}

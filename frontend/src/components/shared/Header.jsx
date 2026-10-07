@@ -1,52 +1,50 @@
-import { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import styles from './Header.module.css';
+import StatusDot from './StatusDot';
+import { useAppData } from '../../context/AppDataContext';
+import useNow from '../../hooks/useNow';
+
+const PAGE_NAMES = {
+    '/live': 'Live',
+    '/fire': 'Fire Assessment',
+    '/flood': 'Flood Sensors',
+    '/flight': 'Flight',
+    '/map': 'Map',
+};
 
 export default function Header() {
-    const [timeString, setTimeString] = useState('');
+    const now = useNow();
+    const { pathname } = useLocation();
+    const { drone } = useAppData();
 
-    useEffect(() => {
-        const updateClock = () => {
-            const now = new Date();
-            // Format HH:mm:ss in PHT (Asia/Manila)
-            const formatted = now.toLocaleTimeString('en-GB', {
-                timeZone: 'Asia/Manila',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-            });
-            setTimeString(`${formatted} PHT`);
-        };
-
-        updateClock();
-        const timer = setInterval(updateClock, 1000);
-        return () => clearInterval(timer);
-    }, []);
+    const timeString = new Date(now).toLocaleTimeString('en-GB', {
+        timeZone: 'Asia/Manila',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+    });
 
     return (
         <header className={styles.header}>
             <div className={styles.leftSection}>
                 <span>Disaster Response Management System</span>
                 <span>•</span>
-                <span>Overview</span>
+                <span>{PAGE_NAMES[pathname] ?? ''}</span>
             </div>
 
             <div className={styles.rightSection}>
                 <div className={styles.statusIndicator}>
-                    <span className={styles.statusDot}></span>
-                    <span>SYSTEM NOMINAL</span>
+                    <StatusDot value={drone.link} />
+                    <span>LINK {drone.link}</span>
                 </div>
 
-                <div className={styles.timestamp}>
-                    {timeString || '17:27:02 PHT'}
-                </div>
+                <div className={styles.timestamp}>{timeString} PHT</div>
 
-                <button className={styles.placeholderBtn}>
-                    <span className={styles.statusDot}></span>
-                    <span>placeholder</span>
-                    <ChevronDown size={12} className={styles.chevron} />
-                </button>
+                <div className={styles.droneBadge}>
+                    <StatusDot value={drone.flight} pulse={drone.flight === 'AIRBORNE'} />
+                    <span>{drone.id} · {drone.flight}</span>
+                </div>
             </div>
         </header>
     );

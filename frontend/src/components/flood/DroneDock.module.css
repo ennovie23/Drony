@@ -1,0 +1,139 @@
+.dock {
+    border: 1px solid var(--border-color);
+    padding: 18px 20px;
+}
+
+.head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.head p {
+    margin: 0;
+}
+
+.columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+}
+
+.slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 10px 0 14px;
+}
+
+.slot {
+    border: 1px dashed var(--border-color);
+    padding: 12px;
+    min-height: 78px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--icon-color);
+    background: none;
+    font-family: inherit;
+    text-align: left;
+}
+
+.slotFilled {
+    border-style: solid;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.slotFilled:hover {
+    border-color: var(--icon-hover);
+}
+
+.slotOn {
+    border-color: var(--warn);
+    background: rgba(240, 165, 20, 0.06);
+}
+
+.slotId {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.deployBox {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hint {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.dropList,
+.outList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.outList {
+    margin-top: 10px;
+}
+
+.dropItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 12px;
+    border: 1px solid var(--border-color);
+    background: none;
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.dropItem:hover {
+    border-color: var(--icon-hover);
+}
+
+.dropOn {
+    border-color: var(--warn);
+    color: var(--warn);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.outItem {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 11px;
+}
+
+.muted {
+    color: var(--icon-color);
+    font-size: 11px;
+}
+
+@media (max-width: 1000px) {
+    .columns {
+        grid-template-columns: 1fr;
+    }
+}

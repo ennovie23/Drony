@@ -1,8 +1,17 @@
-import { Gauge, Radio, Drone, RotateCcwClock, Sun, Moon } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Radio, Flame, Waves, Drone, Map, Sun, Moon } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import { useState, useEffect } from 'react';
 
-export default function SideBar({ activeTab, setActiveTab }) {
+const NAV_ITEMS = [
+  { to: '/live', label: 'Live', icon: Radio },
+  { to: '/fire', label: 'Fire', icon: Flame },
+  { to: '/flood', label: 'Flood', icon: Waves },
+  { to: '/flight', label: 'Flight', icon: Drone },
+  { to: '/map', label: 'Map', icon: Map },
+];
+
+export default function SideBar() {
   const [isLightMode, setIsLightMode] = useState(false);
 
   useEffect(() => {
@@ -15,40 +24,27 @@ export default function SideBar({ activeTab, setActiveTab }) {
         <span>DRMS</span>
       </div>
 
-      <div
-        className={`${styles.iconBox} ${activeTab === 'dashboard' ? styles.active : ''}`}
-        onClick={() => setActiveTab('dashboard')}>
-        <Gauge />
-        <span className={styles.iconText}>Dashboard</span>
-      </div>
+      <nav className={styles.nav}>
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => `${styles.iconBox} ${isActive ? styles.active : ''}`}>
+              <Icon />
+              <span className={styles.iconText}>{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
 
-      <div
-        className={`${styles.iconBox} ${activeTab === 'live' ? styles.active : ''}`}
-        onClick={() => setActiveTab('live')}>
-        <Radio />
-        <span className={styles.iconText}>Live</span>
-      </div>
-
-      <div
-        className={`${styles.iconBox} ${activeTab === 'instrument' ? styles.active : ''}`}
-        onClick={() => setActiveTab('instrument')}>
-        <Drone />
-        <span className={styles.iconText}>Flight</span>
-      </div>
-
-      <div
-        className={`${styles.iconBox} ${activeTab === 'history' ? styles.active : ''}`}
-        onClick={() => setActiveTab('history')}>
-        <RotateCcwClock />
-        <span className={styles.iconText}>History</span>
-      </div>
-
-      <div
+      <button
         className={`${styles.iconBox} ${styles.bottom}`}
         onClick={() => setIsLightMode(!isLightMode)}>
         {isLightMode ? <Sun /> : <Moon />}
         <span className={styles.iconText}>{isLightMode ? 'Light' : 'Dark'}</span>
-      </div>
+      </button>
     </aside>
   );
 }

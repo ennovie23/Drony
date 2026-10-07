@@ -1,4 +1,3 @@
-/* ── Container ─────────────────────────────────────────── */
 .container {
     display: flex;
     flex-direction: column;
@@ -6,183 +5,90 @@
     background-color: var(--bg-color);
     box-sizing: border-box;
     width: 100%;
-    height: 100%;
+    min-height: 100%;
 }
 
-/* ── Top Section ───────────────────────────────────────── */
-.topSection {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 1px solid var(--border-color);
-    padding: 20px 28px;
-}
-
-.topLeft {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.droneCodeRow {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 4px;
-}
-
-.droneCode {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--icon-color);
-    letter-spacing: 1px;
-    margin: 0;
-}
-
-.missionTitle {
-    font-size: 42px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin: 0 0 4px 0;
-    color: var(--text-color);
-    line-height: 1.1;
-}
-
-.droneLocation {
-    font-size: 11px;
-    font-family: inherit;
-    letter-spacing: 1px;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.activeStatus {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    letter-spacing: 1px;
-    color: var(--text-color);
-}
-
-.greenDot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: #22c55e;
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
-}
-
-.topRight {
-    display: flex;
-    flex-direction: row;
-    gap: 48px;
-}
-
-.topRightItem {
-    display: flex;
-    flex-direction: column;
-    text-align: end;
-    align-items: flex-end;
-    gap: 4px;
-}
-
-.topRightValue {
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    color: var(--text-color);
-    margin: 0;
-}
-
-/* ── Middle Layout ─────────────────────────────────────── */
-.middleSection {
-    display: flex;
-    flex-direction: row;
+.layout {
     flex: 1;
-    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
 }
 
-/* ── Left: Video + Data Bar ────────────────────────────── */
-.middleLeftSection {
+/* ── Camera feed ───────────────────────────────────────── */
+.feedColumn {
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
+    min-width: 0;
 }
 
-.videoContainer {
-    background-color: var(--video-container);
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
     border-bottom: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
+}
+
+.feed {
+    background-color: var(--video-container);
     line-height: 0;
 }
 
-.videoFeed {
-    width: 760px;
-    height: 480px;
-    object-fit: cover;
-    display: block;
-}
-
-/* ── Detection Data Bar ────────────────────────────────── */
-.data {
+/* ── Side: status + flight map ─────────────────────────── */
+.side {
+    border-left: 1px solid var(--border-color);
     display: flex;
-    flex-direction: row;
-    border-right: 1px solid var(--border-color);
+    flex-direction: column;
 }
 
-.info {
-    flex: 1;
-    padding: 14px 20px;
-    border-right: 1px solid var(--border-color);
+.section {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sectionLabel {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--icon-color);
+    margin: 0 0 14px 0;
+}
+
+.statusGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+}
+
+.statusItem {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.info:last-child {
-    border-right: none;
-}
-
-.infoLabel {
-    font-size: 10px;
-    letter-spacing: 1.2px;
-    color: var(--icon-color);
-    margin: 0;
-    text-transform: uppercase;
-}
-
-.infoValue {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    color: var(--text-color);
-    margin: 0;
-}
-
-/* ── Right: Panels ─────────────────────────────────────── */
-.middleRightSection {
-    flex: 1;
+.statusValue {
     display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    border-left: 1px solid var(--border-color);
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
 }
 
-.panelCard {
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.panelCard:last-child {
-    border-bottom: none;
-}
-
-.panelLabel {
+.mapFoot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
     font-size: 10px;
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
     color: var(--icon-color);
-    margin: 0 0 12px 0;
-    text-transform: uppercase;
+}
+
+@media (max-width: 1000px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+    .side {
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+    }
 }

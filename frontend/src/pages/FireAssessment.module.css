@@ -1,0 +1,156 @@
+/* Fire page pieces; layout and tables come from Assessment.module.css. */
+
+/* ── Detections table ──────────────────────────────────── */
+.detRow {
+    display: grid;
+    grid-template-columns: 60px 70px minmax(140px, 1.5fr) 1fr 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-color);
+    border-left: 2px solid transparent;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+}
+
+.fireLabel {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.score {
+    display: grid;
+    grid-template-columns: 1fr 36px;
+    align-items: center;
+    gap: 10px;
+}
+
+.score span:first-child span {
+    background-color: #2f4bff;
+}
+
+/* ── Intelligence report ───────────────────────────────── */
+.reportBlock {
+    border: 1px solid var(--border-color);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.reportBlock p {
+    margin: 0;
+}
+
+.confidence {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--danger);
+}
+
+.badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    color: #fff;
+}
+
+.badge.ok { background-color: #15803d; }
+.badge.warn { background-color: #b45309; }
+.badge.danger { background-color: #dc2626; }
+
+.smokeStatus {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ok);
+}
+
+.smokeOn {
+    color: var(--warn);
+}
+
+/* Severity text tones in the gallery */
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+.danger { color: var(--danger); }
+
+/* ── Snapshot gallery ──────────────────────────────────── */
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+.snapCard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    background: none;
+    color: var(--text-color);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+.snapCard:hover {
+    border-color: var(--icon-color);
+}
+
+.snapOn {
+    border-color: var(--icon-hover);
+}
+
+.snapHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.latestTag {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    padding: 2px 6px;
+    border: 1px solid var(--warn);
+    color: var(--warn);
+}
+
+.snapMeta {
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    color: var(--icon-color);
+}
+
+.pending {
+    cursor: default;
+}
+
+.pendingThumb {
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: var(--video-container);
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    color: var(--warn);
+}
+
+@media (max-width: 1100px) {
+    .detRow {
+        grid-template-columns: 50px 60px 1fr;
+    }
+    .detRow > :nth-child(4),
+    .detRow > :nth-child(5) {
+        display: none;
+    }
+}

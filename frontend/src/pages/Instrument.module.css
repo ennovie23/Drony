@@ -360,6 +360,12 @@
     border-color: var(--teal);
 }
 
+/* ── Payload dock ──────────────────────────────────────── */
+.dockSection {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
 /* ── Footer ────────────────────────────────────────────── */
 .footer {
     display: flex;
