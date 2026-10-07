@@ -9,6 +9,7 @@ import MlFrame from '../components/fire/MlFrame';
 import { useAppData } from '../context/AppDataContext';
 import { formatTime, timeAgo } from '../utils/format';
 import useNow from '../hooks/useNow';
+import { VIDEO_PATH } from '../config';
 
 const SEVERITY_TONE = { LOW: 'ok', MODERATE: 'warn', SEVERE: 'danger' };
 const BEHAVIOR_TONE = { DECLINING: 'ok', STABLE: 'warn', GROWING: 'danger' };
@@ -55,7 +56,15 @@ export default function FireAssessment() {
                                 </span>
                             </div>
                             <div className={base.mediaFrame}>
-                                <MlFrame snapshot={snap} highlightId={highlightId} />
+                                {/* <MlFrame snapshot={snap} highlightId={highlightId} /> */}
+                                <video
+                                    src={snap.videoUrl ?? VIDEO_PATH}
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
                             </div>
                         </div>
 

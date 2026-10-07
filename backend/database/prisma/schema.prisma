@@ -18,3 +18,17 @@ model TelemetryLog {
 
   @@map("telemetry_logs")
 }
+
+
+model FireDetection {
+  id         String   @id @default(uuid())
+  timestamp  DateTime @default(now())
+  label      String   //fire or smoke
+  confidence Float
+  bboxX1     Float    // Top-left X coordinate
+  bboxY1     Float    // Top-left Y coordinate
+  bboxX2     Float    // Bottom-right X coordinate
+  bboxY2     Float    // Bottom-right Y coordinate
+  status     String   @default("ACTIVE") // For tracking state later
+  createdAt  DateTime @default(now())
+}

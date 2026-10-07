@@ -1,5 +1,5 @@
 import styles from './CameraFeed.module.css';
-import fireImg from '../../assets/fire.webp';
+import { VIDEO_PATH } from '../../config';
 import { useAppData } from '../../context/AppDataContext';
 
 // Drone camera view with HUD overlay. The image stands in for the video stream
@@ -16,7 +16,14 @@ export default function CameraFeed({
 
     return (
         <div className={`${styles.feed} ${mode === 'thermal' ? styles.thermal : ''}`}>
-            <img className={styles.media} src={fireImg} alt={`Drone camera over ${site.area}`} />
+            <video
+                className={styles.media}
+                src={VIDEO_PATH}
+                autoPlay
+                loop
+                muted
+                playsInline
+            />
 
             <div className={styles.scanlines}></div>
 
