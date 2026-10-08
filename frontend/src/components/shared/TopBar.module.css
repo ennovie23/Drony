@@ -3,8 +3,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 11px 20px;
-    min-height: 52px;
+    padding: 0 20px;
+    height: var(--topbar-h);
+    flex-shrink: 0;
     box-sizing: border-box;
     border-bottom: 1px solid var(--line);
     background: var(--bg);
