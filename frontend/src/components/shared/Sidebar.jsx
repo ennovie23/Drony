@@ -1,7 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { Radio, Flame, Waves, Drone, Map, Sun, Moon } from 'lucide-react';
 import styles from './Sidebar.module.css';
-import { useState, useEffect } from 'react';
+import useTheme from '../../hooks/useTheme';
+import { useAppData } from '../../context/AppDataContext';
+import { SEVERITY_TONE, toneFor } from '../ui/tones';
+import { reportingSensors } from '../../utils/flood';
 
 const NAV_ITEMS = [
   { to: '/live', label: 'Live', icon: Radio },
@@ -12,17 +15,20 @@ const NAV_ITEMS = [
 ];
 
 export default function SideBar() {
-  const [isLightMode, setIsLightMode] = useState(false);
+  const [theme, toggleTheme] = useTheme();
+  const { fireSnapshots, modules } = useAppData();
+  const isLightMode = theme === 'light';
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isLightMode ? 'light' : 'dark');
-  }, [isLightMode]);
+  // Dots let the operator see hazard state without opening the page.
+  const fireTone = toneFor(SEVERITY_TONE, fireSnapshots[0]?.severity);
+  const dots = {
+    '/fire': fireTone !== 'off' ? styles[fireTone] : null,
+    '/flood': reportingSensors(modules).length > 0 ? styles.water : null,
+  };
 
   return (
     <aside className={styles.container}>
-      <div id={styles.titleBox}>
-        <span>DRMS</span>
-      </div>
+      <div className={styles.mark}>DRMS</div>
 
       <nav className={styles.nav}>
         {NAV_ITEMS.map((item) => {
@@ -31,19 +37,18 @@ export default function SideBar() {
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) => `${styles.iconBox} ${isActive ? styles.active : ''}`}>
+              className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
               <Icon />
-              <span className={styles.iconText}>{item.label}</span>
+              <span>{item.label}</span>
+              {dots[item.to] && <span className={`${styles.dot} ${dots[item.to]}`}></span>}
             </NavLink>
           );
         })}
       </nav>
 
-      <button
-        className={`${styles.iconBox} ${styles.bottom}`}
-        onClick={() => setIsLightMode(!isLightMode)}>
+      <button className={`${styles.item} ${styles.bottom}`} onClick={toggleTheme}>
         {isLightMode ? <Sun /> : <Moon />}
-        <span className={styles.iconText}>{isLightMode ? 'Light' : 'Dark'}</span>
+        <span>{isLightMode ? 'Light' : 'Dark'}</span>
       </button>
     </aside>
   );

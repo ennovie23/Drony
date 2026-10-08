@@ -1,0 +1,39 @@
+.readout {
+    min-width: 0;
+}
+
+.label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    color: var(--text-strong);
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.md { font-size: 24px; }
+.hero { font-size: 34px; }
+
+.ok { color: var(--ok); }
+.warn { color: var(--attention-text); }
+.danger { color: var(--bad); }
+.off { color: var(--text-muted); }
+
+.unit {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-faint);
+    margin-left: 4px;
+}
+
+.sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}

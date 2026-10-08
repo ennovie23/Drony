@@ -1,7 +1,8 @@
-import ui from './ui.module.css';
+import styles from './StatusDot.module.css';
 import { toneOf } from '../../utils/status';
 
-export default function StatusDot({ tone, value, pulse = false }) {
+// Small static dot coloured by tone (or by the tone of a status word).
+export default function StatusDot({ tone, value }) {
     const resolved = tone ?? toneOf(value);
-    return <span className={`${ui.dot} ${ui[resolved]} ${pulse ? ui.pulse : ''}`}></span>;
+    return <span className={`${styles.dot} ${styles[resolved]}`}></span>;
 }
