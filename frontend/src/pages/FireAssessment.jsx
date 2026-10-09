@@ -10,7 +10,6 @@ import { formatStatus } from '../components/ui/format';
 import { useAppData } from '../context/AppDataContext';
 import { formatTime, timeAgo } from '../utils/format';
 import useNow from '../hooks/useNow';
-import { VIDEO_PATH } from '../config';
 
 export default function FireAssessment() {
     useNow(5000);

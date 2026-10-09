@@ -1,5 +1,5 @@
 import styles from './CameraFeed.module.css';
-import { VIDEO_PATH } from '../../config';
+import useVideoUrl from '../../hooks/useVideoUrl';
 import { useAppData } from '../../context/AppDataContext';
 
 // Drone camera view. The image stands in for the video stream until the backend
@@ -14,12 +14,13 @@ export default function CameraFeed({
     const { drone, site, fireSnapshots } = useAppData();
     const latest = fireSnapshots[0];
     const modeLabel = mode === 'thermal' ? 'Thermal' : 'RGB';
+    const videoUrl = useVideoUrl().videoUrl;
 
     return (
         <div className={`${styles.feed} ${mode === 'thermal' ? styles.thermal : ''}`}>
             <video
                 className={styles.media}
-                src={VIDEO_PATH}
+                src={videoUrl}
                 autoPlay
                 loop
                 muted

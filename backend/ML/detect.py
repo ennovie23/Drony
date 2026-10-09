@@ -2,11 +2,15 @@ import cv2
 from ultralytics import YOLO
 import requests
 from datetime import datetime, timezone
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
+video_filename = os.getenv("ACTIVE_VIDEO", "smoke.mp4")
+video_path = f"ML/test_video/{video_filename}"
 
 model = YOLO("ML/best.pt")
 
-# link your sample video here
-video_path = "ML/test_video/smoke.mp4"
 cap = cv2.VideoCapture(video_path)
 
 # Your Node.js backend API endpoint

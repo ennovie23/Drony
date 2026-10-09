@@ -1,12 +1,21 @@
 import styles from './MlFrame.module.css';
-import fireImg from '../../assets/fire.webp';
+import useVideoUrl from '../../hooks/useVideoUrl';
 
-// One drone snapshot as analysed by the fire model: the image with the model's boxes
-// labelled "<label> <score>". `small` renders a thumbnail without labels.
+// One drone snapshot as analysed by the fire model: the video feed with the model's
+// bounding boxes labelled "<label> <score>". `small` renders a thumbnail without labels.
 export default function MlFrame({ snapshot, highlightId = null, small = false, tag }) {
+    const { videoUrl, loading } = useVideoUrl();
+
     return (
         <div className={`${styles.frame} ${small ? styles.small : ''}`}>
-            <img className={styles.image} src={fireImg} alt={`Drone snapshot, frame ${snapshot.frame}`} />
+            <video
+                className={styles.image}
+                src={videoUrl}
+                autoPlay
+                loop
+                muted
+                playsInline
+            />
 
             {snapshot.detections.map((d) => (
                 <div
