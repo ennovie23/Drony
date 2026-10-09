@@ -1,0 +1,32 @@
+.group {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--surface-sunken);
+}
+
+.option {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    padding: 5px 11px;
+    border: 0;
+    border-right: 1px solid var(--line);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.option:last-child {
+    border-right: 0;
+}
+
+.option:hover {
+    color: var(--text-strong);
+}
+
+.on {
+    background: var(--surface);
+    color: var(--text-strong);
+    box-shadow: inset 0 -2px 0 var(--attention);
+}

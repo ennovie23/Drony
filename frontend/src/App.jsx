@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SideBar from "./components/shared/Sidebar";
-import Header from "./components/shared/Header";
 import Live from "./pages/Live";
 import FireAssessment from "./pages/FireAssessment";
 import FloodAssessment from "./pages/FloodAssessment";
@@ -12,7 +11,6 @@ function App() {
     <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <SideBar />
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, height: '100vh', overflow: 'hidden' }}>
-        <Header />
         <main style={{ flex: 1, overflowY: 'auto' }}>
           <Routes>
             <Route path="/live" element={<Live />} />

@@ -1,8 +1,8 @@
 import styles from './TacticalMap.module.css';
-import StatusDot from './StatusDot';
+import { formatStatus } from '../ui/format';
 import { useAppData } from '../../context/AppDataContext';
 
-// Topographic site map. Marker positions are percentages of the frame; the SVG
+// Site map. Marker positions are percentages of the frame; the SVG
 // layer (path, zones, water) uses a 500 × 360 viewBox stretched to fit.
 const DEFAULT_LAYERS = { path: true, fire: true, flood: true, dropPoints: false };
 
@@ -13,20 +13,6 @@ export default function TacticalMap({ layers = DEFAULT_LAYERS, dropPoints = [], 
 
     return (
         <div className={`${styles.frame} ${tall ? styles.tall : ''} ${compact ? styles.compact : ''}`}>
-            <div className={styles.overlayHeader}>
-                <div className={styles.overlayLeft}>
-                    <StatusDot tone="ok" />
-                    <span>{compact ? 'FLIGHT PATH' : 'SITE OVERLAY'}</span>
-                </div>
-                <div className={styles.overlayRight}>
-                    {!compact && <span>FIRE · FLOOD · TRACKING</span>}
-                    <div className={styles.liveBadge}>
-                        <StatusDot tone="ok" pulse />
-                        <span>LIVE</span>
-                    </div>
-                </div>
-            </div>
-
             <div className={styles.compass}>
                 <span>N</span>
                 <div className={styles.compassLine}></div>
@@ -64,7 +50,7 @@ export default function TacticalMap({ layers = DEFAULT_LAYERS, dropPoints = [], 
             {layers.fire &&
                 map.hazards.map((h, i) => (
                     <div key={i} className={styles.marker} style={{ left: `${h.x}%`, top: `${h.y}%` }}>
-                        <span className={h.kind === 'flame' ? styles.flameBox : styles.smokeBox}>{h.kind.toUpperCase()}</span>
+                        <span className={h.kind === 'flame' ? styles.flameBox : styles.smokeBox}>{h.kind === 'flame' ? 'Flame' : 'Smoke'}</span>
                         <div className={h.kind === 'flame' ? styles.flameRing : styles.smokeRing}></div>
                     </div>
                 ))}
@@ -92,11 +78,11 @@ export default function TacticalMap({ layers = DEFAULT_LAYERS, dropPoints = [], 
                             <div className={styles.moduleDot}></div>
                         </div>
                         <div className={styles.moduleText}>
-                            <div className={styles.moduleLabel}>
+                            <div className={`${styles.moduleLabel} mono`}>
                                 {m.id}
-                                {m.status === 'DEPLOYED' && <span className={styles.moduleLevel}> · {m.distance} CM</span>}
+                                {m.status === 'DEPLOYED' && <span className={styles.moduleLevel}> · {m.distance} cm</span>}
                             </div>
-                            <div className={styles.moduleSub}>{m.status}</div>
+                            <div className={styles.moduleSub}>{formatStatus(m.status)}</div>
                         </div>
                     </button>
                 ))}
@@ -108,14 +94,13 @@ export default function TacticalMap({ layers = DEFAULT_LAYERS, dropPoints = [], 
                 <span className={styles.droneIcon}>
                     <span></span>
                 </span>
-                <span className={styles.droneAlt}>ALT {Math.round(drone.altitudeRel)}M</span>
+                <span className={styles.droneAlt}>Alt {Math.round(drone.altitudeRel)} m</span>
             </button>
 
-            <div className={styles.overlayFooter}>
+            <div className={styles.footer}>
                 <div className={styles.scaleBar}>
-                    <span>—</span>
-                    <span>100 M</span>
-                    <span>—</span>
+                    <span className={styles.scaleLine}></span>
+                    <span>100 m</span>
                 </div>
                 <span className={styles.sectorBadge}>{site.sector}</span>
             </div>

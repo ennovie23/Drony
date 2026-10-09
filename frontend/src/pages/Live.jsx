@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import styles from './Live.module.css';
-import ui from '../components/shared/ui.module.css';
-import PageHeader from '../components/shared/PageHeader';
+import TopBar from '../components/shared/TopBar';
 import CameraFeed from '../components/shared/CameraFeed';
 import TacticalMap from '../components/shared/TacticalMap';
-import StatusDot from '../components/shared/StatusDot';
+import { Card, Readout, Chip, KeyValue, Segmented, Button } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { formatElapsed } from '../utils/format';
 import useNow from '../hooks/useNow';
 
 // Flight map shows only where the drone is and where it has flown.
 const FLIGHT_LAYERS = { path: true, fire: false, flood: false };
+const MODES = [
+    { key: 'rgb', label: 'RGB' },
+    { key: 'thermal', label: 'Thermal' },
+];
 
 export default function Live() {
     useNow();
@@ -19,73 +22,57 @@ export default function Live() {
     const [mode, setMode] = useState('rgb');
     const [showDetections, setShowDetections] = useState(true);
 
-    const status = [
-        { label: 'BATTERY', value: `${drone.battery}%` },
-        { label: 'ALTITUDE', value: `${drone.altitudeRel} m` },
-        { label: 'SPEED', value: `${drone.velocity} m/s` },
-        { label: 'HEADING', value: `${String(drone.heading).padStart(3, '0')}°` },
-        { label: 'GPS', value: drone.gps, dot: true },
-        { label: 'LINK', value: drone.link, dot: true },
-    ];
-
     return (
-        <div className={styles.container}>
-            <PageHeader
-                eyebrow={
-                    <>
-                        <span>{drone.id}</span>
-                        <span className={ui.status}>
-                            <StatusDot value={drone.flight} pulse />
-                            {drone.flight}
-                        </span>
-                    </>
+        <div className={styles.page}>
+            <TopBar
+                title="Live feed"
+                subtitle={`${site.area}, ${site.city}`}
+                actions={
+                    <span>
+                        Elapsed <span className="mono">{formatElapsed(site.startedAt)}</span>
+                    </span>
                 }
-                title="LIVE FEED"
-                subtitle={`${site.area} · ${site.city}`}
-                stats={[{ label: 'ELAPSED', value: formatElapsed(site.startedAt) }]}
             />
 
             <div className={styles.layout}>
                 <div className={styles.feedColumn}>
-                    <div className={styles.toolbar}>
-                        <div className={ui.segment}>
-                            <button className={mode === 'rgb' ? ui.segmentOn : ''} onClick={() => setMode('rgb')}>RGB</button>
-                            <button className={mode === 'thermal' ? ui.segmentOn : ''} onClick={() => setMode('thermal')}>THERMAL</button>
+                    <div className={styles.feedBlock}>
+                        <div className={styles.toolbar}>
+                            <Segmented options={MODES} value={mode} onChange={setMode} />
+                            <Button size="sm" onClick={() => setShowDetections(!showDetections)}>
+                                {showDetections ? <Eye /> : <EyeOff />}
+                                Detections {showDetections ? 'on' : 'off'}
+                            </Button>
                         </div>
-                        <button className={`${ui.btn} ${ui.btnSmall}`} onClick={() => setShowDetections(!showDetections)}>
-                            {showDetections ? <Eye size={12} /> : <EyeOff size={12} />}
-                            <span>DETECTIONS {showDetections ? 'ON' : 'OFF'}</span>
-                        </button>
+                        <div className={styles.feed}>
+                            <CameraFeed mode={mode} showDetections={showDetections} />
+                        </div>
                     </div>
-                    <div className={styles.feed}>
-                        <CameraFeed mode={mode} showDetections={showDetections} />
+
+                    <div className={styles.readouts}>
+                        <Card><Readout label="Battery" value={drone.battery} unit="%" /></Card>
+                        <Card><Readout label="Altitude" value={drone.altitudeRel} unit="m" /></Card>
+                        <Card><Readout label="Speed" value={drone.velocity} unit="m/s" /></Card>
+                        <Card><Readout label="Heading" value={String(drone.heading).padStart(3, '0')} unit="°" /></Card>
                     </div>
                 </div>
 
                 <aside className={styles.side}>
-                    <section className={styles.section}>
-                        <p className={styles.sectionLabel}>— DRONE STATUS</p>
-                        <div className={styles.statusGrid}>
-                            {status.map((s) => (
-                                <div key={s.label} className={styles.statusItem}>
-                                    <p className={ui.label}>{s.label}</p>
-                                    <p className={styles.statusValue}>
-                                        {s.dot && <StatusDot value={s.value} />}
-                                        {s.value}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+                    <Card>
+                        <KeyValue
+                            rows={[
+                                { label: 'GPS', value: <Chip value={drone.gps} /> },
+                                { label: 'Link', value: <Chip value={drone.link} /> },
+                            ]}
+                        />
+                    </Card>
 
-                    <section className={styles.section}>
-                        <p className={styles.sectionLabel}>— FLIGHT MAP</p>
-                        <TacticalMap layers={FLIGHT_LAYERS} compact />
-                        <div className={styles.mapFoot}>
-                            <span>{site.coords}</span>
-                            <span>{drone.distanceHome} M FROM HOME</span>
+                    <Card title="Flight map" meta={<span><span className="mono">{drone.distanceHome}</span> m from home</span>} className={styles.mapCard}>
+                        <div className={styles.map}>
+                            <TacticalMap layers={FLIGHT_LAYERS} compact />
                         </div>
-                    </section>
+                        <div className={`${styles.coords} mono`}>{site.coords}</div>
+                    </Card>
                 </aside>
             </div>
         </div>
