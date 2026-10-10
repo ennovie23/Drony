@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
   try {
     const items = Array.isArray(req.body) ? req.body : [req.body];
 
-    const data = items.map(({ timestamp, label, confidence, bboxX1, bboxY1, bboxX2, bboxY2 }) => ({
+    const data = items.map(({ timestamp, label, confidence, bboxX1, bboxY1, bboxX2, bboxY2, severity, severityConf}) => ({
       // Use the frame's capture time when provided, since batches are inserted later
       ...(timestamp && { timestamp: new Date(timestamp) }),
       label,
@@ -29,6 +29,8 @@ router.post('/', async (req, res) => {
       bboxY1,
       bboxX2,
       bboxY2,
+      severity,
+      severityConf,
     }));
 
     const result = await prisma.fireDetection.createMany({ data });
@@ -43,12 +45,27 @@ router.post('/', async (req, res) => {
 
 router.get('/live', async (req, res) => {
   try {
-    const since = new Date(Date.now() - 2000); // last 2 seconds
-    const rows = await prisma.fireDetection.findMany({
-      where:   { createdAt: { gte: since } },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
+    const latest = await prisma.fireDetection.findFirst({
+      orderBy: { timestamp: 'desc' },
+      select: { timestamp: true },
     });
+
+    if (!latest) {
+      return res.json([]);
+    }
+
+    // Only return boxes from the most recent detection frame (300ms window)
+    const windowStart = new Date(latest.timestamp.getTime() - 300);
+    const rows = await prisma.fireDetection.findMany({
+      where: {
+        timestamp: {
+          gte: windowStart,
+          lte: latest.timestamp,
+        },
+      },
+      orderBy: { confidence: 'desc' },
+    });
+
     res.json(rows);
   } catch (error) {
     console.error('Error fetching live detections:', error);
@@ -69,6 +86,8 @@ router.get('/latest', async (req, res) => {
         label: true,
         confidence: true,
         timestamp: true,
+        severity: true,
+        severityConf: true,
       },
     });
 

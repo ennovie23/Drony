@@ -29,6 +29,8 @@ model FireDetection {
   bboxY1     Float    // Top-left Y coordinate
   bboxX2     Float    // Bottom-right X coordinate
   bboxY2     Float    // Bottom-right Y coordinate
+  severity   String   @default("MODERATE") // Added: Minor, Moderate, or Severe
+  severityConf Float?
   status     String   @default("ACTIVE") // For tracking state later
   createdAt  DateTime @default(now())
 }

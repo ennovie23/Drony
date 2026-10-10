@@ -51,6 +51,8 @@ export default function FireAssessment() {
             confidence: (result.data.confidence * 100).toFixed(1),
             timestamp: result.data.timestamp,
             label: result.data.label,
+            severity: result.data.severity,
+            severityConf: result.data.severityConf,
           });
         }
       } catch (error) {
@@ -145,7 +147,6 @@ export default function FireAssessment() {
                 </span>
               }
             >
-              {/* <Readout label="Active fire front" value={snap.fireConfidence} unit="% confidence" size="hero" /> */}
               <div
                 style={{
                   background: "#1e222d",
@@ -217,8 +218,12 @@ export default function FireAssessment() {
                       label: "Severity",
                       value: (
                         <Chip
-                          tone={toneFor(SEVERITY_TONE, snap.severity)}
-                          value={snap.severity}
+                          tone={toneFor(SEVERITY_TONE, latestDetection?.severity)}
+                          value={
+                            latestDetection?.severity
+                              ? `${latestDetection.severity} · ${(Number(latestDetection.severityConf || 0) * 100).toFixed(1)}%`
+                              : "N/A"
+                          }
                         />
                       ),
                     },
