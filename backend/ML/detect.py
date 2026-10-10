@@ -2,7 +2,8 @@ import cv2
 from ultralytics import YOLO
 import requests
 from datetime import datetime, timezone
-import os 
+import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,12 +14,20 @@ model = YOLO("ML/best.pt")
 
 cap = cv2.VideoCapture(video_path)
 
+# Get frame dimensions for normalising bbox coordinates to percentages
+frame_width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  or 640
+frame_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 360
+
+# Real-time throttle: sleep between frames so detect.py stays in sync with the browser video
+fps = cap.get(cv2.CAP_PROP_FPS) or 30
+frame_delay = 1.0 / fps  # seconds to wait after processing each frame
+
 # Your Node.js backend API endpoint
 backend_url = "http://localhost:5001/api/detections"
 
-# Collect detections from every frame and send them in one request about once per second
-BATCH_INTERVAL_SEC = 1.0
-fps = cap.get(cv2.CAP_PROP_FPS) or 30
+# Send a small batch every N frames so the frontend gets frequent updates.
+# 0.3 s at the video's fps → boxes refresh ~3 times per second in the browser.
+BATCH_INTERVAL_SEC = 0.3
 batch_every_n_frames = max(1, round(fps * BATCH_INTERVAL_SEC))
 frame_index = 0
 pending = []
@@ -36,24 +45,27 @@ def send_batch(batch):
 
 
 while cap.isOpened():
+    t_frame_start = time.time()
+
     ret, frame = cap.read()
     if not ret:
         break
 
-    results = model(frame, conf=0.25)
+    results = model(frame, conf=0.25, verbose=False)
     timestamp = datetime.now(timezone.utc).isoformat()
 
     for result in results:
         for box in result.boxes:
-            xyxy = box.xyxy[0].tolist()  # [x1, y1, x2, y2]
+            xyxy = box.xyxy[0].tolist()  # [x1, y1, x2, y2] in pixels
+            # Normalise to 0-100 % so the frontend can overlay boxes directly
             pending.append({
                 "timestamp": timestamp,
                 "label": model.names[int(box.cls[0])],
                 "confidence": float(box.conf[0]),
-                "bboxX1": xyxy[0],
-                "bboxY1": xyxy[1],
-                "bboxX2": xyxy[2],
-                "bboxY2": xyxy[3]
+                "bboxX1": round(xyxy[0] / frame_width  * 100, 4),
+                "bboxY1": round(xyxy[1] / frame_height * 100, 4),
+                "bboxX2": round(xyxy[2] / frame_width  * 100, 4),
+                "bboxY2": round(xyxy[3] / frame_height * 100, 4),
             })
 
     frame_index += 1
@@ -61,15 +73,15 @@ while cap.isOpened():
         send_batch(pending)
         pending = []
 
-    # Display video feed with bounding boxes locally
-    annotated_frame = results[0].plot()
-    cv2.imshow("Drony Fire Detection", annotated_frame)
+    # Sleep for whatever time is left in this frame's budget so that
+    # detect.py stays in sync with real-time video playback in the browser.
+    elapsed = time.time() - t_frame_start
+    sleep_for = frame_delay - elapsed
+    if sleep_for > 0:
+        time.sleep(sleep_for)
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
 
 # Send whatever is left from the last partial batch
 send_batch(pending)
 
 cap.release()
-cv2.destroyAllWindows()

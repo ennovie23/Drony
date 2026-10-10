@@ -9,15 +9,14 @@ const { PrismaClient } = pkg;
 const router = express.Router();
 
 // Reuse a single shared pool with a capped connection limit
-const pool = new Pool({ 
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 5 // limits concurrent connections to avoid hitting Neon limits
+  max: 5, // limits concurrent connections to avoid hitting Neon limits
 });
 const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma  = new PrismaClient({ adapter });
 
-// POST endpoint for yolo detections (accepts a single detection or a batch array)
-router.post('/detections', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const items = Array.isArray(req.body) ? req.body : [req.body];
 
@@ -38,6 +37,52 @@ router.post('/detections', async (req, res) => {
   } catch (error) {
     console.error('Error saving detection:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
+
+
+router.get('/live', async (req, res) => {
+  try {
+    const since = new Date(Date.now() - 2000); // last 2 seconds
+    const rows = await prisma.fireDetection.findMany({
+      where:   { createdAt: { gte: since } },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching live detections:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/latest', async (req, res) => {
+  try {
+    const latestDetection = await prisma.fireDetection.findFirst({
+      where: {
+        status: 'ACTIVE',
+      },
+      orderBy: {
+        timestamp: 'desc',
+      },
+      select: {
+        label: true,
+        confidence: true,
+        timestamp: true,
+      },
+    });
+
+    if (!latestDetection){
+      return res.status(404).json({ success: false, message: 'No detection found.' });
+    }
+    const data = {
+      ...latestDetection,
+      timestampPHT: new Date(latestDetection.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Manila' }),
+    };
+    res.status(200).json({ success: true, data });
+  } catch (error){
+    console.error('Error fetching latest detection: ', error);
+    res.status(500).json({success:false, error: 'Database query failed.'});
   }
 });
 
