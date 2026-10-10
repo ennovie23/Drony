@@ -21,16 +21,17 @@ model TelemetryLog {
 
 
 model FireDetection {
-  id         String   @id @default(uuid())
-  timestamp  DateTime @default(now())
-  label      String   //fire or smoke
-  confidence Float
-  bboxX1     Float    // Top-left X coordinate
-  bboxY1     Float    // Top-left Y coordinate
-  bboxX2     Float    // Bottom-right X coordinate
-  bboxY2     Float    // Bottom-right Y coordinate
-  severity   String   @default("MODERATE") // Added: Minor, Moderate, or Severe
-  severityConf Float?
-  status     String   @default("ACTIVE") // For tracking state later
-  createdAt  DateTime @default(now())
+  id           String   @id @default(uuid())
+  timestamp    DateTime @default(now())
+  label        String   // "fire" or "smoke"
+  confidence   Float    // YOLO detection confidence
+  bboxX1       Float    // Top-left X coordinate (%)
+  bboxY1       Float    // Top-left Y coordinate (%)
+  bboxX2       Float    // Bottom-right X coordinate (%)
+  bboxY2       Float    // Bottom-right Y coordinate (%)
+  severity     String   @default("MODERATE") // "Minor", "Moderate", or "Severe"
+  severityConf Float?   // Secondary classifier confidence
+  trend        String?  @default("STABLE")   // "GROWING", "STABLE", "DIMINISHING", or "MONITORING"
+  trendSlope   Float?   // Numerical regression slope from np.polyfit
+  createdAt    DateTime @default(now())
 }

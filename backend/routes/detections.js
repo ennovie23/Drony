@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
   try {
     const items = Array.isArray(req.body) ? req.body : [req.body];
 
-    const data = items.map(({ timestamp, label, confidence, bboxX1, bboxY1, bboxX2, bboxY2, severity, severityConf}) => ({
+    const data = items.map(({ timestamp, label, confidence, bboxX1, bboxY1, bboxX2, bboxY2, severity, severityConf, trend, trendSlope }) => ({
       // Use the frame's capture time when provided, since batches are inserted later
       ...(timestamp && { timestamp: new Date(timestamp) }),
       label,
@@ -31,6 +31,8 @@ router.post('/', async (req, res) => {
       bboxY2,
       severity,
       severityConf,
+      trend,
+      trendSlope,
     }));
 
     const result = await prisma.fireDetection.createMany({ data });
@@ -75,12 +77,24 @@ router.get('/live', async (req, res) => {
 
 router.get('/latest', async (req, res) => {
   try {
-    const latestDetection = await prisma.fireDetection.findFirst({
-      where: {
-        status: 'ACTIVE',
-      },
+    // 1. Find the most recent timestamp in the table
+    const latestRecord = await prisma.fireDetection.findFirst({
       orderBy: {
         timestamp: 'desc',
+      },
+      select: {
+        timestamp: true,
+      },
+    });
+
+    if (!latestRecord) {
+      return res.status(404).json({ success: false, message: 'No detection found.' });
+    }
+
+    // 2. Fetch all hazard rows sharing that exact same latest timestamp
+    const frameDetections = await prisma.fireDetection.findMany({
+      where: {
+        timestamp: latestRecord.timestamp,
       },
       select: {
         label: true,
@@ -88,20 +102,41 @@ router.get('/latest', async (req, res) => {
         timestamp: true,
         severity: true,
         severityConf: true,
+        trend: true,
+        trendSlope: true,
       },
     });
 
-    if (!latestDetection){
-      return res.status(404).json({ success: false, message: 'No detection found.' });
-    }
+    // 3. Separate them into fire and smoke lists
+    const fireDetections = frameDetections.filter(d => d.label === 'fire');
+    const smokeDetections = frameDetections.filter(d => d.label === 'smoke');
+
+    // 4. Pick the dominant fire and smoke records (e.g., highest confidence)
+    const primaryFire = fireDetections.length > 0 
+      ? fireDetections.reduce((prev, current) => (prev.confidence > current.confidence) ? prev : current)
+      : null;
+
+    const primarySmoke = smokeDetections.length > 0 
+      ? smokeDetections.reduce((prev, current) => (prev.confidence > current.confidence) ? prev : current)
+      : null;
+
+    // Format timestamp PHT for convenience
+    const timestampPHT = new Date(latestRecord.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Manila' });
+
     const data = {
-      ...latestDetection,
-      timestampPHT: new Date(latestDetection.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Manila' }),
+      timestamp: latestRecord.timestamp,
+      timestampPHT,
+      // If there's fire, it takes visual priority for the main card display. 
+      // If no fire exists, it falls back to primarySmoke so the card focuses on smoke instead.
+      primaryHazard: primaryFire ? 'fire' : (primarySmoke ? 'smoke' : null),
+      fire: primaryFire,       
+      smoke: primarySmoke,     
     };
+
     res.status(200).json({ success: true, data });
-  } catch (error){
+  } catch (error) {
     console.error('Error fetching latest detection: ', error);
-    res.status(500).json({success:false, error: 'Database query failed.'});
+    res.status(500).json({ success: false, error: 'Database query failed.' });
   }
 });
 

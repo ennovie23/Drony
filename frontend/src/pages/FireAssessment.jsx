@@ -34,8 +34,9 @@ export default function FireAssessment() {
 
   const [latestDetection, setLatestDetection] = useState({
     timestamp: "",
-    confidence: 0.0,
-    label: "",
+    primaryHazard: null,
+    fire: null,
+    smoke: null,
   });
 
   useEffect(() => {
@@ -48,17 +49,30 @@ export default function FireAssessment() {
 
         if (result.success && result.data) {
           setLatestDetection({
-            confidence: (result.data.confidence * 100).toFixed(1),
-            timestamp: result.data.timestamp,
-            label: result.data.label,
-            severity: result.data.severity,
-            severityConf: result.data.severityConf,
+            timestamp: result.data.timestampPHT || result.data.timestamp,
+            primaryHazard: result.data.primaryHazard, // "fire" or "smoke" or null
+            fire: result.data.fire
+              ? {
+                  ...result.data.fire,
+                  confidence: (result.data.fire.confidence * 100).toFixed(1),
+                  severityConf: result.data.fire.severityConf
+                    ? (result.data.fire.severityConf * 100).toFixed(1)
+                    : null,
+                }
+              : null,
+            smoke: result.data.smoke
+              ? {
+                  ...result.data.smoke,
+                  confidence: (result.data.smoke.confidence * 100).toFixed(1),
+                }
+              : null,
           });
         }
       } catch (error) {
-        console.error("Failed to fetch latest datection.", error);
+        console.error("Failed to fetch latest detection.", error);
       }
     };
+
     fetchLatestDetection();
     const interval = setInterval(fetchLatestDetection, 1000);
 
@@ -178,10 +192,12 @@ export default function FireAssessment() {
                       fontSize: "24px",
                       fontWeight: "bold",
                       textTransform: "uppercase",
-                      color: latestDetection?.label ? "#ef4444" : "#848e9c",
+                      color: latestDetection?.primaryHazard
+                        ? "#ef4444"
+                        : "#848e9c",
                     }}
                   >
-                    {latestDetection?.label || "None"}
+                    {latestDetection?.primaryHazard || "None"}
                   </span>
                 </div>
 
@@ -205,49 +221,57 @@ export default function FireAssessment() {
                       fontFamily: "monospace",
                     }}
                   >
-                    {latestDetection?.confidence
-                      ? `${latestDetection.confidence}%`
-                      : "0.0%"}
+                    {(() => {
+                      const activeHazard =
+                        latestDetection?.primaryHazard === "fire"
+                          ? latestDetection?.fire
+                          : latestDetection?.smoke;
+                      return activeHazard?.confidence
+                        ? `${activeHazard.confidence}%`
+                        : "0.0%";
+                    })()}
                   </span>
                 </div>
               </div>
               <div className={styles.verdict}>
-                <KeyValue
-                  rows={[
-                    {
-                      label: "Severity",
-                      value: (
-                        <Chip
-                          tone={toneFor(SEVERITY_TONE, latestDetection?.severity)}
-                          value={
-                            latestDetection?.severity
-                              ? `${latestDetection.severity} · ${(Number(latestDetection.severityConf || 0) * 100).toFixed(1)}%`
-                              : "N/A"
-                          }
-                        />
-                      ),
-                    },
-                    {
-                      label: "Behaviour",
-                      value: (
-                        <Chip
-                          tone={toneFor(BEHAVIOR_TONE, snap.behavior)}
-                          value={snap.behavior}
-                        />
-                      ),
-                    },
-                    {
-                      label: "Smoke plume",
-                      value: snap.smoke.detected ? (
-                        <Chip tone="warn">
-                          Plume detected · {snap.smoke.confidence.toFixed(2)}
-                        </Chip>
-                      ) : (
-                        <Chip tone="ok">Clear air</Chip>
-                      ),
-                    },
-                  ]}
-                />
+<KeyValue
+  rows={[
+    {
+      label: "Severity",
+      value: latestDetection?.fire ? (
+        <Chip
+          tone={toneFor(SEVERITY_TONE, latestDetection.fire.severity)}
+          value={`${latestDetection.fire.severity} · ${latestDetection.fire.severityConf || "0.0"}%`}
+        />
+      ) : (
+        <Chip tone="ok">None detected</Chip>
+      ),
+    },
+    {
+      label: "Behaviour",
+      value: latestDetection?.fire ? (
+        <Chip
+          tone={toneFor(BEHAVIOR_TONE, latestDetection.fire.trend)}
+          value={latestDetection.fire.trend}
+        />
+      ) : (
+        <Chip tone="neutral">Standby</Chip>
+      ),
+    },
+    {
+      label: "Smoke plume",
+      value: latestDetection?.smoke ? (
+        <Chip
+          tone={toneFor(BEHAVIOR_TONE, latestDetection.smoke.trend)}
+        >
+          {latestDetection.smoke.trend}
+        </Chip>
+      ) : (
+        <Chip tone="ok">Clear air</Chip>
+      ),
+    },
+  ]}
+/>
               </div>
             </Card>
 

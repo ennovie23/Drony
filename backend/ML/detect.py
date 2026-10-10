@@ -6,6 +6,7 @@ import os
 import time
 from dotenv import load_dotenv
 from severity import classify_fire_crop
+from temporal_behavior import TemporalGrowthClassifier  # 1. Import your temporal behavior tracker
 
 load_dotenv()
 video_filename = os.getenv("ACTIVE_VIDEO", "smoke.mp4")
@@ -15,6 +16,9 @@ model_path = os.path.join(os.path.dirname(__file__), "best.pt")
 model = YOLO(model_path)
 
 cap = cv2.VideoCapture(video_path)
+
+# 2. Initialize the temporal growth behavior tracker (15-frame rolling window)
+growth_tracker = TemporalGrowthClassifier(window_size=15)
 
 # Get frame dimensions for normalising bbox coordinates to percentages
 frame_width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  or 640
@@ -28,7 +32,6 @@ frame_delay = 1.0 / fps  # seconds to wait after processing each frame
 backend_url = "http://localhost:5001/api/detections"
 
 # Send a small batch every N frames so the frontend gets frequent updates.
-# 0.3 s at the video's fps → boxes refresh ~3 times per second in the browser.
 BATCH_INTERVAL_SEC = 0.3
 batch_every_n_frames = max(1, round(fps * BATCH_INTERVAL_SEC))
 frame_index = 0
@@ -60,9 +63,33 @@ while cap.isOpened():
     results = model(frame, conf=0.25, verbose=False)
     timestamp = datetime.now(timezone.utc).isoformat()
 
+    frame_raw_detections = []
+
+    # 3. Step 1: Collect raw bounding boxes for the temporal tracker
     for result in results:
         for box in result.boxes:
             xyxy = box.xyxy[0].tolist()  # [x1, y1, x2, y2] in pixels
+            label = model.names[int(box.cls[0])]
+            frame_raw_detections.append({
+                "class": label,
+                "box": xyxy
+            })
+
+    # 4. Step 2: Evaluate temporal behavior trends for both fire and smoke globally in this frame
+    behavior_trends = growth_tracker.update_and_evaluate(frame_raw_detections)
+
+    # 5. Step 3: Loop through detections again to map trends, severity, and build the payload
+    for result in results:
+        for box in result.boxes:
+            xyxy = box.xyxy[0].tolist()
+            label = model.names[int(box.cls[0])]
+
+            # Select the appropriate trend dictionary based on object label
+            current_behavior = (
+                behavior_trends["fire_behavior"] 
+                if label == "fire" 
+                else behavior_trends["smoke_behavior"]
+            )
 
             # Convert pixel coordinates to integers for cropping
             x1_px, y1_px, x2_px, y2_px = map(int, xyxy)
@@ -76,10 +103,12 @@ while cap.isOpened():
             # Normalise to 0-100 % so the frontend can overlay boxes directly
             pending.append({
                 "timestamp": timestamp,
-                "label": model.names[int(box.cls[0])],
+                "label": label,
                 "confidence": float(box.conf[0]),
                 "severity": severity_label,
                 "severityConf": float(severity_conf),
+                "trend": current_behavior["status"],           # 'GROWING', 'STABLE', 'DIMINISHING', 'MONITORING'
+                "trendSlope": current_behavior["trend_slope"], # Numerical slope value from regression
                 "bboxX1": round(xyxy[0] / frame_width  * 100, 4),
                 "bboxY1": round(xyxy[1] / frame_height * 100, 4),
                 "bboxX2": round(xyxy[2] / frame_width  * 100, 4),
@@ -91,8 +120,7 @@ while cap.isOpened():
         send_batch(pending)
         pending = []
 
-    # Sleep for whatever time is left in this frame's budget so that
-    # detect.py stays in sync with real-time video playback in the browser.
+    # Sleep for whatever time is left in this frame's budget
     elapsed = time.time() - t_frame_start
     sleep_for = frame_delay - elapsed
     if sleep_for > 0:
