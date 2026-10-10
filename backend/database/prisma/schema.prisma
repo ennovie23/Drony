@@ -33,5 +33,6 @@ model FireDetection {
   severityConf Float?   // Secondary classifier confidence
   trend        String?  @default("STABLE")   // "GROWING", "STABLE", "DIMINISHING", or "MONITORING"
   trendSlope   Float?   // Numerical regression slope from np.polyfit
+  threatScore  Int?     // Fusion urgency score (0-100)
   createdAt    DateTime @default(now())
 }

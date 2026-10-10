@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
   try {
     const items = Array.isArray(req.body) ? req.body : [req.body];
 
-    const data = items.map(({ timestamp, label, confidence, bboxX1, bboxY1, bboxX2, bboxY2, severity, severityConf, trend, trendSlope }) => ({
+    const data = items.map(({ timestamp, label, confidence, bboxX1, bboxY1, bboxX2, bboxY2, severity, severityConf, trend, trendSlope, threatScore }) => ({
       // Use the frame's capture time when provided, since batches are inserted later
       ...(timestamp && { timestamp: new Date(timestamp) }),
       label,
@@ -33,6 +33,7 @@ router.post('/', async (req, res) => {
       severityConf,
       trend,
       trendSlope,
+      threatScore,
     }));
 
     const result = await prisma.fireDetection.createMany({ data });
@@ -104,6 +105,7 @@ router.get('/latest', async (req, res) => {
         severityConf: true,
         trend: true,
         trendSlope: true,
+        threatScore: true,
       },
     });
 

@@ -58,6 +58,7 @@ export default function FireAssessment() {
                   severityConf: result.data.fire.severityConf
                     ? (result.data.fire.severityConf * 100).toFixed(1)
                     : null,
+                  threatScore: result.data.fire.threatScore ?? 0, // <--- Explicitly preserve threatScore
                 }
               : null,
             smoke: result.data.smoke
@@ -232,7 +233,153 @@ export default function FireAssessment() {
                     })()}
                   </span>
                 </div>
+
+                
               </div>
+              {/* Highlighted Threat Fusion Summary Card */}
+              {(() => {
+                const score = latestDetection?.fire?.threatScore ?? 0;
+                const isCritical = score > 75;
+                const isElevated = score > 40;
+
+                const theme = isCritical
+                  ? {
+                      border: "rgba(239, 68, 68, 0.45)",
+                      bg: "linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(26, 20, 24, 0.95) 100%)",
+                      text: "#ef4444",
+                      glow: "0 0 18px rgba(239, 68, 68, 0.25)",
+                      badgeBg: "rgba(239, 68, 68, 0.22)",
+                      badgeBorder: "rgba(239, 68, 68, 0.5)",
+                      label: "CRITICAL RISK",
+                      barColor: "linear-gradient(90deg, #f87171, #ef4444)",
+                    }
+                  : isElevated
+                  ? {
+                      border: "rgba(245, 158, 11, 0.45)",
+                      bg: "linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(26, 24, 20, 0.95) 100%)",
+                      text: "#f59e0b",
+                      glow: "0 0 18px rgba(245, 158, 11, 0.25)",
+                      badgeBg: "rgba(245, 158, 11, 0.22)",
+                      badgeBorder: "rgba(245, 158, 11, 0.5)",
+                      label: "ELEVATED THREAT",
+                      barColor: "linear-gradient(90deg, #fbbf24, #f59e0b)",
+                    }
+                  : {
+                      border: "rgba(16, 185, 129, 0.35)",
+                      bg: "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(18, 26, 23, 0.95) 100%)",
+                      text: "#10b981",
+                      glow: "0 0 14px rgba(16, 185, 129, 0.18)",
+                      badgeBg: "rgba(16, 185, 129, 0.2)",
+                      badgeBorder: "rgba(16, 185, 129, 0.35)",
+                      label: "NOMINAL",
+                      barColor: "linear-gradient(90deg, #34d399, #10b981)",
+                    };
+
+                return (
+                  <div
+                    style={{
+                      margin: "14px 0 16px 0",
+                      padding: "16px 18px",
+                      borderRadius: "10px",
+                      background: theme.bg,
+                      border: `1px solid ${theme.border}`,
+                      boxShadow: theme.glow,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    {/* Header Row: Title & Badge */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.8px",
+                          color: "#9ca3af",
+                        }}
+                      >
+                        Overall Threat Fusion Score
+                      </span>
+                      <span
+                        style={{
+                          padding: "3px 10px",
+                          borderRadius: "6px",
+                          fontSize: "10px",
+                          fontWeight: "800",
+                          letterSpacing: "0.6px",
+                          textTransform: "uppercase",
+                          backgroundColor: theme.badgeBg,
+                          color: theme.text,
+                          border: `1px solid ${theme.badgeBorder}`,
+                        }}
+                      >
+                        {theme.label}
+                      </span>
+                    </div>
+
+                    {/* Main Score Display */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: "6px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "36px",
+                          fontWeight: "900",
+                          fontFamily: "monospace",
+                          lineHeight: "1",
+                          color: theme.text,
+                          textShadow: `0 0 12px ${theme.border}`,
+                        }}
+                      >
+                        {score}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          color: "#6b7280",
+                        }}
+                      >
+                        / 100
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "6px",
+                        backgroundColor: "rgba(255, 255, 255, 0.08)",
+                        borderRadius: "3px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${Math.min(Math.max(score, 0), 100)}%`,
+                          height: "100%",
+                          background: theme.barColor,
+                          borderRadius: "3px",
+                          transition: "width 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
               <div className={styles.verdict}>
 <KeyValue
   rows={[
