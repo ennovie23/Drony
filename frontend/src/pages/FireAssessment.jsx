@@ -12,6 +12,16 @@ import { formatTime, timeAgo } from "../utils/format";
 import useNow from "../hooks/useNow";
 import SimulateBtn from "../components/fire/SimulateBtn";
 
+import { API_BASE_URL } from "../config";
+
+const formatPercent = (val) => {
+  if (val === null || val === undefined) return null;
+  const num = Number(val);
+  if (isNaN(num)) return null;
+  const pct = num <= 1 && num > 0 ? num * 100 : num;
+  return pct.toFixed(1);
+};
+
 export default function FireAssessment() {
   useNow(5000);
   const { drone, site, fireSnapshots, analyzing, captureSnapshot } =
@@ -35,6 +45,7 @@ export default function FireAssessment() {
   const [latestDetection, setLatestDetection] = useState({
     timestamp: "",
     primaryHazard: null,
+    threatScore: 0,
     fire: null,
     smoke: null,
   });
@@ -42,29 +53,31 @@ export default function FireAssessment() {
   useEffect(() => {
     const fetchLatestDetection = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:5001/api/detections/latest",
-        );
+        const response = await fetch(`${API_BASE_URL}/api/detections/latest`);
         const result = await response.json();
 
         if (result.success && result.data) {
+          const d = result.data;
           setLatestDetection({
-            timestamp: result.data.timestampPHT || result.data.timestamp,
-            primaryHazard: result.data.primaryHazard, // "fire" or "smoke" or null
-            fire: result.data.fire
+            timestamp: d.timestampPHT || d.timestamp,
+            primaryHazard: d.primaryHazard, 
+            threatScore: d.threatScore ?? 0,
+            fire: d.fire
               ? {
-                  ...result.data.fire,
-                  confidence: (result.data.fire.confidence * 100).toFixed(1),
-                  severityConf: result.data.fire.severityConf
-                    ? (result.data.fire.severityConf * 100).toFixed(1)
-                    : null,
-                  threatScore: result.data.fire.threatScore ?? 0, // <--- Explicitly preserve threatScore
+                  ...d.fire,
+                  confidence: formatPercent(d.fire.confidence),
+                  severity: d.fire.severity,
+                  severityConf: formatPercent(d.fire.severityConf),
+                  trend: d.fire.trend,
+                  trendSlope: d.fire.trendSlope != null ? Number(d.fire.trendSlope).toFixed(2) : null,
                 }
               : null,
-            smoke: result.data.smoke
+            smoke: d.smoke
               ? {
-                  ...result.data.smoke,
-                  confidence: (result.data.smoke.confidence * 100).toFixed(1),
+                  ...d.smoke,
+                  confidence: formatPercent(d.smoke.confidence),
+                  trend: d.smoke.trend,
+                  trendSlope: d.smoke.trendSlope != null ? Number(d.smoke.trendSlope).toFixed(2) : null,
                 }
               : null,
           });
@@ -79,7 +92,7 @@ export default function FireAssessment() {
 
     return () => clearInterval(interval);
   }, []);
-
+  
   return (
     <div className={styles.page}>
       <TopBar
@@ -154,7 +167,7 @@ export default function FireAssessment() {
           </div>
 
           <div className={styles.column}>
-            <Card
+<Card
               title="Model result"
               meta={
                 <span>
@@ -233,12 +246,11 @@ export default function FireAssessment() {
                     })()}
                   </span>
                 </div>
-
-                
               </div>
+
               {/* Highlighted Threat Fusion Summary Card */}
               {(() => {
-                const score = latestDetection?.fire?.threatScore ?? 0;
+                const score = latestDetection?.threatScore ?? 0;
                 const isCritical = score > 75;
                 const isElevated = score > 40;
 
@@ -290,7 +302,6 @@ export default function FireAssessment() {
                       transition: "all 0.3s ease",
                     }}
                   >
-                    {/* Header Row: Title & Badge */}
                     <div
                       style={{
                         display: "flex",
@@ -326,7 +337,6 @@ export default function FireAssessment() {
                       </span>
                     </div>
 
-                    {/* Main Score Display */}
                     <div
                       style={{
                         display: "flex",
@@ -357,7 +367,6 @@ export default function FireAssessment() {
                       </span>
                     </div>
 
-                    {/* Progress Bar */}
                     <div
                       style={{
                         width: "100%",
@@ -380,45 +389,45 @@ export default function FireAssessment() {
                   </div>
                 );
               })()}
+
               <div className={styles.verdict}>
-<KeyValue
-  rows={[
-    {
-      label: "Severity",
-      value: latestDetection?.fire ? (
-        <Chip
-          tone={toneFor(SEVERITY_TONE, latestDetection.fire.severity)}
-          value={`${latestDetection.fire.severity} · ${latestDetection.fire.severityConf || "0.0"}%`}
-        />
-      ) : (
-        <Chip tone="ok">None detected</Chip>
-      ),
-    },
-    {
-      label: "Behaviour",
-      value: latestDetection?.fire ? (
-        <Chip
-          tone={toneFor(BEHAVIOR_TONE, latestDetection.fire.trend)}
-          value={latestDetection.fire.trend}
-        />
-      ) : (
-        <Chip tone="neutral">Standby</Chip>
-      ),
-    },
-    {
-      label: "Smoke plume",
-      value: latestDetection?.smoke ? (
-        <Chip
-          tone={toneFor(BEHAVIOR_TONE, latestDetection.smoke.trend)}
-        >
-          {latestDetection.smoke.trend}
-        </Chip>
-      ) : (
-        <Chip tone="ok">Clear air</Chip>
-      ),
-    },
-  ]}
-/>
+                <KeyValue
+                  rows={[
+                    {
+                      label: "Severity",
+                      value: latestDetection?.fire?.severity ? (
+                        <Chip
+                          tone={toneFor(SEVERITY_TONE, latestDetection.fire.severity)}
+                          value={`${latestDetection.fire.severity}${latestDetection.fire.severityConf ? ` · ${latestDetection.fire.severityConf}%` : ""}`}
+                        />
+                      ) : (
+                        <Chip tone="ok">None detected</Chip>
+                      ),
+                    },
+                    {
+                      label: "Fire Behaviour",
+                      value: latestDetection?.fire?.trend ? (
+                        <Chip
+                          tone={toneFor(BEHAVIOR_TONE, latestDetection.fire.trend)}
+                          value={latestDetection.fire.trend}
+                        />
+                      ) : (
+                        <Chip tone="neutral">Standby</Chip>
+                      ),
+                    },
+                    {
+                      label: "Smoke Plume",
+                      value: latestDetection?.smoke?.trend ? (
+                        <Chip
+                          tone={toneFor(BEHAVIOR_TONE, latestDetection.smoke.trend)}
+                          value={latestDetection.smoke.trend}
+                        />
+                      ) : (
+                        <Chip tone="ok">Clear air</Chip>
+                      ),
+                    },
+                  ]}
+                />
               </div>
             </Card>
 

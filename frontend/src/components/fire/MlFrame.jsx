@@ -62,14 +62,14 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
             />
 
             {/* Live bounding boxes from detect.py (shown only in the main frame, not thumbnails) */}
-            {!small && liveBoxes.map((d) => {
+            {!small && liveBoxes.map((d, idx) => {
                 const x = d.bboxX1;
                 const y = d.bboxY1;
                 const w = d.bboxX2 - d.bboxX1;
                 const h = d.bboxY2 - d.bboxY1;
                 return (
                     <div
-                        key={d.id}
+                        key={d.id ?? idx}
                         className={styles.box}
                         style={{ left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%` }}
                     >

@@ -22,6 +22,7 @@ def classify_fire_crop(fire_crop):
 
     label_mapping = {
         "mild": "Minor",
+        "minor": "Minor",
         "moderate": "Moderate",
         "severe": "Severe"
     }

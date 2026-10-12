@@ -16,128 +16,108 @@ const pool = new Pool({
 const adapter = new PrismaPg(pool);
 const prisma  = new PrismaClient({ adapter });
 
+// In-memory cache for ultra-fast polling response
+let latestAssessmentCache = null;
+
+// POST unified frame assessment snapshot from Python
 router.post('/', async (req, res) => {
   try {
-    const items = Array.isArray(req.body) ? req.body : [req.body];
+    const payload = req.body;
 
-    const data = items.map(({ timestamp, label, confidence, bboxX1, bboxY1, bboxX2, bboxY2, severity, severityConf, trend, trendSlope, threatScore }) => ({
-      // Use the frame's capture time when provided, since batches are inserted later
-      ...(timestamp && { timestamp: new Date(timestamp) }),
-      label,
-      confidence,
-      bboxX1,
-      bboxY1,
-      bboxX2,
-      bboxY2,
-      severity,
-      severityConf,
-      trend,
-      trendSlope,
-      threatScore,
-    }));
+    const record = await prisma.frameAssessment.create({
+      data: {
+        timestamp: payload.timestamp ? new Date(payload.timestamp) : new Date(),
+        fireDetected: payload.fireDetected ?? false,
+        fireConfidence: payload.fireConfidence ?? null,
+        fireSeverity: payload.fireSeverity ?? null,
+        fireSeverityConf: payload.fireSeverityConf ?? null,
+        fireTrend: payload.fireTrend ?? null,
+        fireTrendSlope: payload.fireTrendSlope ?? null,
+        smokeDetected: payload.smokeDetected ?? false,
+        smokeConfidence: payload.smokeConfidence ?? null,
+        smokeTrend: payload.smokeTrend ?? null,
+        smokeTrendSlope: payload.smokeTrendSlope ?? null,
+        threatScore: payload.threatScore ?? 0,
+        boxes: payload.boxes ?? [],
+      },
+    });
 
-    const result = await prisma.fireDetection.createMany({ data });
+    latestAssessmentCache = record;
 
-    res.status(201).json({ success: true, count: result.count });
+    res.status(201).json({ success: true, record });
   } catch (error) {
-    console.error('Error saving detection:', error);
+    console.error('Error saving frame assessment:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
 
-
+// GET live bounding boxes for canvas overlays from the latest frame record
 router.get('/live', async (req, res) => {
   try {
-    const latest = await prisma.fireDetection.findFirst({
+    if (latestAssessmentCache && latestAssessmentCache.boxes) {
+      return res.json(latestAssessmentCache.boxes);
+    }
+
+    const latest = await prisma.frameAssessment.findFirst({
       orderBy: { timestamp: 'desc' },
-      select: { timestamp: true },
+      select: { boxes: true },
     });
 
-    if (!latest) {
+    if (!latest || !latest.boxes) {
       return res.json([]);
     }
 
-    // Only return boxes from the most recent detection frame (300ms window)
-    const windowStart = new Date(latest.timestamp.getTime() - 300);
-    const rows = await prisma.fireDetection.findMany({
-      where: {
-        timestamp: {
-          gte: windowStart,
-          lte: latest.timestamp,
-        },
-      },
-      orderBy: { confidence: 'desc' },
-    });
-
-    res.json(rows);
+    // Return the raw boxes JSON array for canvas rendering
+    res.json(latest.boxes);
   } catch (error) {
-    console.error('Error fetching live detections:', error);
+    console.error('Error fetching live boxes:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
+// GET latest unified frame assessment for the command center dashboard
 router.get('/latest', async (req, res) => {
   try {
-    // 1. Find the most recent timestamp in the table
-    const latestRecord = await prisma.fireDetection.findFirst({
-      orderBy: {
-        timestamp: 'desc',
-      },
-      select: {
-        timestamp: true,
-      },
-    });
+    let latest = latestAssessmentCache;
 
-    if (!latestRecord) {
-      return res.status(404).json({ success: false, message: 'No detection found.' });
+    if (!latest) {
+      latest = await prisma.frameAssessment.findFirst({
+        orderBy: { timestamp: 'desc' },
+      });
     }
 
-    // 2. Fetch all hazard rows sharing that exact same latest timestamp
-    const frameDetections = await prisma.fireDetection.findMany({
-      where: {
-        timestamp: latestRecord.timestamp,
-      },
-      select: {
-        label: true,
-        confidence: true,
-        timestamp: true,
-        severity: true,
-        severityConf: true,
-        trend: true,
-        trendSlope: true,
-        threatScore: true,
-      },
-    });
-
-    // 3. Separate them into fire and smoke lists
-    const fireDetections = frameDetections.filter(d => d.label === 'fire');
-    const smokeDetections = frameDetections.filter(d => d.label === 'smoke');
-
-    // 4. Pick the dominant fire and smoke records (e.g., highest confidence)
-    const primaryFire = fireDetections.length > 0 
-      ? fireDetections.reduce((prev, current) => (prev.confidence > current.confidence) ? prev : current)
-      : null;
-
-    const primarySmoke = smokeDetections.length > 0 
-      ? smokeDetections.reduce((prev, current) => (prev.confidence > current.confidence) ? prev : current)
-      : null;
+    if (!latest) {
+      return res.status(404).json({ success: false, message: 'No frame assessments found.' });
+    }
 
     // Format timestamp PHT for convenience
-    const timestampPHT = new Date(latestRecord.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Manila' });
+    const timestampPHT = new Date(latest.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Manila' });
 
+    // Primary hazard: Fire has priority if detected. If no fire, fallback to smoke.
+    const primaryHazard = latest.fireDetected ? 'fire' : (latest.smokeDetected ? 'smoke' : null);
+
+    // Construct response object mapping side-by-side columns and legacy nested properties for UI safety
     const data = {
-      timestamp: latestRecord.timestamp,
+      ...latest,
       timestampPHT,
-      // If there's fire, it takes visual priority for the main card display. 
-      // If no fire exists, it falls back to primarySmoke so the card focuses on smoke instead.
-      primaryHazard: primaryFire ? 'fire' : (primarySmoke ? 'smoke' : null),
-      fire: primaryFire,       
-      smoke: primarySmoke,     
+      primaryHazard,
+      fire: latest.fireDetected ? {
+        confidence: latest.fireConfidence,
+        severity: latest.fireSeverity,
+        severityConf: latest.fireSeverityConf,
+        trend: latest.fireTrend,
+        trendSlope: latest.fireTrendSlope,
+      } : null,
+      smoke: latest.smokeDetected ? {
+        confidence: latest.smokeConfidence,
+        trend: latest.smokeTrend,
+        trendSlope: latest.smokeTrendSlope,
+      } : null,
     };
 
     res.status(200).json({ success: true, data });
   } catch (error) {
-    console.error('Error fetching latest detection: ', error);
+    console.error('Error fetching latest frame assessment:', error);
     res.status(500).json({ success: false, error: 'Database query failed.' });
   }
 });

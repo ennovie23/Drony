@@ -20,19 +20,29 @@ model TelemetryLog {
 }
 
 
-model FireDetection {
-  id           String   @id @default(uuid())
-  timestamp    DateTime @default(now())
-  label        String   // "fire" or "smoke"
-  confidence   Float    // YOLO detection confidence
-  bboxX1       Float    // Top-left X coordinate (%)
-  bboxY1       Float    // Top-left Y coordinate (%)
-  bboxX2       Float    // Bottom-right X coordinate (%)
-  bboxY2       Float    // Bottom-right Y coordinate (%)
-  severity     String   @default("MODERATE") // "Minor", "Moderate", or "Severe"
-  severityConf Float?   // Secondary classifier confidence
-  trend        String?  @default("STABLE")   // "GROWING", "STABLE", "DIMINISHING", or "MONITORING"
-  trendSlope   Float?   // Numerical regression slope from np.polyfit
-  threatScore  Int?     // Fusion urgency score (0-100)
-  createdAt    DateTime @default(now())
+model FrameAssessment {
+  id               String   @id @default(uuid())
+  timestamp        DateTime @default(now())
+  
+  // Fire-specific metrics
+  fireDetected     Boolean  @default(false)
+  fireConfidence   Float?
+  fireSeverity     String?  // "Minor", "Moderate", or "Severe"
+  fireSeverityConf Float?   // Secondary classifier confidence
+  fireTrend        String?  // "GROWING", "STABLE", or "DIMINISHING"
+  fireTrendSlope   Float?   // Numerical regression slope for fire
+  
+  // Smoke-specific metrics
+  smokeDetected    Boolean  @default(false)
+  smokeConfidence  Float?
+  smokeTrend       String?  // "EXPANDING", "STABLE", or "DISPERSING" (Plume dynamics)
+  smokeTrendSlope  Float?   // Numerical regression slope for smoke
+  
+  // Decision Fusion
+  threatScore      Int?     // Fusion urgency score (0-100)
+  
+  // Raw bounding boxes stored as JSON for your canvas overlays
+  boxes            Json?
+  
+  createdAt        DateTime @default(now())
 }

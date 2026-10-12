@@ -8,7 +8,8 @@ class TemporalGrowthClassifier:
 
     def update_and_evaluate(self, current_detections):
         """
-        Analyzes sequences of frames to classify both fire and smoke behavior.
+        Analyzes sequences of frames to classify both fire and smoke behavior
+        using distinct kinematic terminology for each hazard.
         """
         current_fire_area = 0
         current_smoke_area = 0
@@ -16,8 +17,8 @@ class TemporalGrowthClassifier:
         for det in current_detections:
             cls = det.get("class", "").lower()
             box = det.get("box", [0, 0, 0, 0])  # expects [x1, y1, x2, y2] in pixels
-            width = box[2] - box[0]
-            height = box[3] - box[1]
+            width = max(0, box[2] - box[0])
+            height = max(0, box[3] - box[1])
             area = width * height
 
             if cls == "fire":
@@ -34,8 +35,11 @@ class TemporalGrowthClassifier:
         if len(self.smoke_history) > self.window_size:
             self.smoke_history.pop(0)
 
-        # Helper function to compute trend metrics via np.polyfit
-        def evaluate_metric(history):
+        # Helper function to compute trend metrics via np.polyfit with hazard-specific labels
+        def evaluate_metric(history, is_smoke=False):
+            if all(h == 0 for h in history):
+                return {"status": "Clear air" if is_smoke else "Standby", "confidence": 0.0, "trend_slope": 0.0}
+
             if len(history) < 5:
                 return {"status": "MONITORING", "confidence": 0.0, "trend_slope": 0.0}
             
@@ -44,9 +48,9 @@ class TemporalGrowthClassifier:
             confidence = min(float(abs(slope) / 500.0), 1.0)
 
             if slope > 5.0:
-                status = "GROWING"
+                status = "EXPANDING" if is_smoke else "GROWING"
             elif slope < -5.0:
-                status = "DIMINISHING"
+                status = "DISPERSING" if is_smoke else "DIMINISHING"
             else:
                 status = "STABLE"
 
@@ -57,6 +61,6 @@ class TemporalGrowthClassifier:
             }
 
         return {
-            "fire_behavior": evaluate_metric(self.fire_history),
-            "smoke_behavior": evaluate_metric(self.smoke_history)
+            "fire_behavior": evaluate_metric(self.fire_history, is_smoke=False),
+            "smoke_behavior": evaluate_metric(self.smoke_history, is_smoke=True)
         }
