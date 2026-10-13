@@ -17,18 +17,22 @@ import { toModelResult } from "../utils/snapshots";
 
 export default function FireAssessment() {
   useNow(5000);
-  const { drone, site, fireSnapshots, analyzing, captureSnapshot } =
+  const { drone, site, fireSnapshots, analyzing, captureSnapshot, videoSource } =
     useAppData();
+  const isWebcam = videoSource === "webcam";
   const [selectedId, setSelectedId] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
 
+  // Webcam mode starts on the live stream (no snapshot selected) and the list may be
+  // empty; file mode keeps showing the latest mock snapshot by default.
   const latest = fireSnapshots[0];
-  const snap = fireSnapshots.find((s) => s.id === selectedId) ?? latest;
-  const isLatest = snap.id === latest.id;
-  const detections = [...snap.detections].sort(
-    (a, b) => b.confidence - a.confidence,
-  );
+  const selected = fireSnapshots.find((s) => s.id === selectedId);
+  const snap = isWebcam ? selected : (selected ?? latest);
+  const isLatest = Boolean(snap && snap.id === latest?.id);
+  const detections = snap
+    ? [...snap.detections].sort((a, b) => b.confidence - a.confidence)
+    : [];
 
   const selectSnapshot = (id) => {
     setSelectedId(id);
@@ -47,10 +51,10 @@ export default function FireAssessment() {
     const fetchLatestDetection = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/detections/latest`);
-        const result = await response.json();
+        const body = await response.json();
 
-        if (result.success && result.data) {
-          setLatestDetection(toModelResult(result.data));
+        if (body.success && body.data) {
+          setLatestDetection(toModelResult(body.data));
         }
       } catch (error) {
         console.error("Failed to fetch latest detection.", error);
@@ -62,21 +66,29 @@ export default function FireAssessment() {
 
     return () => clearInterval(interval);
   }, []);
-  
+
+  // A selected webcam snapshot shows its saved assessment; otherwise the live one
+  const result = snap?.assessment ? toModelResult(snap.assessment) : latestDetection;
+
   return (
     <div className={styles.page}>
       <TopBar
         title="Fire assessment"
         subtitle={`${site.area}, ${site.city}`}
         actions={
-          <Button
-            variant="primary"
-            onClick={captureSnapshot}
-            disabled={analyzing}
-          >
-            <Camera />
-            {analyzing ? "Analysing…" : "Capture snapshot"}
-          </Button>
+          <>
+            {isWebcam && snap && (
+              <Button onClick={() => selectSnapshot(null)}>Back to live</Button>
+            )}
+            <Button
+              variant="primary"
+              onClick={captureSnapshot}
+              disabled={analyzing}
+            >
+              <Camera />
+              {analyzing ? "Analysing…" : "Capture snapshot"}
+            </Button>
+          </>
         }
       />
 
@@ -86,13 +98,21 @@ export default function FireAssessment() {
             <MlFrame
               snapshot={snap}
               highlightId={highlightId}
-              tag={`Frame ${snap.frame}${isLatest ? " · latest" : ""} · ${formatTime(snap.capturedAt)}`}
+              tag={
+                snap
+                  ? `Frame ${snap.frame}${isLatest ? " · latest" : ""} · ${formatTime(snap.capturedAt)}`
+                  : "Live · Webcam"
+              }
               playing={isSimulating}
             />
 
             <Card title={`Detections (${detections.length})`}>
               {detections.length === 0 ? (
-                <p className={table.empty}>No fire detected in this frame</p>
+                <p className={table.empty}>
+                  {snap
+                    ? "No fire detected in this frame"
+                    : "Live view — select a snapshot to see its detections"}
+                </p>
               ) : (
                 <table className={table.table}>
                   <thead>
@@ -140,9 +160,13 @@ export default function FireAssessment() {
 <Card
               title="Model result"
               meta={
-                <span>
-                  Frame <span className="mono">{snap.frame}</span>
-                </span>
+                snap ? (
+                  <span>
+                    Frame <span className="mono">{snap.frame}</span>
+                  </span>
+                ) : (
+                  <span>Live</span>
+                )
               }
             >
               <div
@@ -176,12 +200,12 @@ export default function FireAssessment() {
                       fontSize: "24px",
                       fontWeight: "bold",
                       textTransform: "uppercase",
-                      color: latestDetection?.primaryHazard
+                      color: result?.primaryHazard
                         ? "#ef4444"
                         : "#848e9c",
                     }}
                   >
-                    {latestDetection?.primaryHazard || "None"}
+                    {result?.primaryHazard || "None"}
                   </span>
                 </div>
 
@@ -207,9 +231,9 @@ export default function FireAssessment() {
                   >
                     {(() => {
                       const activeHazard =
-                        latestDetection?.primaryHazard === "fire"
-                          ? latestDetection?.fire
-                          : latestDetection?.smoke;
+                        result?.primaryHazard === "fire"
+                          ? result?.fire
+                          : result?.smoke;
                       return activeHazard?.confidence
                         ? `${activeHazard.confidence}%`
                         : "0.0%";
@@ -220,7 +244,7 @@ export default function FireAssessment() {
 
               {/* Highlighted Threat Fusion Summary Card */}
               {(() => {
-                const score = latestDetection?.threatScore ?? 0;
+                const score = result?.threatScore ?? 0;
                 const isCritical = score > 75;
                 const isElevated = score > 40;
 
@@ -365,10 +389,10 @@ export default function FireAssessment() {
                   rows={[
                     {
                       label: "Severity",
-                      value: latestDetection?.fire?.severity ? (
+                      value: result?.fire?.severity ? (
                         <Chip
-                          tone={toneFor(SEVERITY_TONE, latestDetection.fire.severity)}
-                          value={`${latestDetection.fire.severity}${latestDetection.fire.severityConf ? ` · ${latestDetection.fire.severityConf}%` : ""}`}
+                          tone={toneFor(SEVERITY_TONE, result.fire.severity)}
+                          value={`${result.fire.severity}${result.fire.severityConf ? ` · ${result.fire.severityConf}%` : ""}`}
                         />
                       ) : (
                         <Chip tone="ok">None detected</Chip>
@@ -376,10 +400,10 @@ export default function FireAssessment() {
                     },
                     {
                       label: "Fire Behaviour",
-                      value: latestDetection?.fire?.trend ? (
+                      value: result?.fire?.trend ? (
                         <Chip
-                          tone={toneFor(BEHAVIOR_TONE, latestDetection.fire.trend)}
-                          value={latestDetection.fire.trend}
+                          tone={toneFor(BEHAVIOR_TONE, result.fire.trend)}
+                          value={result.fire.trend}
                         />
                       ) : (
                         <Chip tone="neutral">Standby</Chip>
@@ -387,10 +411,10 @@ export default function FireAssessment() {
                     },
                     {
                       label: "Smoke Plume",
-                      value: latestDetection?.smoke?.trend ? (
+                      value: result?.smoke?.trend ? (
                         <Chip
-                          tone={toneFor(BEHAVIOR_TONE, latestDetection.smoke.trend)}
-                          value={latestDetection.smoke.trend}
+                          tone={toneFor(BEHAVIOR_TONE, result.smoke.trend)}
+                          value={result.smoke.trend}
                         />
                       ) : (
                         <Chip tone="ok">Clear air</Chip>
@@ -406,10 +430,10 @@ export default function FireAssessment() {
                 rows={[
                   {
                     label: "Captured",
-                    value: formatStatus(timeAgo(snap.capturedAt)),
+                    value: snap ? formatStatus(timeAgo(snap.capturedAt)) : "Live",
                   },
-                  { label: "Boxes", value: snap.detections.length },
-                  { label: "Source", value: `${drone.id} camera` },
+                  { label: "Boxes", value: snap ? snap.detections.length : "—" },
+                  { label: "Source", value: isWebcam ? "Webcam" : `${drone.id} camera` },
                 ]}
               />
             </Card>
@@ -434,11 +458,16 @@ export default function FireAssessment() {
                 <span className={styles.snapMeta}>New snapshot</span>
               </div>
             )}
+            {!analyzing && fireSnapshots.length === 0 && (
+              <p className={table.empty}>
+                No snapshots yet — fire detections will appear here
+              </p>
+            )}
             {fireSnapshots.map((s) => (
               <button
                 key={s.id}
                 type="button"
-                className={`${styles.snap} ${s.id === snap.id ? styles.snapOn : ""}`}
+                className={`${styles.snap} ${s.id === snap?.id ? styles.snapOn : ""}`}
                 onClick={() => selectSnapshot(s.id)}
               >
                 <MlFrame snapshot={s} small />
@@ -446,7 +475,7 @@ export default function FireAssessment() {
                   <span>
                     Frame <span className="mono">{s.frame}</span>
                   </span>
-                  {s.id === latest.id && <Chip tone="off">Latest</Chip>}
+                  {s.id === latest?.id && <Chip tone="off">Latest</Chip>}
                 </span>
                 <span className={styles.snapMeta}>
                   <span className="mono">{s.fireConfidence}%</span> ·{" "}

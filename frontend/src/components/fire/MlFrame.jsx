@@ -113,7 +113,7 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
                 <video
                     ref={videoRef}
                     className={styles.image}
-                    src={videoUrl}
+                    src={videoUrl || undefined}
                     loop
                     muted
                     playsInline
