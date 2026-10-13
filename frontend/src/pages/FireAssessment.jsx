@@ -4,7 +4,7 @@ import styles from "./FireAssessment.module.css";
 import table from "../components/ui/Table.module.css";
 import TopBar from "../components/shared/TopBar";
 import MlFrame from "../components/fire/MlFrame";
-import { Card, Readout, Chip, KeyValue, Button } from "../components/ui";
+import { Card, Chip, KeyValue, Button } from "../components/ui";
 import { SEVERITY_TONE, BEHAVIOR_TONE, toneFor } from "../components/ui/tones";
 import { formatStatus } from "../components/ui/format";
 import { useAppData } from "../context/AppDataContext";
@@ -13,14 +13,7 @@ import useNow from "../hooks/useNow";
 import SimulateBtn from "../components/fire/SimulateBtn";
 
 import { API_BASE_URL } from "../config";
-
-const formatPercent = (val) => {
-  if (val === null || val === undefined) return null;
-  const num = Number(val);
-  if (isNaN(num)) return null;
-  const pct = num <= 1 && num > 0 ? num * 100 : num;
-  return pct.toFixed(1);
-};
+import { toModelResult } from "../utils/snapshots";
 
 export default function FireAssessment() {
   useNow(5000);
@@ -57,30 +50,7 @@ export default function FireAssessment() {
         const result = await response.json();
 
         if (result.success && result.data) {
-          const d = result.data;
-          setLatestDetection({
-            timestamp: d.timestampPHT || d.timestamp,
-            primaryHazard: d.primaryHazard, 
-            threatScore: d.threatScore ?? 0,
-            fire: d.fire
-              ? {
-                  ...d.fire,
-                  confidence: formatPercent(d.fire.confidence),
-                  severity: d.fire.severity,
-                  severityConf: formatPercent(d.fire.severityConf),
-                  trend: d.fire.trend,
-                  trendSlope: d.fire.trendSlope != null ? Number(d.fire.trendSlope).toFixed(2) : null,
-                }
-              : null,
-            smoke: d.smoke
-              ? {
-                  ...d.smoke,
-                  confidence: formatPercent(d.smoke.confidence),
-                  trend: d.smoke.trend,
-                  trendSlope: d.smoke.trendSlope != null ? Number(d.smoke.trendSlope).toFixed(2) : null,
-                }
-              : null,
-          });
+          setLatestDetection(toModelResult(result.data));
         }
       } catch (error) {
         console.error("Failed to fetch latest detection.", error);
