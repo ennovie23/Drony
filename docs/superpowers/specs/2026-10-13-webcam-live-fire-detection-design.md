@@ -48,7 +48,7 @@ Fire page ──GET /api/config/video──► { source, videoUrl, streamUrl }
 | `VIDEO_SOURCE` | `file` | `file` = existing `.mp4` behaviour; `webcam` = live camera |
 | `WEBCAM_INDEX` | `0` | OpenCV camera index |
 | `STREAM_PORT` | `5002` | Port of the MJPEG stream / capture server in `detect.py` |
-| `SNAPSHOT_COOLDOWN_S` | `5` | Minimum seconds between automatic snapshots |
+| `SNAPSHOT_COOLDOWN_S` | `60` | Minimum seconds between automatic snapshots |
 | `ACTIVE_VIDEO` | (existing) | Still used when `VIDEO_SOURCE=file` |
 
 ### 4.2 `backend/ML/detect.py`

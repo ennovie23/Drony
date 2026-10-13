@@ -13,6 +13,7 @@ from temporal_behavior import TemporalGrowthClassifier
 from threat_fusion import calculate_urgency_score
 from live_stream import LatestFrame, CaptureFlag, start_stream_server
 from snapshot_trigger import SnapshotTrigger
+from frame_grabber import FrameGrabber
 
 # Load environment configuration from backend/.env
 env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
@@ -22,7 +23,7 @@ load_dotenv(env_path)
 video_source = os.getenv("VIDEO_SOURCE", "file").strip().lower()
 webcam_index = int(os.getenv("WEBCAM_INDEX", "0"))
 stream_port = int(os.getenv("STREAM_PORT", "5002"))
-snapshot_cooldown_s = float(os.getenv("SNAPSHOT_COOLDOWN_S", "5"))
+snapshot_cooldown_s = float(os.getenv("SNAPSHOT_COOLDOWN_S", "60"))
 is_webcam = video_source == "webcam"
 
 if video_source == "file":
@@ -115,39 +116,44 @@ if is_webcam:
     start_stream_server(stream_port, latest_frame, capture_flag)
     snapshot_trigger = SnapshotTrigger(snapshot_cooldown_s)
     send_snapshot = make_sender(snapshots_url, 2, "snapshot")
+
+    # Read the camera on its own thread so the stream runs at camera speed;
+    # the models below analyse whichever frame is newest when they're free.
+    def publish_frame(frame):
+        ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+        if ok:
+            latest_frame.set(buf.tobytes())
+
+    grabber = FrameGrabber(cap, on_frame=publish_frame)
+    grabber.start()
     print(f"Starting detection on webcam {webcam_index} "
           f"(stream: http://localhost:{stream_port}/stream)...")
 else:
     print(f"Starting detection on {os.path.basename(video_path)} @ {fps:.1f} FPS...")
 
 frame_index = 0
-failed_reads = 0
+grabbed_version = 0
 
 while cap.isOpened():
     t_frame_start = time.time()
 
-    ret, frame = cap.read()
-    if not ret:
-        if is_webcam:
-            # Webcams occasionally drop a frame; give up after ~3 s of failures
-            failed_reads += 1
-            if failed_reads >= 30:
-                print(f"Error: Lost webcam {webcam_index} (no frames)")
-                break
-            time.sleep(0.1)
+    if is_webcam:
+        new_version, frame = grabber.wait_newer(grabbed_version, timeout=1.0)
+        if grabber.lost:
+            print(f"Error: Lost webcam {webcam_index} (no frames)")
+            break
+        if new_version == grabbed_version:
             continue
-        # Loop video playback seamlessly when finished
-        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        grabbed_version = new_version
+    else:
         ret, frame = cap.read()
         if not ret:
-            break
-    failed_reads = 0
+            # Loop video playback seamlessly when finished
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            ret, frame = cap.read()
+            if not ret:
+                break
     frame_index += 1
-
-    if is_webcam:
-        ok, jpeg_buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
-        if ok:
-            latest_frame.set(jpeg_buf.tobytes())
 
     # Run primary YOLO inference on the current frame
     results = model(frame, conf=0.25, verbose=False)
@@ -280,9 +286,11 @@ while cap.isOpened():
     send_frame_assessment(frame_payload)
 
     # Save this frame as a snapshot on detection (cooldown) or manual request
-    if is_webcam and ok:
+    if is_webcam:
         trigger_kind = snapshot_trigger.check(fire_detected, smoke_detected, capture_flag.consume())
-        if trigger_kind:
+        # Encode the analysed frame (not the newest one) so the saved boxes match it
+        ok, jpeg_buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80]) if trigger_kind else (False, None)
+        if ok:
             send_snapshot({
                 "imageBase64": base64.b64encode(jpeg_buf.tobytes()).decode("ascii"),
                 "trigger": trigger_kind,
@@ -296,4 +304,6 @@ while cap.isOpened():
         if sleep_for > 0:
             time.sleep(sleep_for)
 
+if is_webcam:
+    grabber.stop()
 cap.release()
