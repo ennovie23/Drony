@@ -15,6 +15,9 @@ import SimulateBtn from "../components/fire/SimulateBtn";
 import { API_BASE_URL } from "../config";
 import { toModelResult } from "../utils/snapshots";
 
+// Box coordinates are percentages; webcam boxes carry 4 decimals, so show one.
+const pct = (v) => Number(Number(v).toFixed(1));
+
 export default function FireAssessment() {
   useNow(5000);
   const { drone, site, fireSnapshots, analyzing, captureSnapshot, videoSource } =
@@ -143,10 +146,10 @@ export default function FireAssessment() {
                           {d.confidence.toFixed(2)}
                         </td>
                         <td className="mono">
-                          {d.box.x}%, {d.box.y}%
+                          {pct(d.box.x)}%, {pct(d.box.y)}%
                         </td>
                         <td className="mono">
-                          {d.box.w}% × {d.box.h}%
+                          {pct(d.box.w)}% × {pct(d.box.h)}%
                         </td>
                       </tr>
                     ))}
