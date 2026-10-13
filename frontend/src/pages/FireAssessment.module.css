@@ -30,9 +30,14 @@
 
 /* ── Snapshot strip ────────────────────────────────────── */
 .strip {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 10px;
+    padding-bottom: 6px; /* room for the scrollbar */
+}
+
+/* Eight tiles fit across; more scroll sideways instead of adding rows */
+.strip > * {
+    flex: 0 0 calc((100% - 7 * 10px) / 8);
+    min-width: 130px;
 }
 
 .snap {
@@ -91,4 +96,9 @@
     border-radius: 3px;
     background: var(--surface-sunken);
     color: var(--text-muted);
+}
+
+/* The empty message spans the row rather than taking one tile's width */
+.strip > .stripEmpty {
+    flex: 1 0 100%;
 }

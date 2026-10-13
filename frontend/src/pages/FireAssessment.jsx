@@ -11,6 +11,7 @@ import { useAppData } from "../context/AppDataContext";
 import { formatTime, timeAgo } from "../utils/format";
 import useNow from "../hooks/useNow";
 import SimulateBtn from "../components/fire/SimulateBtn";
+import ScrollStrip from "../components/shared/ScrollStrip";
 
 import { API_BASE_URL } from "../config";
 import { toModelResult } from "../utils/snapshots";
@@ -454,7 +455,7 @@ export default function FireAssessment() {
           title={`Snapshots (${fireSnapshots.length})`}
           meta="Click a snapshot to view its result"
         >
-          <div className={styles.strip}>
+          <ScrollStrip className={styles.strip}>
             {analyzing && (
               <div className={`${styles.snap} ${styles.pending}`}>
                 <div className={styles.pendingThumb}>Analysing…</div>
@@ -462,7 +463,7 @@ export default function FireAssessment() {
               </div>
             )}
             {!analyzing && fireSnapshots.length === 0 && (
-              <p className={table.empty}>
+              <p className={`${table.empty} ${styles.stripEmpty}`}>
                 No snapshots yet — fire detections will appear here
               </p>
             )}
@@ -491,7 +492,7 @@ export default function FireAssessment() {
                 </span>
               </button>
             ))}
-          </div>
+          </ScrollStrip>
         </Card>
       </div>
     </div>

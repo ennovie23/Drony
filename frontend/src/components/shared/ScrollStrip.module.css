@@ -1,0 +1,50 @@
+.wrap {
+    position: relative;
+}
+
+.row {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+}
+
+.row > * {
+    scroll-snap-align: start;
+}
+
+.arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+}
+
+.arrow:hover {
+    border-color: var(--text-faint);
+}
+
+.arrow svg {
+    width: 18px;
+    height: 18px;
+}
+
+.left {
+    left: -6px;
+}
+
+.right {
+    right: -6px;
+}
