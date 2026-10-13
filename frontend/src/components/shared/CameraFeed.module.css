@@ -1,12 +1,14 @@
+/* Overlays sit on imagery, so they use fixed scrim colours in both themes. */
 .feed {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 10;
-    background-color: #0b0d0c;
+    height: 100%;
+    min-height: 280px;
+    background-color: #16181A;
+    border-radius: 4px;
     overflow: hidden;
-    color: #edeae3;
-    font-size: 10px;
-    letter-spacing: 1.2px;
+    color: #E6E3DC;
+    font-size: 12px;
 }
 
 .media {
@@ -24,110 +26,58 @@
     filter: grayscale(1) contrast(1.5) sepia(1) hue-rotate(-40deg) saturate(3.5) brightness(0.95);
 }
 
-.scanlines {
+.topRight,
+.bottom {
     position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 3px);
-    pointer-events: none;
-}
-
-.corner {
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border: 0 solid rgba(237, 234, 227, 0.7);
-}
-
-.tl { top: 14px; left: 14px; border-top-width: 1.5px; border-left-width: 1.5px; }
-.tr { top: 14px; right: 14px; border-top-width: 1.5px; border-right-width: 1.5px; }
-.bl { bottom: 14px; left: 14px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
-.br { bottom: 14px; right: 14px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
-
-.hudTop,
-.hudBottom {
-    position: absolute;
-    left: 40px;
-    right: 40px;
-    display: flex;
-    justify-content: space-between;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-.hudTop { top: 22px; }
-.hudBottom { bottom: 22px; }
-
-.rec {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    z-index: 2;
+}
+
+.topRight { top: 10px; right: 10px; }
+.bottom { bottom: 10px; left: 10px; right: 10px; justify-content: space-between; }
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(22, 24, 26, 0.82);
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
 }
 
 .recDot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background-color: #ef4444;
+    background-color: #E8806A;
 }
-
-.recOn {
-    animation: blink 1s steps(2, start) infinite;
-}
-
-.crosshair {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 28px;
-    height: 28px;
-    transform: translate(-50%, -50%);
-    border: 1px solid rgba(237, 234, 227, 0.35);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.crosshair::before,
-.crosshair::after {
-    content: '';
-    position: absolute;
-    background-color: rgba(237, 234, 227, 0.5);
-}
-
-.crosshair::before { left: 50%; top: -8px; bottom: -8px; width: 1px; }
-.crosshair::after { top: 50%; left: -8px; right: -8px; height: 1px; }
 
 .box {
     position: absolute;
-    border: 1.5px solid #ef4444;
-    background-color: rgba(239, 68, 68, 0.08);
+    border: 2px solid #F5B83D;
+    border-radius: 2px;
+    transition: opacity 0.2s ease;
 }
 
 .boxLabel {
     position: absolute;
-    top: -18px;
-    left: -1.5px;
-    padding: 1px 6px;
-    background-color: #ef4444;
-    color: #fff;
-    font-size: 9px;
+    top: 4px;
+    left: 4px;
+    padding: 1px 5px;
+    background-color: #F5B83D;
+    color: #1B1D20;
+    font-size: 12px;
+    font-weight: 500;
     white-space: nowrap;
 }
 
-.box {
-    transition: opacity 0.2s ease, box-shadow 0.2s ease;
-}
-
 .boxHighlight {
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+    border-width: 3px;
 }
 
 .boxDim {
-    opacity: 0.3;
-}
-
-@keyframes blink {
-    to { visibility: hidden; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .recOn { animation: none; }
+    opacity: 0.35;
 }

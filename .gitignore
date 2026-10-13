@@ -15,3 +15,5 @@ dist/
 # IDEs
 .vscode/
 .idea/
+
+.superpowers/

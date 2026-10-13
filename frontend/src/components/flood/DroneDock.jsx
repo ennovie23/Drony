@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { ArrowDownToLine, X } from 'lucide-react';
 import styles from './DroneDock.module.css';
-import ui from '../shared/ui.module.css';
-import StatusDot from '../shared/StatusDot';
+import { Card, Chip, Button } from '../ui';
 import { useAppData } from '../../context/AppDataContext';
 import { dropPoints } from '../../data/mock';
 
@@ -38,33 +37,26 @@ export default function DroneDock() {
     };
 
     return (
-        <div className={styles.dock}>
-            <div className={styles.head}>
-                <p className={ui.sectionTag}>— PAYLOAD DOCK · FLOOD MODULES</p>
-                <span className={ui.status}>
-                    <StatusDot value={latch} />
-                    LATCH {latch}
-                </span>
-            </div>
-
+        <Card title="Payload dock · flood modules" meta={<>Latch <Chip value={latch} /></>}>
             <div className={styles.columns}>
                 <div>
-                    <p className={ui.label}>IN DOCK ({docked.length}/{DOCK_SLOTS})</p>
+                    <p className={styles.label}>In dock ({docked.length}/{DOCK_SLOTS})</p>
                     <div className={styles.slots}>
                         {slots.map((m, i) =>
                             m ? (
                                 <button
                                     key={m.id}
+                                    type="button"
                                     className={`${styles.slot} ${styles.slotFilled} ${deployingId === m.id ? styles.slotOn : ''}`}
                                     onClick={() => startDeploy(m.id)}>
-                                    <span>SLOT {i + 1}</span>
-                                    <span className={styles.slotId}>{m.id}</span>
-                                    <span>BATT {m.battery}%</span>
+                                    <span>Slot {i + 1}</span>
+                                    <span className={`${styles.slotId} mono`}>{m.id}</span>
+                                    <span>Batt <span className="mono">{m.battery}%</span></span>
                                 </button>
                             ) : (
                                 <div key={i} className={styles.slot}>
-                                    <span>SLOT {i + 1}</span>
-                                    <span>EMPTY</span>
+                                    <span>Slot {i + 1}</span>
+                                    <span>Empty</span>
                                 </div>
                             ),
                         )}
@@ -73,28 +65,27 @@ export default function DroneDock() {
                     {deployingId ? (
                         <div className={styles.deployBox}>
                             <p className={styles.hint}>
-                                Choose where the drone drops <strong>{deployingId}</strong>.
+                                Choose where the drone drops <strong className="mono">{deployingId}</strong>.
                             </p>
                             <div className={styles.dropList}>
                                 {freePoints.map((p) => (
                                     <button
                                         key={p.id}
+                                        type="button"
                                         className={`${styles.dropItem} ${dropPointId === p.id ? styles.dropOn : ''}`}
                                         onClick={() => setDropPointId(p.id)}>
                                         <span>{p.place}</span>
-                                        <span className={styles.muted}>{p.id}</span>
+                                        <span className={`${styles.muted} mono`}>{p.id}</span>
                                     </button>
                                 ))}
                                 {freePoints.length === 0 && <p className={styles.hint}>All drop points are in use.</p>}
                             </div>
                             <div className={styles.actions}>
-                                <button className={ui.btnAccent} disabled={!chosenPoint} onClick={confirmDeploy}>
-                                    <ArrowDownToLine size={14} />
-                                    <span>{chosenPoint ? `DROP AT ${chosenPoint.id}` : 'SELECT A POINT'}</span>
-                                </button>
-                                <button className={ui.btn} onClick={() => startDeploy(null)}>
-                                    CANCEL
-                                </button>
+                                <Button variant="primary" disabled={!chosenPoint} onClick={confirmDeploy}>
+                                    <ArrowDownToLine />
+                                    {chosenPoint ? `Drop at ${chosenPoint.id}` : 'Select a point'}
+                                </Button>
+                                <Button onClick={() => startDeploy(null)}>Cancel</Button>
                             </div>
                         </div>
                     ) : (
@@ -105,20 +96,18 @@ export default function DroneDock() {
                 </div>
 
                 <div>
-                    <p className={ui.label}>ON THE WATER ({out.length})</p>
+                    <p className={styles.label}>On the water ({out.length})</p>
                     <div className={styles.outList}>
                         {out.map((m) => (
                             <div key={m.id} className={styles.outItem}>
-                                <span className={styles.slotId}>{m.id}</span>
+                                <span className={`${styles.slotId} mono`}>{m.id}</span>
                                 <span className={styles.muted}>{m.place}</span>
                                 {m.status === 'DEPLOYING' ? (
-                                    <span className={ui.status}>
-                                        <StatusDot tone="warn" pulse /> DROPPING
-                                    </span>
+                                    <Chip tone="warn">Dropping</Chip>
                                 ) : (
-                                    <button className={`${ui.btnDanger} ${ui.btnSmall}`} onClick={() => handleRecall(m)}>
-                                        <X size={11} /> RECALL
-                                    </button>
+                                    <Button variant="danger" size="sm" onClick={() => handleRecall(m)}>
+                                        <X /> Recall
+                                    </Button>
                                 )}
                             </div>
                         ))}
@@ -126,6 +115,6 @@ export default function DroneDock() {
                     </div>
                 </div>
             </div>
-        </div>
+        </Card>
     );
 }

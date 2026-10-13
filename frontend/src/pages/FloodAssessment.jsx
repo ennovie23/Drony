@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import styles from './Assessment.module.css';
-import ui from '../components/shared/ui.module.css';
-import PageHeader from '../components/shared/PageHeader';
+import styles from './FloodAssessment.module.css';
+import table from '../components/ui/Table.module.css';
+import TopBar from '../components/shared/TopBar';
 import TacticalMap from '../components/shared/TacticalMap';
 import LineChart from '../components/shared/LineChart';
-import StatusDot from '../components/shared/StatusDot';
+import { chartWindow } from '../components/shared/chartScale';
+import { Card, Readout, Chip, KeyValue } from '../components/ui';
+import { formatStatus } from '../components/ui/format';
 import { useAppData } from '../context/AppDataContext';
 import { jsnSpec } from '../data/mock';
 import { echoMicros, readingStatus, distanceChange, formatChange, reportingSensors } from '../utils/flood';
@@ -13,12 +15,18 @@ import useNow from '../hooks/useNow';
 
 // History keeps one distance sample every 5 minutes.
 const SAMPLE_MINUTES = 5;
-const SERIES_COLORS = ['var(--flood)', 'var(--teal)', '#a78bfa', '#f472b6', '#facc15'];
+const SERIES_COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)', 'var(--series-5)'];
 const MAP_LAYERS = { path: false, fire: false, flood: true };
+// Default chart window (cm), widened when readings leave it. Inverted, so water rising
+// (distance falling) draws upward.
+const CHART_WINDOW = { min: 120, max: 210, pad: 10 };
+const LOW_BATTERY = 50;
+
+const ago = (iso) => formatStatus(timeAgo(iso));
 
 export default function FloodAssessment() {
     useNow(5000);
-    const { drone, site, modules } = useAppData();
+    const { site, modules } = useAppData();
     const [selectedId, setSelectedId] = useState(null);
 
     const sensors = reportingSensors(modules);
@@ -27,158 +35,168 @@ export default function FloodAssessment() {
     const latest = sensors.reduce((top, m) => (m.lastReadingAt > (top?.lastReadingAt ?? '') ? m : top), null);
     const weakest = sensors.reduce((low, m) => (m.battery < (low?.battery ?? Infinity) ? m : low), null);
     const selected = sensors.find((m) => m.id === selectedId) ?? sensors[0];
+    const range = chartWindow(sensors.flatMap((m) => m.history), CHART_WINDOW);
     const colorOf = (id) => SERIES_COLORS[sensors.findIndex((m) => m.id === id) % SERIES_COLORS.length];
 
-    const kpis = [
-        { label: 'SENSORS REPORTING', value: `${sensors.length}/${modules.length}`, sub: `${docked.length} STILL IN DOCK` },
-        { label: 'LAST READING', value: latest ? timeAgo(latest.lastReadingAt) : '—', sub: `EVERY ${jsnSpec.sampleSeconds} S` },
-        { label: 'VALID READINGS', value: `${valid.length}/${sensors.length}`, sub: `RANGE ${jsnSpec.minCm}–${jsnSpec.maxCm} CM` },
-        { label: 'LOWEST BATTERY', value: weakest ? `${weakest.battery}%` : '—', sub: weakest ? weakest.id : 'NO DATA' },
-    ];
-
     return (
-        <div className={styles.container}>
-            <PageHeader
-                eyebrow={<span>{drone.id} · FLOATING {jsnSpec.model} MODULES</span>}
-                title="FLOOD SENSORS"
-                subtitle={`${site.area} · ${site.city}`}
-                stats={[
-                    { label: 'SENSOR', value: jsnSpec.model },
-                    { label: 'LINK', value: 'ESP32 · LORA' },
-                ]}
+        <div className={styles.page}>
+            <TopBar
+                title="Flood sensors"
+                subtitle={`Floating ${jsnSpec.model} modules · ${site.area}`}
+                actions={
+                    <>
+                        <span>Sensor <span className="mono">{jsnSpec.model}</span></span>
+                        <span>Link ESP32 · LoRa</span>
+                    </>
+                }
             />
 
             <div className={styles.body}>
-                <div className={styles.kpiRow}>
-                    {kpis.map((k) => (
-                        <div key={k.label} className={styles.kpi}>
-                            <p className={ui.label}>{k.label}</p>
-                            <p className={ui.bigValue}>{k.value}</p>
-                            <p className={styles.kpiSub}>{k.sub}</p>
-                        </div>
-                    ))}
+                <div className={styles.kpis}>
+                    <Card>
+                        <Readout label="Sensors reporting" value={`${sensors.length}/${modules.length}`} sub={`${docked.length} still in dock`} />
+                    </Card>
+                    <Card>
+                        <Readout label="Last reading" value={latest ? ago(latest.lastReadingAt) : '—'} sub={`Every ${jsnSpec.sampleSeconds} s`} />
+                    </Card>
+                    <Card>
+                        <Readout label="Valid readings" value={`${valid.length}/${sensors.length}`} sub={`Range ${jsnSpec.minCm}–${jsnSpec.maxCm} cm`} />
+                    </Card>
+                    <Card>
+                        <Readout
+                            label="Lowest battery"
+                            value={weakest ? weakest.battery : '—'}
+                            unit={weakest ? '%' : undefined}
+                            sub={weakest ? weakest.id : 'No data'}
+                            tone={weakest && weakest.battery < LOW_BATTERY ? 'warn' : undefined}
+                        />
+                    </Card>
                 </div>
 
-                <div className={styles.grid}>
-                    <div className={styles.column}>
-                        <div>
-                            <div className={styles.cardHead}>
-                                <p className={ui.sectionTag}>— SENSOR POSITIONS</p>
-                                <span className={ui.label}>CLICK A SENSOR</span>
-                            </div>
-                            <TacticalMap layers={MAP_LAYERS} selectedId={selected?.id} onSelect={setSelectedId} />
-                        </div>
+                <div className={styles.middle}>
+                    <Card title="Sensor positions" meta="Click a sensor" className={styles.stretch}>
+                        <TacticalMap layers={MAP_LAYERS} selectedId={selected?.id} onSelect={setSelectedId} />
+                    </Card>
 
-                        <div className={styles.card}>
-                            <div className={styles.cardHead}>
-                                <p className={ui.sectionTag}>— MEASURED DISTANCE</p>
-                                <span className={ui.label}>CM / {SAMPLE_MINUTES} MIN</span>
-                            </div>
-                            <LineChart
-                                series={sensors.map((m) => ({ id: m.id, values: m.history, color: colorOf(m.id) }))}
-                                max={250}
-                                height={190}
-                            />
-                            <div className={styles.legend}>
-                                {sensors.map((m) => (
-                                    <span key={m.id} className={styles.legendItem}>
-                                        <span className={styles.swatch} style={{ backgroundColor: colorOf(m.id) }}></span>
-                                        {m.id} · {m.place}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className={styles.column}>
-                        <div className={styles.card}>
-                            {selected ? (
-                                <>
-                                    <div className={styles.cardHead}>
-                                        <p className={ui.sectionTag}>— {selected.id} · {selected.place}</p>
-                                        <span className={ui.status}>
-                                            <StatusDot value={readingStatus(selected.distance)} />
-                                            {readingStatus(selected.distance)}
-                                        </span>
-                                    </div>
-                                    <p className={styles.sensorValue}>
-                                        {selected.distance}
-                                        <span className={ui.unit}>cm measured distance</span>
-                                    </p>
-                                    <div className={styles.kv}>
-                                        <div className={styles.kvRow}><span>CHANGE (LAST {SAMPLE_MINUTES} MIN)</span><span>{formatChange(distanceChange(selected))}</span></div>
-                                        <div className={styles.kvRow}><span>FIRST READING</span><span>{selected.history[0]} cm</span></div>
-                                        <div className={styles.kvRow}><span>ECHO TIME</span><span>{echoMicros(selected.distance)} µs</span></div>
-                                        <div className={styles.kvRow}><span>LAST READING</span><span>{timeAgo(selected.lastReadingAt)}</span></div>
-                                        <div className={styles.kvRow}><span>DEPLOYED</span><span>{timeAgo(selected.deployedAt)}</span></div>
-                                        <div className={styles.kvRow}><span>BATTERY</span><span>{selected.battery}%</span></div>
-                                        <div className={styles.kvRow}>
-                                            <span>SIGNAL</span>
-                                            <span className={ui.status}>
-                                                <StatusDot value={selected.lora} /> {selected.lora} · {selected.signal} dBm
-                                            </span>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <p className={ui.empty}>NO SENSORS REPORTING</p>
-                            )}
-                        </div>
-
-                        <div className={styles.card}>
-                            <p className={ui.sectionTag}>— SENSOR · {jsnSpec.model}</p>
-                            <div className={styles.kv}>
-                                <div className={styles.kvRow}><span>TYPE</span><span>WATERPROOF ULTRASONIC</span></div>
-                                <div className={styles.kvRow}><span>RANGE</span><span>{jsnSpec.minCm}–{jsnSpec.maxCm} cm</span></div>
-                                <div className={styles.kvRow}><span>ACCURACY</span><span>± {jsnSpec.accuracyCm} cm</span></div>
-                                <div className={styles.kvRow}><span>FREQUENCY</span><span>{jsnSpec.frequencyKhz} kHz</span></div>
-                                <div className={styles.kvRow}><span>SAMPLE RATE</span><span>EVERY {jsnSpec.sampleSeconds} S</span></div>
-                                <div className={styles.kvRow}><span>MODULE</span><span>FLOATING · ESP32 · LORA</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <p className={ui.sectionTag}>— LATEST READINGS ({sensors.length})</p>
-                    {sensors.length === 0 ? (
-                        <p className={ui.empty}>NO SENSORS REPORTING</p>
-                    ) : (
-                        <div className={styles.table}>
-                            <div className={`${styles.sensorRow} ${styles.th}`}>
-                                <span>SENSOR</span>
-                                <span>PLACE</span>
-                                <span>DISTANCE</span>
-                                <span>CHANGE</span>
-                                <span>ECHO</span>
-                                <span>READING</span>
-                                <span>BATTERY</span>
-                                <span>SIGNAL</span>
-                                <span>UPDATED</span>
-                            </div>
+                    <Card title="Distance to water" meta={`cm · every ${SAMPLE_MINUTES} min`} className={styles.stretch}>
+                        <LineChart
+                            series={sensors.map((m) => ({ id: m.id, values: m.history, color: colorOf(m.id) }))}
+                            min={range.min}
+                            max={range.max}
+                            invert
+                            height={190}
+                        />
+                        <div className={styles.legend}>
                             {sensors.map((m) => (
-                                <button
-                                    key={m.id}
-                                    className={`${styles.sensorRow} ${styles.trBody} ${selected?.id === m.id ? styles.trActive : ''}`}
-                                    onClick={() => setSelectedId(m.id)}>
-                                    <span className={styles.sensorId}>
-                                        <span className={styles.swatch} style={{ backgroundColor: colorOf(m.id) }}></span>
-                                        {m.id}
-                                    </span>
-                                    <span className={styles.muted}>{m.place}</span>
-                                    <span>{m.distance} cm</span>
-                                    <span>{formatChange(distanceChange(m))}</span>
-                                    <span className={styles.muted}>{echoMicros(m.distance)} µs</span>
-                                    <span className={ui.status}>
-                                        <StatusDot value={readingStatus(m.distance)} /> {readingStatus(m.distance)}
-                                    </span>
-                                    <span>{m.battery}%</span>
-                                    <span className={styles.muted}>{m.signal} dBm</span>
-                                    <span className={styles.muted}>{timeAgo(m.lastReadingAt)}</span>
-                                </button>
+                                <span key={m.id} className={styles.legendItem}>
+                                    <span className={styles.swatch} style={{ backgroundColor: colorOf(m.id) }}></span>
+                                    <span className="mono">{m.id}</span> · {m.place}
+                                </span>
                             ))}
                         </div>
+                        <p className={styles.note}>Axis inverted: a rising line means rising water.</p>
+                    </Card>
+
+                    {selected ? (
+                        <Card title={`${selected.id} · ${selected.place}`} meta={<Chip value={readingStatus(selected.distance)} />}>
+                            <Readout label="Measured distance" value={selected.distance} unit="cm to water" size="hero" />
+                            <div className={styles.detail}>
+                                <KeyValue
+                                    rows={[
+                                        { label: `Change (last ${SAMPLE_MINUTES} min)`, value: formatChange(distanceChange(selected)) },
+                                        { label: 'First reading', value: `${selected.history[0]} cm` },
+                                        { label: 'Echo time', value: `${echoMicros(selected.distance)} µs` },
+                                        { label: 'Last reading', value: ago(selected.lastReadingAt) },
+                                        { label: 'Deployed', value: ago(selected.deployedAt) },
+                                        { label: 'Battery', value: `${selected.battery}%` },
+                                        {
+                                            label: 'Signal',
+                                            value: (
+                                                <>
+                                                    <Chip value={selected.lora} />
+                                                    <span className="mono">{selected.signal} dBm</span>
+                                                </>
+                                            ),
+                                        },
+                                    ]}
+                                />
+                            </div>
+                        </Card>
+                    ) : (
+                        <Card title="Selected sensor">
+                            <p className={table.empty}>No sensors reporting</p>
+                        </Card>
                     )}
+                </div>
+
+                <div className={styles.lower}>
+                    <Card title={`Latest readings (${sensors.length})`}>
+                        {sensors.length === 0 ? (
+                            <p className={table.empty}>No sensors reporting</p>
+                        ) : (
+                            <div className={styles.tableWrap}>
+                                <table className={table.table}>
+                                    <thead>
+                                        <tr>
+                                            <th>Sensor</th>
+                                            <th>Place</th>
+                                            <th>Distance</th>
+                                            <th>Change</th>
+                                            <th>Echo</th>
+                                            <th>Reading</th>
+                                            <th>Battery</th>
+                                            <th>Signal</th>
+                                            <th>Updated</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {sensors.map((m) => (
+                                            <tr
+                                                key={m.id}
+                                                className={`${table.clickable} ${selected?.id === m.id ? table.active : ''}`}
+                                                onClick={() => setSelectedId(m.id)}>
+                                                <td className="mono">
+                                                    {/* Real button so the row can be selected from the keyboard. */}
+                                                    <button
+                                                        type="button"
+                                                        className={styles.rowButton}
+                                                        aria-pressed={selected?.id === m.id}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedId(m.id);
+                                                        }}>
+                                                        <span className={styles.swatch} style={{ backgroundColor: colorOf(m.id) }}></span>
+                                                        {m.id}
+                                                    </button>
+                                                </td>
+                                                <td className={table.muted}>{m.place}</td>
+                                                <td className="mono">{m.distance} cm</td>
+                                                <td className="mono">{formatChange(distanceChange(m))}</td>
+                                                <td className={`mono ${table.muted}`}>{echoMicros(m.distance)} µs</td>
+                                                <td><Chip value={readingStatus(m.distance)} /></td>
+                                                <td className="mono">{m.battery}%</td>
+                                                <td className={`mono ${table.muted}`}>{m.signal} dBm</td>
+                                                <td className={table.muted}>{ago(m.lastReadingAt)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </Card>
+
+                    <Card title={`Sensor · ${jsnSpec.model}`}>
+                        <KeyValue
+                            rows={[
+                                { label: 'Type', value: <span>Waterproof ultrasonic</span> },
+                                { label: 'Range', value: `${jsnSpec.minCm}–${jsnSpec.maxCm} cm` },
+                                { label: 'Accuracy', value: `± ${jsnSpec.accuracyCm} cm` },
+                                { label: 'Frequency', value: `${jsnSpec.frequencyKhz} kHz` },
+                                { label: 'Sample rate', value: `Every ${jsnSpec.sampleSeconds} s` },
+                                { label: 'Module', value: <span>Floating · ESP32 · LoRa</span> },
+                            ]}
+                        />
+                    </Card>
                 </div>
             </div>
         </div>

@@ -1,12 +1,14 @@
 import styles from './LineChart.module.css';
+import { makeYScale } from './chartScale';
 
 const W = 400;
 const H = 160;
 const PAD = { top: 10, right: 8, bottom: 20, left: 34 };
 
 // Minimal SVG line chart. `series` is [{ id, values, color }]; `thresholds` draws
-// labelled horizontal guides (e.g. flood depth levels).
-export default function LineChart({ series, thresholds = [], max, unit = '', xLabels = [], height = H }) {
+// labelled horizontal guides (e.g. flood depth levels). `invert` puts `min` at the top,
+// so a falling value (e.g. distance to water) draws as a rising line.
+export default function LineChart({ series, thresholds = [], min = 0, max, invert = false, unit = '', xLabels = [], height = H }) {
     const all = series.flatMap((s) => s.values);
     const top = max ?? Math.max(1, ...all, ...thresholds.map((t) => t.value)) * 1.1;
     const longest = Math.max(2, ...series.map((s) => s.values.length));
@@ -14,8 +16,8 @@ export default function LineChart({ series, thresholds = [], max, unit = '', xLa
     const innerH = height - PAD.top - PAD.bottom;
 
     const x = (i) => PAD.left + (i / (longest - 1)) * innerW;
-    const y = (v) => PAD.top + innerH - (v / top) * innerH;
-    const ticks = [0, 0.5, 1].map((f) => Math.round(top * f * 10) / 10);
+    const y = makeYScale({ min, max: top, top: PAD.top, height: innerH, invert });
+    const ticks = [min, (min + top) / 2, top].map((t) => Math.round(t * 10) / 10);
 
     return (
         <svg className={styles.chart} viewBox={`0 0 ${W} ${height}`} role="img">
@@ -46,7 +48,7 @@ export default function LineChart({ series, thresholds = [], max, unit = '', xLa
                     <g key={s.id}>
                         {s.fill && (
                             <polygon
-                                points={`${x(0)},${y(0)} ${points} ${x(last)},${y(0)}`}
+                                points={`${x(0)},${y(min)} ${points} ${x(last)},${y(min)}`}
                                 fill={s.color}
                                 fillOpacity="0.08"
                             />

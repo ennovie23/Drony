@@ -1,49 +1,86 @@
+/* Night-ops palette. Light is the default; [data-theme='dark'] swaps it.
+   Colour carries meaning only: attention = needs a look, bad = severe, ok = fine, water = flood. */
 :root {
-  /* Dark mode (default) */
-  --bg-color: #111312;
-  --text-color: #EDEAE3;
-  --text-secondary: #9ca3af;
-  --border-color: #272928;
-  --icon-color: #7C7972;
-  --icon-hover: #ffffff;
-  --alert-bg: rgba(239, 68, 68, 0.05);
-  --video-container: #0b0d0c;
-  --map-bg: #0b0d0c;
-  --map-line: rgba(255, 255, 255, 0.08);
-  --panel-hover: rgba(255, 255, 255, 0.03);
+  --bg: #F3F1EC;
+  --surface: #FFFFFF;
+  --surface-sunken: #E9E6DE;
+  --rail: #E9E6DF;
+  --line: #DDD9D0;
 
-  /* Status & hazard tones (shared by both themes) */
-  --ok: #22c55e;
-  --warn: #f0a514;
-  --danger: #ef4444;
-  --fire: #f97316;
-  --flood: #38bdf8;
-  --teal: #2dd4bf;
+  --text: #3A3B3E;
+  --text-strong: #141517;
+  --text-muted: #5B5F64;
+  --text-faint: #63666B;
+
+  --attention: #E6A52A;
+  --attention-text: #8C5B0F;
+  --on-attention: #141517;
+  --warn-soft: #F6EAD2;
+  --bad: #B04128;
+  --bad-soft: #F8E4DE;
+  --ok: #2B7343;
+  --ok-soft: #E0EFE4;
+  --water: #2C6A91;
+  --water-fill: #8DB6CF;
+
+  --series-1: #2C6A91;
+  --series-2: #7A5FB0;
+  --series-3: #9A7B3C;
+  --series-4: #3E8478;
+  --series-5: #8A6A80;
+
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Shared by TopBar and the sidebar wordmark so their bottom lines meet. */
+  --topbar-h: 56px;
 }
 
-:root[data-theme='light'] {
-  /* Light mode */
-  --bg-color: #ffffff;
-  --text-color: #111312;
-  --text-secondary: #4b5563;
-  --border-color: #e5e5e5;
-  --icon-color: #71717a;
-  --icon-hover: #111312;
-  --alert-bg: rgba(239, 68, 68, 0.06);
-  --video-container: #dad9d9;
-  --map-bg: #f4f3f0;
-  --map-line: rgba(17, 19, 18, 0.10);
-  --panel-hover: rgba(17, 19, 18, 0.03);
+:root[data-theme='dark'] {
+  --bg: #1B1D20;
+  --surface: #212428;
+  --surface-sunken: #202326;
+  --rail: #16181A;
+  --line: #2C2F33;
+
+  --text: #D8D5CE;
+  --text-strong: #F2EFE8;
+  --text-muted: #9A9DA2;
+  --text-faint: #888C91;
+
+  --attention: #F5B83D;
+  --attention-text: #F5B83D;
+  --on-attention: #1B1D20;
+  --warn-soft: #3A2C12;
+  --bad: #E8806A;
+  --bad-soft: #3A2420;
+  --ok: #8FCB9B;
+  --ok-soft: #1F3226;
+  --water: #7FB7D9;
+  --water-fill: #3E6E8C;
+
+  --series-1: #7FB7D9;
+  --series-2: #B9A6E0;
+  --series-3: #C9B48A;
+  --series-4: #86C6B9;
+  --series-5: #D3A8C4;
 }
 
 body {
   margin: 0;
-  padding: 0;  
-  color: var(--text-color);
-  background-color: var(--bg-color);
-  font-family: 'IBM Plex Mono', monospace;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text);
+  background-color: var(--bg);
   overflow: hidden;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 #root,

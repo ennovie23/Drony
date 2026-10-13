@@ -1,9 +1,15 @@
+/* Boxes sit on imagery, so they use fixed amber and scrim colours in both themes. */
 .frame {
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    background-color: #000;
+    background-color: #16181A;
+    border-radius: 4px;
     overflow: hidden;
+}
+
+.small {
+    border-radius: 3px;
 }
 
 .image {
@@ -15,12 +21,12 @@
     display: block;
 }
 
-/* Matches the model's own output: blue boxes with a filled label tab. */
 .box {
     position: absolute;
-    border: 2px solid #2f4bff;
+    border: 2px solid #F5B83D;
+    border-radius: 2px;
     box-sizing: border-box;
-    transition: opacity 0.2s ease, border-color 0.2s ease;
+    transition: opacity 0.2s ease;
 }
 
 .small .box {
@@ -28,29 +34,24 @@
 }
 
 .boxOn {
-    border-color: #8fa0ff;
+    border-width: 3px;
     z-index: 2;
 }
 
 .boxDim {
-    opacity: 0.25;
+    opacity: 0.35;
 }
 
 .label {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 4px;
+    left: 4px;
     padding: 1px 5px;
-    background-color: #2f4bff;
-    color: #fff;
-    font-size: 10px;
-    letter-spacing: 0.3px;
+    background-color: #F5B83D;
+    color: #1B1D20;
+    font-size: 12px;
+    font-weight: 500;
     white-space: nowrap;
-}
-
-.boxOn .label {
-    background-color: #8fa0ff;
-    color: #0b0d0c;
 }
 
 .frameTag {
@@ -58,8 +59,8 @@
     right: 10px;
     bottom: 10px;
     padding: 3px 8px;
-    background-color: rgba(0, 0, 0, 0.65);
-    color: #edeae3;
-    font-size: 10px;
-    letter-spacing: 1.2px;
+    border-radius: 3px;
+    background-color: rgba(22, 24, 26, 0.85);
+    color: #E6E3DC;
+    font-size: 12px;
 }

@@ -1,27 +1,25 @@
 import { useState } from 'react';
 import styles from './MapPage.module.css';
-import ui from '../components/shared/ui.module.css';
-import PageHeader from '../components/shared/PageHeader';
+import TopBar from '../components/shared/TopBar';
 import TacticalMap from '../components/shared/TacticalMap';
-import DroneTelemetry from '../components/shared/DroneTelemetry';
-import StatusTable from '../components/shared/StatusTable';
-import StatusDot from '../components/shared/StatusDot';
+import { Card, Chip, KeyValue, Segmented } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 
 const LAYERS = [
-    { key: 'path', label: 'FLIGHT PATH' },
-    { key: 'fire', label: 'FIRE' },
-    { key: 'flood', label: 'FLOOD' },
+    { key: 'path', label: 'Flight path' },
+    { key: 'fire', label: 'Fire' },
+    { key: 'flood', label: 'Flood' },
 ];
 
+// Swatches use the same tokens TacticalMap draws with.
 const LEGEND = [
-    { swatch: styles.swDrone, label: 'DRONE' },
-    { swatch: styles.swPath, label: 'FLIGHT PATH' },
-    { swatch: styles.swHome, label: 'HOME POINT' },
-    { swatch: styles.swModule, label: 'FLOOD MODULE' },
-    { swatch: styles.swFlame, label: 'FLAME' },
-    { swatch: styles.swSmoke, label: 'SMOKE' },
-    { swatch: styles.swWater, label: 'FLOOD WATER' },
+    { swatch: styles.swDrone, label: 'Drone' },
+    { swatch: styles.swPath, label: 'Flight path' },
+    { swatch: styles.swHome, label: 'Home point' },
+    { swatch: styles.swModule, label: 'Flood module' },
+    { swatch: styles.swFlame, label: 'Flame' },
+    { swatch: styles.swSmoke, label: 'Smoke' },
+    { swatch: styles.swWater, label: 'Flood water' },
 ];
 
 export default function MapPage() {
@@ -33,78 +31,63 @@ export default function MapPage() {
     const toggle = (key) => setLayers((prev) => ({ ...prev, [key]: !prev[key] }));
 
     return (
-        <div className={styles.container}>
-            <PageHeader
-                eyebrow={
-                    <>
-                        <span>{drone.id}</span>
-                        <span className={ui.status}>
-                            <StatusDot value={drone.flight} pulse />
-                            {drone.flight}
-                        </span>
-                    </>
-                }
-                title="SITE MAP"
+        <div className={styles.page}>
+            <TopBar
+                title="Site map"
                 subtitle={`${site.area} · ${site.coords}`}
-                actions={
-                    <div className={ui.segment}>
-                        {LAYERS.map((l) => (
-                            <button key={l.key} className={layers[l.key] ? ui.segmentOn : ''} onClick={() => toggle(l.key)}>
-                                {l.label}
-                            </button>
-                        ))}
-                    </div>
-                }
+                actions={<Segmented options={LAYERS} value={layers} onChange={toggle} multi />}
             />
 
             <div className={styles.layout}>
                 <div className={styles.mapArea}>
-                    <TacticalMap
-                        layers={layers}
-                        selectedId={selectedId}
-                        onSelect={setSelectedId}
-                        tall
-                    />
+                    <TacticalMap layers={layers} selectedId={selectedId} onSelect={setSelectedId} tall />
                 </div>
 
                 <aside className={styles.side}>
-                    <div className={ui.panel}>
-                        <p className={ui.sectionTag}>— SELECTED</p>
-                        {selectedId === 'drone' && <DroneTelemetry drone={drone} />}
-                        {selectedModule && (
-                            <StatusTable
-                                title="JSN SENSOR"
-                                tag={selectedModule.id}
+                    {selectedId === 'drone' && (
+                        <Card title="Selected · Drone" meta={<span className="mono">{drone.id}</span>}>
+                            <KeyValue
                                 rows={[
-                                    { label: 'STATUS', value: selectedModule.status, dot: true },
-                                    { label: 'PLACE', value: selectedModule.place },
-                                    { label: 'LORA', value: selectedModule.lora, dot: true },
-                                    { label: 'BATTERY', value: `${selectedModule.battery}%` },
-                                    { label: 'DISTANCE', value: `${selectedModule.distance} cm` },
+                                    { label: 'Battery', value: `${drone.battery}%` },
+                                    { label: 'GPS', value: <Chip value={drone.gps} /> },
+                                    { label: 'Link', value: <Chip value={drone.link} /> },
+                                    { label: 'Status', value: <Chip value={drone.status} /> },
+                                    { label: 'Flight', value: <Chip value={drone.flight} /> },
                                 ]}
                             />
-                        )}
-                        {!selectedModule && selectedId !== 'drone' && <p className={ui.muted}>Click a marker on the map.</p>}
-                    </div>
+                        </Card>
+                    )}
+                    {selectedModule && (
+                        <Card title="Selected · JSN sensor" meta={<span className="mono">{selectedModule.id}</span>}>
+                            <KeyValue
+                                rows={[
+                                    { label: 'Status', value: <Chip value={selectedModule.status} /> },
+                                    { label: 'Place', value: <span>{selectedModule.place}</span> },
+                                    { label: 'LoRa', value: <Chip value={selectedModule.lora} /> },
+                                    { label: 'Battery', value: `${selectedModule.battery}%` },
+                                    { label: 'Distance', value: selectedModule.distance == null ? '—' : `${selectedModule.distance} cm` },
+                                ]}
+                            />
+                        </Card>
+                    )}
+                    {!selectedModule && selectedId !== 'drone' && (
+                        <Card title="Selected">
+                            <p className={styles.hint}>Click a marker on the map.</p>
+                        </Card>
+                    )}
 
-                    <div className={ui.panel}>
-                        <p className={ui.sectionTag}>— POSITION</p>
-                        <div className={styles.kv}>
-                            <span>COORDINATES</span>
-                            <span>{site.coords}</span>
-                            <span>SECTOR</span>
-                            <span>{site.sector}</span>
-                            <span>ALTITUDE</span>
-                            <span>{drone.altitudeRel} m REL</span>
-                            <span>HEADING</span>
-                            <span>{String(drone.heading).padStart(3, '0')}°</span>
-                            <span>FROM HOME</span>
-                            <span>{drone.distanceHome} m</span>
-                        </div>
-                    </div>
+                    <Card title="Position" meta={site.sector}>
+                        <KeyValue
+                            rows={[
+                                { label: 'Coordinates', value: site.coords },
+                                { label: 'Altitude', value: `${drone.altitudeRel} m rel` },
+                                { label: 'Heading', value: `${String(drone.heading).padStart(3, '0')}°` },
+                                { label: 'From home', value: `${drone.distanceHome} m` },
+                            ]}
+                        />
+                    </Card>
 
-                    <div className={ui.panel}>
-                        <p className={ui.sectionTag}>— LEGEND</p>
+                    <Card title="Legend">
                         <div className={styles.legend}>
                             {LEGEND.map((l) => (
                                 <span key={l.label} className={styles.legendItem}>
@@ -113,7 +96,7 @@ export default function MapPage() {
                                 </span>
                             ))}
                         </div>
-                    </div>
+                    </Card>
                 </aside>
             </div>
         </div>

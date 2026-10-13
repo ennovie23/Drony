@@ -1,55 +1,47 @@
-.container {
+.page {
     display: flex;
     flex-direction: column;
     min-height: 100%;
-    color: var(--text-color);
 }
 
 .layout {
     flex: 1;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 14px;
+    padding: 14px;
 }
 
 .mapArea {
-    padding: 24px 28px;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .side {
-    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
 }
 
-.kv {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 10px 16px;
-    font-size: 11px;
-    letter-spacing: 0.8px;
-}
-
-.kv span:nth-child(odd) {
-    color: var(--icon-color);
-}
-
-.kv span:nth-child(even) {
-    text-align: right;
+.hint {
+    margin: 0;
+    color: var(--text-muted);
 }
 
 .legend {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
 }
 
 .legendItem {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: var(--text-secondary);
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text);
 }
 
 .swatch {
@@ -59,20 +51,10 @@
     box-sizing: border-box;
 }
 
-.swDrone { border: 2px solid var(--flood); border-radius: 50%; }
-.swPath { height: 0; border-top: 2px dashed var(--flood); }
-.swHome { border: 1px solid var(--icon-color); }
-.swModule { border: 1.5px solid var(--text-color); width: 10px; height: 10px; margin: 0 2px; }
-.swFlame { border: 2px solid var(--danger); border-radius: 50%; }
-.swSmoke { border: 1.5px solid var(--warn); border-radius: 50%; }
-.swWater { background: rgba(56, 189, 248, 0.25); border: 1px dashed var(--flood); }
-
-@media (max-width: 1100px) {
-    .layout {
-        grid-template-columns: 1fr;
-    }
-    .side {
-        border-left: none;
-        border-top: 1px solid var(--border-color);
-    }
-}
+.swDrone { border: 2px solid var(--attention); border-radius: 50%; }
+.swPath { height: 0; border-top: 2px dashed var(--text-muted); }
+.swHome { border: 2px solid var(--text-strong); }
+.swModule { background: var(--water); border-radius: 50%; width: 10px; height: 10px; margin: 0 2px; }
+.swFlame { background: var(--bad); border-radius: 50%; width: 10px; height: 10px; margin: 0 2px; }
+.swSmoke { background: var(--text-muted); opacity: 0.7; border-radius: 50%; width: 10px; height: 10px; margin: 0 2px; }
+.swWater { background: var(--water-fill); opacity: 0.8; border-radius: 2px; }

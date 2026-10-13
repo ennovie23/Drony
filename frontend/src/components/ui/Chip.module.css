@@ -1,0 +1,15 @@
+.chip {
+    display: inline-block;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.ok { color: var(--ok); background: var(--ok-soft); }
+.warn { color: var(--attention-text); background: var(--warn-soft); }
+.danger { color: var(--bad); background: var(--bad-soft); }
+.off { color: var(--text-muted); background: var(--surface-sunken); }

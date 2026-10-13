@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Check } from 'lucide-react';
 import styles from './Instrument.module.css';
 import { useAppData } from '../context/AppDataContext';
 import DroneDock from '../components/flood/DroneDock';
+import TopBar from '../components/shared/TopBar';
+import { Card, Readout, Chip, KeyValue, Button } from '../components/ui';
+import { formatStatus } from '../components/ui/format';
 
 const CARDINALS = [
     { label: 'N', angle: 0 },
@@ -14,6 +16,7 @@ const CARDINALS = [
 const CENTER = 300;
 const RING_RADIUS = 280;
 const CELL_COUNT = 6;
+const LOW_BATTERY = 30;
 
 // Point on a circle around the instrument centre, 0° = up, clockwise.
 function polar(radius, angle) {
@@ -24,21 +27,6 @@ function polar(radius, angle) {
 function jitter(value, spread, decimals = 1) {
     const next = value + (Math.random() - 0.5) * spread;
     return Number(next.toFixed(decimals));
-}
-
-function Stat({ label, value, unit, sub, icon, side }) {
-    return (
-        <div className={`${styles.stat} ${side === 'right' ? styles.statRight : ''}`}>
-            <span className={styles.connector}></span>
-            <p className={styles.statLabel}>{label}</p>
-            <p className={styles.statValue}>
-                {icon}
-                <span>{value}</span>
-                {unit && <span className={styles.statUnit}>{unit}</span>}
-            </p>
-            <p className={styles.statSub}>{sub}</p>
-        </div>
-    );
 }
 
 function Rotor({ x, y, spin }) {
@@ -73,20 +61,9 @@ function DroneView({ heading }) {
 
     return (
         <svg className={styles.droneSvg} viewBox="0 0 600 600" role="img" aria-label={`Drone top view, heading ${heading} degrees`}>
-            <defs>
-                <radialGradient id="instrumentGlow">
-                    <stop offset="0%" stopColor="rgba(45, 212, 191, 0.10)" />
-                    <stop offset="100%" stopColor="rgba(45, 212, 191, 0)" />
-                </radialGradient>
-                <linearGradient id="bodyFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#5b5d58" />
-                    <stop offset="100%" stopColor="#363834" />
-                </linearGradient>
-            </defs>
-
             {/* Satellite / beacon markers */}
             {satellites.map(([cx, cy], i) => (
-                <circle key={i} cx={cx} cy={cy} r="3.5" className={styles.satellite} />
+                <circle key={i} cx={cx} cy={cy} r="3" className={styles.satellite} />
             ))}
 
             {/* Compass ring rotates opposite to heading so the drone always points up */}
@@ -120,7 +97,6 @@ function DroneView({ heading }) {
             </text>
 
             {/* Proximity rings */}
-            <circle cx={CENTER} cy={CENTER} r="180" fill="url(#instrumentGlow)" />
             <circle cx={CENTER} cy={CENTER} r="145" className={styles.proximityRing} />
             <circle cx={CENTER} cy={CENTER} r="108" className={styles.proximityRing} />
 
@@ -136,7 +112,6 @@ function DroneView({ heading }) {
             {/* Fuselage */}
             <path
                 d="M 260 235 L 340 238 L 362 268 L 358 350 L 322 392 L 278 390 L 240 348 L 242 268 Z"
-                fill="url(#bodyFill)"
                 className={styles.body}
             />
             <rect x="285" y="255" width="32" height="72" rx="2" transform="rotate(2 300 290)" className={styles.bodyPanel} />
@@ -190,69 +165,93 @@ function InstrumentView({ drone }) {
 
     const t = telemetry;
     const filledCells = Math.round((t.battery / 100) * CELL_COUNT);
-
-    const leftStats = [
-        { label: 'ARM STATE', value: t.armed ? 'ARMED' : 'DISARMED', icon: t.armed && <Check size={18} className={styles.checkIcon} />, sub: 'FLIGHT CONTROLLER' },
-        { label: 'BATTERY', value: `${t.battery}% · ${t.voltage.toFixed(1)} V`, sub: `${t.minutesLeft} MIN EST. REMAINING` },
-        { label: 'GPS FIX', value: t.satellites >= 6 ? '3D FIX' : t.gps, sub: `${t.satellites} SAT · HDOP ${t.hdop.toFixed(1)}` },
-        { label: 'DISTANCE TO HOME', value: t.distanceHome, unit: 'm', sub: `NEXT WAYPOINT · ${t.nextWaypoint} m` },
-    ];
-
-    const rightStats = [
-        { label: 'FLIGHT MODE', value: t.mode, sub: `ARMED · ${t.armed ? 'YES' : 'NO'}` },
-        { label: 'ALTITUDE', value: t.altitudeRel.toFixed(1), unit: 'm REL', sub: `${(t.altitudeRel + t.homeElevation).toFixed(1)} m AMSL` },
-        { label: 'VELOCITY', value: t.velocity.toFixed(1), unit: 'm/s', sub: `CLIMB ${t.climb.toFixed(1)} m/s` },
-        { label: 'TELEMETRY LINK', value: t.signal, unit: 'dBm', sub: `HB ${t.heartbeat.toFixed(1)} s · LOSS ${t.loss.toFixed(1)}%` },
-    ];
+    const cellTone = t.battery < LOW_BATTERY ? styles.cellLow : styles.cellFilled;
 
     return (
-        <div className={styles.container}>
-            <div className={styles.topSection}>
-                <div>
-                    <p className={styles.breadcrumb}>AIRCRAFT / {t.id}</p>
-                    <h1 className={styles.title}>FLIGHT INSTRUMENT</h1>
-                </div>
-                <span className={styles.modeBadge}>{t.mode}</span>
-            </div>
+        <div className={styles.page}>
+            <TopBar
+                title="Flight"
+                subtitle={t.id}
+                actions={
+                    <>
+                        <Chip tone={t.armed ? 'ok' : 'off'}>{t.armed ? 'Armed' : 'Disarmed'}</Chip>
+                        <Chip tone="off">Mode · {formatStatus(t.mode)}</Chip>
+                        <Button className={demo ? styles.demoActive : ''} onClick={() => setDemo(!demo)}>
+                            {demo ? 'Stop demo' : 'Demo state'}
+                        </Button>
+                    </>
+                }
+            />
 
-            <div className={styles.instrumentGrid}>
-                <div className={styles.statColumn}>
-                    {leftStats.map((stat) => (
-                        <Stat key={stat.label} side="left" {...stat} />
-                    ))}
-                </div>
+            <div className={styles.content}>
+                <div className={styles.instrumentGrid}>
+                    <div className={styles.side}>
+                        <Card title="Power" meta="Flight controller">
+                            <Readout
+                                label="Battery"
+                                value={`${t.battery}% · ${t.voltage.toFixed(1)}`}
+                                unit="V"
+                                sub={`${t.minutesLeft} min estimated remaining`}
+                            />
+                        </Card>
+                        <Card title="Position">
+                            <Readout
+                                label="GPS fix"
+                                value={t.satellites >= 6 ? '3D fix' : formatStatus(t.gps)}
+                                sub={`${t.satellites} sat · HDOP ${t.hdop.toFixed(1)}`}
+                            />
+                            <div className={styles.kv}>
+                                <KeyValue
+                                    rows={[
+                                        { label: 'Distance to home', value: `${t.distanceHome} m` },
+                                        { label: 'Next waypoint', value: `${t.nextWaypoint} m` },
+                                    ]}
+                                />
+                            </div>
+                        </Card>
+                    </div>
 
-                <div className={styles.centerColumn}>
-                    <p className={styles.viewLabel}>{t.id} / TOP VIEW</p>
-                    <DroneView heading={t.heading} />
+                    <div className={styles.centerColumn}>
+                        <p className={styles.viewLabel}><span className="mono">{t.id}</span> · top view</p>
+                        <DroneView heading={t.heading} />
 
-                    <div className={styles.cellBar}>
-                        <div className={styles.cells}>
-                            {Array.from({ length: CELL_COUNT }, (_, i) => (
-                                <span key={i} className={`${styles.cell} ${i < filledCells ? styles.cellFilled : ''}`}></span>
-                            ))}
+                        <div className={styles.cellBar}>
+                            <div className={styles.cells}>
+                                {Array.from({ length: CELL_COUNT }, (_, i) => (
+                                    <span key={i} className={`${styles.cell} ${i < filledCells ? cellTone : ''}`}></span>
+                                ))}
+                            </div>
+                            <span><span className="mono">{t.battery}%</span> cell capacity</span>
                         </div>
-                        <span>{t.battery}% CELL CAPACITY</span>
+                    </div>
+
+                    <div className={styles.side}>
+                        <Card title="Motion">
+                            <div className={styles.pair}>
+                                <Readout
+                                    label="Altitude"
+                                    value={t.altitudeRel.toFixed(1)}
+                                    unit="m rel"
+                                    sub={`${(t.altitudeRel + t.homeElevation).toFixed(1)} m AMSL`}
+                                />
+                                <Readout label="Velocity" value={t.velocity.toFixed(1)} unit="m/s" sub={`Climb ${t.climb.toFixed(1)} m/s`} />
+                            </div>
+                        </Card>
+                        <Card title="Telemetry link" meta={<Chip value={t.link} />}>
+                            <Readout label="Signal" value={t.signal} unit="dBm" />
+                            <div className={styles.kv}>
+                                <KeyValue
+                                    rows={[
+                                        { label: 'Heartbeat', value: `${t.heartbeat.toFixed(1)} s` },
+                                        { label: 'Packet loss', value: `${t.loss.toFixed(1)}%` },
+                                    ]}
+                                />
+                            </div>
+                        </Card>
                     </div>
                 </div>
 
-                <div className={styles.statColumn}>
-                    {rightStats.map((stat) => (
-                        <Stat key={stat.label} side="right" {...stat} />
-                    ))}
-                </div>
-            </div>
-
-            <div className={styles.dockSection}>
                 <DroneDock />
-            </div>
-
-            <div className={styles.footer}>
-                <button
-                    className={`${styles.demoBtn} ${demo ? styles.demoActive : ''}`}
-                    onClick={() => setDemo(!demo)}>
-                    {demo ? 'STOP DEMO' : 'DEMO STATE'}
-                </button>
             </div>
         </div>
     );
