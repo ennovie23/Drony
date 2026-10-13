@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Camera } from "lucide-react";
+import { Camera, Trash2 } from "lucide-react";
 import styles from "./FireAssessment.module.css";
 import table from "../components/ui/Table.module.css";
 import TopBar from "../components/shared/TopBar";
@@ -21,7 +21,7 @@ const pct = (v) => Number(Number(v).toFixed(1));
 
 export default function FireAssessment() {
   useNow(5000);
-  const { drone, site, fireSnapshots, analyzing, captureSnapshot, videoSource } =
+  const { drone, site, fireSnapshots, analyzing, captureSnapshot, clearSnapshots, videoSource } =
     useAppData();
   const isWebcam = videoSource === "webcam";
   const [selectedId, setSelectedId] = useState(null);
@@ -41,6 +41,17 @@ export default function FireAssessment() {
   const selectSnapshot = (id) => {
     setSelectedId(id);
     setHighlightId(null);
+  };
+
+  const [clearing, setClearing] = useState(false);
+  const onClearSnapshots = async () => {
+    const count = fireSnapshots.length;
+    if (!window.confirm(`Delete all ${count} snapshot${count === 1 ? "" : "s"}? This can't be undone.`)) return;
+    setClearing(true);
+    const ok = await clearSnapshots();
+    setClearing(false);
+    if (ok) selectSnapshot(null);
+    else window.alert("Couldn't clear snapshots — check that the backend is running.");
   };
 
   const [latestDetection, setLatestDetection] = useState({
@@ -453,7 +464,17 @@ export default function FireAssessment() {
 
         <Card
           title={`Snapshots (${fireSnapshots.length})`}
-          meta="Click a snapshot to view its result"
+          meta={
+            <span className={styles.stripMeta}>
+              Click a snapshot to view its result
+              {isWebcam && fireSnapshots.length > 0 && (
+                <Button size="sm" onClick={onClearSnapshots} disabled={clearing}>
+                  <Trash2 />
+                  {clearing ? "Clearing…" : "Clear"}
+                </Button>
+              )}
+            </span>
+          }
         >
           <ScrollStrip className={styles.strip}>
             {analyzing && (

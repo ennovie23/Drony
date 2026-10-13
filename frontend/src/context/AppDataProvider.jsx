@@ -73,6 +73,20 @@ export default function AppDataProvider({ children }) {
         }
     }, [fetchLiveSnapshots]);
 
+    // Webcam: delete every saved snapshot. Returns false if the backend refused.
+    const clearSnapshots = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/snapshots`, { method: 'DELETE' });
+            if (!res.ok) return false;
+            latestLiveIdRef.current = null;
+            setLiveSnapshots([]);
+            return true;
+        } catch (err) {
+            console.error('[clearSnapshots] Backend unreachable:', err.message);
+            return false;
+        }
+    }, []);
+
     // Ask the drone for a snapshot and run it through the fire model. Mock: reuses the
     // latest result with slightly shifted scores until the backend sends real frames.
     const captureMockSnapshot = useCallback(() => {
@@ -134,11 +148,12 @@ export default function AppDataProvider({ children }) {
             videoSource,
             analyzing,
             captureSnapshot: videoSource === 'webcam' ? captureLiveSnapshot : captureMockSnapshot,
+            clearSnapshots,
             modules: Object.values(modules),
             deployModule,
             recallModule,
         }),
-        [modules, snapshots, liveSnapshots, videoSource, analyzing, captureLiveSnapshot, captureMockSnapshot, deployModule, recallModule],
+        [modules, snapshots, liveSnapshots, videoSource, analyzing, captureLiveSnapshot, captureMockSnapshot, clearSnapshots, deployModule, recallModule],
     );
 
     return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

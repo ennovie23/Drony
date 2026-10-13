@@ -102,3 +102,9 @@
 .strip > .stripEmpty {
     flex: 1 0 100%;
 }
+
+.stripMeta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
