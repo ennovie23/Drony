@@ -96,7 +96,8 @@ def start_stream_server(port, latest, capture):
         def log_message(self, format, *args):
             pass  # keep detect.py output readable
 
-    server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
+    # Localhost only: this is a live webcam feed, not something to share on the LAN
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     server.daemon_threads = True
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server

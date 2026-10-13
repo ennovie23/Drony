@@ -43,6 +43,10 @@ class LiveStreamServerTest(unittest.TestCase):
             self.assertEqual(res.status, 200)
             self.assertTrue(res.headers["Content-Type"].startswith("multipart/x-mixed-replace"))
 
+    def test_binds_to_localhost_only(self):
+        # The stream is a live webcam: never expose it to the network
+        self.assertEqual(self.server.server_address[0], "127.0.0.1")
+
     def test_unknown_path_404(self):
         with self.assertRaises(urllib.error.HTTPError) as ctx:
             urllib.request.urlopen(f"{self.base}/nope", timeout=5)
