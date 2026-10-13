@@ -1,20 +1,81 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { AppDataContext } from './AppDataContext';
 import * as mock from '../data/mock';
+import useVideoUrl from '../hooks/useVideoUrl';
+import { API_BASE_URL } from '../config';
+import { toUiSnapshot } from '../utils/snapshots';
 
 // How long a mock drop takes before the floating module starts reporting.
 const DEPLOY_DELAY_MS = 4000;
 // How long the mock ML model takes to analyse a new snapshot.
 const ANALYSIS_DELAY_MS = 1500;
+// Webcam mode: how often the snapshot strip refreshes, and how long a manual
+// capture waits for its snapshot to show up.
+const SNAPSHOT_POLL_MS = 2000;
+const CAPTURE_TIMEOUT_MS = 5000;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function AppDataProvider({ children }) {
     const [modules, setModules] = useState(mock.modules);
     const [snapshots, setSnapshots] = useState(mock.fireSnapshots);
     const [analyzing, setAnalyzing] = useState(false);
 
+    // VIDEO_SOURCE=webcam: snapshots are real frames saved by detect.py
+    const { source: videoSource } = useVideoUrl();
+    const [liveSnapshots, setLiveSnapshots] = useState([]);
+    const latestLiveIdRef = useRef(null);
+
+    const fetchLiveSnapshots = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/snapshots`);
+            if (!res.ok) return null;
+            const rows = (await res.json()).map(toUiSnapshot);
+            latestLiveIdRef.current = rows[0]?.id ?? null;
+            setLiveSnapshots(rows);
+            return rows;
+        } catch {
+            return null; // backend not reachable – keep the current strip
+        }
+    }, []);
+
+    useEffect(() => {
+        if (videoSource !== 'webcam') return;
+        const first = setTimeout(fetchLiveSnapshots, 0);
+        const id = setInterval(fetchLiveSnapshots, SNAPSHOT_POLL_MS);
+        return () => {
+            clearTimeout(first);
+            clearInterval(id);
+        };
+    }, [videoSource, fetchLiveSnapshots]);
+
+    // Webcam: ask detect.py to save the next frame, then wait for it to land in the strip.
+    const captureLiveSnapshot = useCallback(async () => {
+        setAnalyzing(true);
+        const beforeId = latestLiveIdRef.current;
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/snapshots/capture`, { method: 'POST' });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                console.error('[captureSnapshot]', body.message ?? `HTTP ${res.status}`);
+                return;
+            }
+            const deadline = Date.now() + CAPTURE_TIMEOUT_MS;
+            while (Date.now() < deadline) {
+                await sleep(500);
+                const rows = await fetchLiveSnapshots();
+                if (rows && rows[0]?.id !== beforeId) break;
+            }
+        } catch (err) {
+            console.error('[captureSnapshot] Backend unreachable:', err.message);
+        } finally {
+            setAnalyzing(false);
+        }
+    }, [fetchLiveSnapshots]);
+
     // Ask the drone for a snapshot and run it through the fire model. Mock: reuses the
     // latest result with slightly shifted scores until the backend sends real frames.
-    const captureSnapshot = useCallback(() => {
+    const captureMockSnapshot = useCallback(() => {
         setAnalyzing(true);
         setTimeout(() => {
             setSnapshots((prev) => {
@@ -69,14 +130,15 @@ export default function AppDataProvider({ children }) {
             drone: mock.drone,
             site: mock.site,
             map: mock.map,
-            fireSnapshots: snapshots,
+            fireSnapshots: videoSource === 'webcam' ? liveSnapshots : snapshots,
+            videoSource,
             analyzing,
-            captureSnapshot,
+            captureSnapshot: videoSource === 'webcam' ? captureLiveSnapshot : captureMockSnapshot,
             modules: Object.values(modules),
             deployModule,
             recallModule,
         }),
-        [modules, snapshots, analyzing, captureSnapshot, deployModule, recallModule],
+        [modules, snapshots, liveSnapshots, videoSource, analyzing, captureLiveSnapshot, captureMockSnapshot, deployModule, recallModule],
     );
 
     return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
