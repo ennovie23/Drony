@@ -5,12 +5,15 @@ const INDEX_FILE = 'snapshots.json';
 
 // File-backed snapshot store for webcam testing: one <id>.jpg per snapshot plus a
 // snapshots.json index (newest first, capped at `max`). Writes are serialized so
-// concurrent POSTs can't clobber the index.
+// concurrent POSTs can't clobber the index. The index is read from disk once and then
+// served from memory: on Windows, renaming over a file another request is reading fails
+// with EPERM, so GETs must not touch the file while a write is in flight.
 export function createSnapshotStore({ dir, max = 50, now = Date.now }) {
   const indexPath = path.join(dir, INDEX_FILE);
   let writeChain = Promise.resolve();
+  let loaded = null; // Promise<Entry[]> once the index has been read
 
-  async function list() {
+  async function readIndex() {
     let raw;
     try {
       raw = await fs.readFile(indexPath, 'utf8');
@@ -25,6 +28,11 @@ export function createSnapshotStore({ dir, max = 50, now = Date.now }) {
       console.error('[snapshots] Corrupt index, treating as empty:', err.message);
       return [];
     }
+  }
+
+  async function list() {
+    loaded ??= readIndex();
+    return [...(await loaded)];
   }
 
   async function writeEntry({ imageBase64, trigger, assessment }) {
@@ -50,6 +58,7 @@ export function createSnapshotStore({ dir, max = 50, now = Date.now }) {
     const tmpPath = `${indexPath}.tmp`;
     await fs.writeFile(tmpPath, JSON.stringify(kept, null, 2));
     await fs.rename(tmpPath, indexPath);
+    loaded = Promise.resolve(kept);
 
     await Promise.all(dropped.map((e) =>
       fs.unlink(path.join(dir, `${e.id}.jpg`)).catch((err) => {

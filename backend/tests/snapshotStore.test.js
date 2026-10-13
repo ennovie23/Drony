@@ -63,3 +63,25 @@ test('missing dir lists empty', async () => {
   const dir = path.join(await tmpDir(), 'does-not-exist');
   assert.deepEqual(await createSnapshotStore({ dir }).list(), []);
 });
+
+test('adds succeed while the index is being read', async () => {
+  const dir = await tmpDir();
+  const store = createSnapshotStore({ dir });
+  let reading = true;
+  // Like polling GETs: read continuously, yielding to the event loop between reads
+  const reader = (async () => {
+    while (reading) {
+      await store.list();
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+  })();
+  try {
+    for (let n = 1; n <= 30; n++) {
+      await store.add({ imageBase64: img(String(n)), trigger: 'auto', assessment: { frameIndex: n } });
+    }
+  } finally {
+    reading = false;
+    await reader;
+  }
+  assert.equal((await store.list()).length, 30);
+});
