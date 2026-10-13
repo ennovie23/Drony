@@ -4,6 +4,9 @@ import useVideoUrl from '../../hooks/useVideoUrl';
 import { API_BASE_URL } from '../../config';
 
 const CAMERA_UNAVAILABLE = 'Camera unavailable — check that the simulation is running';
+const CAMERA_CONNECTING = 'Connecting to camera…';
+// detect.py takes a while to load its models before the stream is up
+const STREAM_RETRY_MS = 3000;
 
 // Live boxes from /api/detections/live → the snapshot detection shape.
 const toDetection = (d, idx) => ({
@@ -28,6 +31,7 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
     // Live detections fetched from /api/detections/live while simulation is running
     const [liveBoxes, setLiveBoxes] = useState([]);
     const [streamError, setStreamError] = useState(false);
+    const [streamAttempt, setStreamAttempt] = useState(0);
     // Images are letterboxed at their own aspect ratio so % boxes line up (webcams are 4:3)
     const [aspect, setAspect] = useState('4 / 3');
 
@@ -62,6 +66,16 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
         const id = setInterval(poll, 500);
         return () => clearInterval(id);
     }, [playing, small, isSnapshotImage]);
+
+    // While running, keep retrying a stream that failed to load (e.g. models still loading)
+    useEffect(() => {
+        if (!playing || !streamError) return;
+        const id = setTimeout(() => {
+            setStreamError(false);
+            setStreamAttempt((n) => n + 1);
+        }, STREAM_RETRY_MS);
+        return () => clearTimeout(id);
+    }, [playing, streamError]);
 
     // Clear boxes when the simulation stops; retry the stream when it starts again
     const [prevPlaying, setPrevPlaying] = useState(playing);
@@ -101,11 +115,18 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
     } else if (isLiveStream) {
         content = playing && streamUrl && !streamError ? (
             <div className={styles.stage} style={{ aspectRatio: aspect }}>
-                <img className={styles.fill} src={streamUrl} alt="" onLoad={onImageLoad} onError={() => setStreamError(true)} />
+                <img
+                    key={streamAttempt}
+                    className={styles.fill}
+                    src={`${streamUrl}?attempt=${streamAttempt}`}
+                    alt=""
+                    onLoad={onImageLoad}
+                    onError={() => setStreamError(true)}
+                />
                 {renderBoxes(liveBoxes.map(toDetection), false)}
             </div>
         ) : (
-            <span className={styles.placeholder}>{CAMERA_UNAVAILABLE}</span>
+            <span className={styles.placeholder}>{playing ? CAMERA_CONNECTING : CAMERA_UNAVAILABLE}</span>
         );
     } else {
         content = (

@@ -1,6 +1,7 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlsplit
 
 
 class LatestFrame:
@@ -53,7 +54,7 @@ def start_stream_server(port, latest, capture):
             self.end_headers()
 
         def do_POST(self):
-            if self.path != "/capture":
+            if urlsplit(self.path).path != "/capture":
                 self.send_error(404)
                 return
             capture.request()
@@ -66,7 +67,8 @@ def start_stream_server(port, latest, capture):
             self.wfile.write(body)
 
         def do_GET(self):
-            if self.path != "/stream":
+            # Clients add ?attempt=N to bust the cache when reconnecting
+            if urlsplit(self.path).path != "/stream":
                 self.send_error(404)
                 return
             self.send_response(200)

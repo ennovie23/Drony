@@ -37,6 +37,12 @@ class LiveStreamServerTest(unittest.TestCase):
                 chunk += res.read(1)
             self.assertIn(b"JPEGDATA", chunk)
 
+    def test_stream_ignores_query_string(self):
+        self.latest.set(b"JPEGDATA")
+        with urllib.request.urlopen(f"{self.base}/stream?attempt=3", timeout=5) as res:
+            self.assertEqual(res.status, 200)
+            self.assertTrue(res.headers["Content-Type"].startswith("multipart/x-mixed-replace"))
+
     def test_unknown_path_404(self):
         with self.assertRaises(urllib.error.HTTPError) as ctx:
             urllib.request.urlopen(f"{self.base}/nope", timeout=5)
