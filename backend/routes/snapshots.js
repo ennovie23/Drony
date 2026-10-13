@@ -30,6 +30,17 @@ export function createSnapshotsRouter({ store, streamPort, fetchImpl = fetch }) 
     }
   });
 
+  // Remove every snapshot (images + index) so the strip starts empty
+  router.delete('/', async (req, res) => {
+    try {
+      await store.clear();
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error clearing snapshots:', error);
+      res.status(500).json({ success: false, error: 'Failed to clear snapshots' });
+    }
+  });
+
   // Ask detect.py to save the next frame regardless of detections
   router.post('/capture', async (req, res) => {
     try {

@@ -13,6 +13,7 @@ function fakeStore() {
       entries.unshift(entry);
       return entry;
     },
+    clear: async () => { entries.length = 0; },
   };
 }
 
@@ -87,5 +88,27 @@ test('capture when stream down → 503', async () => {
     const res = await fetch(`${base}/capture`, { method: 'POST' });
     assert.equal(res.status, 503);
     assert.deepEqual(await res.json(), { success: false, message: 'Simulation is not running in webcam mode' });
+  } finally { await close(); }
+});
+
+test('DELETE clears all snapshots', async () => {
+  const store = fakeStore();
+  store.entries.push({ id: 'SNAP-A' }, { id: 'SNAP-B' });
+  const { base, close } = await serve({ store });
+  try {
+    const res = await fetch(base, { method: 'DELETE' });
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { success: true });
+    assert.equal(store.entries.length, 0);
+  } finally { await close(); }
+});
+
+test('DELETE reports a failed clear as 500', async () => {
+  const store = { ...fakeStore(), clear: async () => { throw new Error('EBUSY'); } };
+  const { base, close } = await serve({ store });
+  try {
+    const res = await fetch(base, { method: 'DELETE' });
+    assert.equal(res.status, 500);
+    assert.equal((await res.json()).success, false);
   } finally { await close(); }
 });

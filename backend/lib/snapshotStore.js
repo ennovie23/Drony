@@ -5,6 +5,7 @@ const INDEX_FILE = 'snapshots.json';
 // Ids become file names, so only this exact shape is ever written or deleted
 const ID_PATTERN = /^SNAP-\d{6,}-\d+$/;
 const TRIGGERS = new Set(['auto', 'manual']);
+const IMAGE_PATTERN = /^SNAP-\d{6,}-\d+\.jpg$/;
 
 // File-backed snapshot store for webcam testing: one <id>.jpg per snapshot plus a
 // snapshots.json index (newest first, capped at `max`). Writes are serialized so
@@ -77,10 +78,7 @@ export function createSnapshotStore({ dir, max = 50, now = Date.now }) {
     const kept = entries.slice(0, max);
     const dropped = entries.slice(max);
 
-    const tmpPath = `${indexPath}.tmp`;
-    await fs.writeFile(tmpPath, JSON.stringify(kept, null, 2));
-    await fs.rename(tmpPath, indexPath);
-    loaded = Promise.resolve(kept);
+    await writeIndex(kept);
 
     await Promise.all(dropped.filter((e) => ID_PATTERN.test(e.id)).map((e) =>
       fs.unlink(path.join(dir, `${e.id}.jpg`)).catch((err) => {
@@ -90,11 +88,34 @@ export function createSnapshotStore({ dir, max = 50, now = Date.now }) {
     return entry;
   }
 
-  function add(input) {
-    const result = writeChain.then(() => writeEntry(input));
+  async function writeIndex(entries) {
+    const tmpPath = `${indexPath}.tmp`;
+    await fs.writeFile(tmpPath, JSON.stringify(entries, null, 2));
+    await fs.rename(tmpPath, indexPath);
+    loaded = Promise.resolve(entries);
+  }
+
+  // Deletes every snapshot image in the folder (including ones the index lost
+  // track of) and empties the index, on disk and in memory.
+  async function clearAll() {
+    await fs.mkdir(dir, { recursive: true });
+    const files = await fs.readdir(dir);
+    await Promise.all(files.filter((f) => IMAGE_PATTERN.test(f)).map((f) =>
+      fs.unlink(path.join(dir, f)).catch((err) => {
+        if (err.code !== 'ENOENT') throw err;
+      })));
+    await writeIndex([]);
+  }
+
+  // All writes go through one chain so an add can't interleave with another write
+  function serialized(fn) {
+    const result = writeChain.then(fn);
     writeChain = result.catch(() => {}); // keep the chain alive after a failed write
     return result;
   }
 
-  return { list, add };
+  const add = (input) => serialized(() => writeEntry(input));
+  const clear = () => serialized(clearAll);
+
+  return { list, add, clear };
 }

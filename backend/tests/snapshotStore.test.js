@@ -120,3 +120,36 @@ test('a failed index read is retried, not cached as empty', async () => {
   await fs.writeFile(indexPath, JSON.stringify([{ id: 'SNAP-000002-2', frame: 2 }, { id: 'SNAP-000001-1', frame: 1 }]));
   assert.equal((await store.list()).length, 2);
 });
+
+test('clear removes every snapshot image and empties the index', async () => {
+  const dir = await tmpDir();
+  let t = 0;
+  const store = createSnapshotStore({ dir, now: () => ++t });
+  await store.add({ imageBase64: img('a'), trigger: 'auto', assessment: { frameIndex: 1 } });
+  await store.add({ imageBase64: img('b'), trigger: 'auto', assessment: { frameIndex: 2 } });
+  await fs.writeFile(path.join(dir, 'SNAP-000009-99.jpg'), 'orphan'); // image with no index entry
+  await fs.writeFile(path.join(dir, 'notes.txt'), 'keep');
+
+  await store.clear();
+
+  assert.deepEqual(await store.list(), []);
+  assert.deepEqual((await fs.readdir(dir)).sort(), ['notes.txt', 'snapshots.json']);
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(dir, 'snapshots.json'), 'utf8')), []);
+});
+
+test('adds after clear start a fresh list', async () => {
+  const dir = await tmpDir();
+  let t = 0;
+  const store = createSnapshotStore({ dir, now: () => ++t });
+  await store.add({ imageBase64: img('a'), trigger: 'auto', assessment: { frameIndex: 1 } });
+  await store.clear();
+  await store.add({ imageBase64: img('b'), trigger: 'manual', assessment: { frameIndex: 2 } });
+  assert.deepEqual((await store.list()).map((e) => e.frame), [2]);
+});
+
+test('clear works when the dir does not exist yet', async () => {
+  const dir = path.join(await tmpDir(), 'missing');
+  const store = createSnapshotStore({ dir });
+  await store.clear();
+  assert.deepEqual(await store.list(), []);
+});
