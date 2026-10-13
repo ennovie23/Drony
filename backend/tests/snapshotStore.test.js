@@ -85,3 +85,38 @@ test('adds succeed while the index is being read', async () => {
   }
   assert.equal((await store.list()).length, 30);
 });
+
+test('untrusted frameIndex and trigger cannot escape the snapshots dir', async () => {
+  const dir = await tmpDir();
+  const store = createSnapshotStore({ dir, now: () => 5 });
+  const entry = await store.add({ imageBase64: img('x'), trigger: '../evil', assessment: { frameIndex: '/../../pwn' } });
+  assert.equal(entry.id, 'SNAP-000000-5');
+  assert.equal(entry.frame, 0);
+  assert.equal(entry.trigger, 'auto');
+  assert.equal(await exists(path.join(dir, 'SNAP-000000-5.jpg')), true);
+});
+
+test('eviction never deletes files outside the dir', async () => {
+  const root = await tmpDir();
+  const dir = path.join(root, 'snaps');
+  await fs.mkdir(dir);
+  const outside = path.join(root, 'keep.jpg');
+  await fs.writeFile(outside, 'keep');
+  await fs.writeFile(path.join(dir, 'snapshots.json'), JSON.stringify([{ id: '../keep', frame: 0 }]));
+  const store = createSnapshotStore({ dir, max: 1 });
+  await store.add({ imageBase64: img('a'), trigger: 'auto', assessment: { frameIndex: 1 } });
+  assert.equal(await exists(outside), true);
+});
+
+test('a failed index read is retried, not cached as empty', async () => {
+  const dir = await tmpDir();
+  const indexPath = path.join(dir, 'snapshots.json');
+  // A directory where the index file should be makes readFile fail with EISDIR
+  await fs.mkdir(indexPath);
+  const store = createSnapshotStore({ dir });
+  assert.deepEqual(await store.list(), []);
+
+  await fs.rmdir(indexPath);
+  await fs.writeFile(indexPath, JSON.stringify([{ id: 'SNAP-000002-2', frame: 2 }, { id: 'SNAP-000001-1', frame: 1 }]));
+  assert.equal((await store.list()).length, 2);
+});
