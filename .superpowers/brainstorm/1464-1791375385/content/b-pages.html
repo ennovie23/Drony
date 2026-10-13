@@ -1,0 +1,384 @@
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  .pg { margin: 14px 0 40px; }
+  .pg > h3 { margin:0 0 4px; }
+  .pg > p { margin:0 0 10px; opacity:.75; font-size:13px; max-width:900px; }
+  .B { --bg:#1B1D20; --rail:#16181A; --raise:#212428; --line:#2C2F33; --tx:#D8D5CE; --hi:#F2EFE8; --mute:#7F8389; --mute2:#9A9DA2;
+       --amber:#F5B83D; --ok:#8FCB9B; --bad:#E8806A; --water:#7FB7D9;
+       width:100%; height:700px; display:grid; grid-template-columns:150px 1fr; overflow:hidden; border-radius:6px;
+       background:var(--bg); color:var(--tx); font-family:'IBM Plex Sans',sans-serif; font-size:13px; line-height:1.35; box-shadow:0 2px 18px rgba(0,0,0,.35); }
+  .B * { box-sizing:border-box; }
+  .B svg { display:block; }
+  .B .mono { font-family:'IBM Plex Mono'; }
+  .B nav { background:var(--rail); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:14px 0; }
+  .B .mark { padding:0 16px 18px; font-weight:600; font-size:15px; color:var(--hi); }
+  .B .mark span { display:block; font-weight:400; font-size:11.5px; color:var(--mute); margin-top:2px; }
+  .B nav a { display:flex; justify-content:space-between; align-items:center; padding:9px 16px; color:#A9ACB1; font-size:13.5px; border-left:2px solid transparent; }
+  .B nav a.on { color:var(--hi); background:var(--raise); border-left-color:var(--amber); }
+  .B nav a .t { font-size:11px; font-weight:600; }
+  .B nav .foot { margin-top:auto; padding:0 16px; font-size:12px; color:var(--mute); }
+  .B .main { display:grid; grid-template-rows:auto 1fr; min-width:0; min-height:0; }
+  .B .bar { display:flex; align-items:center; gap:24px; padding:11px 20px; border-bottom:1px solid var(--line); }
+  .B .bar h1 { font-size:16px; font-weight:600; margin:0; margin-right:auto; color:var(--hi); }
+  .B .bar h1 span { font-weight:400; color:var(--mute); margin-left:8px; font-size:14px; }
+  .B .bar .m { font-size:12px; color:var(--mute); }
+  .B .bar .m b { font-family:'IBM Plex Mono'; font-weight:500; color:var(--hi); margin-left:6px; font-size:13px; }
+  .B .air { color:var(--ok); font-size:12.5px; font-weight:500; }
+  .B .btn { background:var(--amber); color:#1B1D20; font-weight:600; font-size:12.5px; padding:6px 12px; border-radius:4px; }
+  .B .btn.g { background:transparent; color:var(--tx); border:1px solid var(--line); font-weight:500; }
+  .B .btn.r { background:transparent; color:var(--bad); border:1px solid #5A3129; font-weight:500; padding:3px 9px; font-size:12px; }
+  .B .body { overflow:hidden; padding:14px; display:grid; gap:14px; min-height:0; }
+  .B .card { background:var(--raise); border-radius:5px; padding:12px 14px; min-width:0; }
+  .B .h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .B .h b { font-weight:600; color:var(--hi); font-size:13.5px; }
+  .B .h span { font-size:12px; color:var(--mute); }
+  .B .lbl { font-size:12px; color:var(--mute); }
+  .B .num { font-family:'IBM Plex Mono'; font-size:24px; color:var(--hi); font-weight:500; line-height:1.15; }
+  .B .num small { font-size:12px; color:var(--mute); margin-left:3px; font-family:'IBM Plex Sans'; }
+  .B .sub { font-size:12px; color:var(--mute2); margin-top:2px; }
+  .B .rows div { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .B .rows div:last-child { border-bottom:0; }
+  .B .rows div span:first-child { color:var(--mute2); }
+  .B .rows div span:last-child { font-family:'IBM Plex Mono'; color:var(--hi); }
+  .B .chip { display:inline-block; font-size:12px; font-weight:600; padding:2px 8px; border-radius:3px; }
+  .B .chip.bad { background:#3A2420; color:var(--bad); }
+  .B .chip.warn { background:#3A2C12; color:var(--amber); }
+  .B .chip.ok { background:#1F3226; color:var(--ok); }
+  .B .chip.off { background:#2A2D31; color:var(--mute2); }
+  .B table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .B th { text-align:left; font-weight:500; color:var(--mute); padding:6px 8px; border-bottom:1px solid var(--line); }
+  .B td { padding:6px 8px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono'; color:var(--hi); }
+  .B td.t { font-family:'IBM Plex Sans'; color:var(--mute2); }
+  .B tr.sel td { background:#262A2F; }
+  .B .shot { position:relative; background:#2b2420 url('/files/fire.webp') center/cover; border-radius:4px; filter:saturate(.85) brightness(.92); overflow:hidden; }
+  .B .shot .bb { position:absolute; border:2px solid var(--amber); border-radius:2px; }
+  .B .shot .bb.dim { border-color:rgba(245,184,61,.35); border-style:dashed; }
+  .B .shot .bb i { position:absolute; top:4px; left:4px; font-style:normal; font-size:11px; background:var(--amber); color:#1B1D20; font-weight:600; padding:1px 5px; }
+  .B .shot .tag { position:absolute; right:8px; bottom:8px; background:rgba(22,24,26,.85); font-size:11.5px; padding:2px 7px; border-radius:3px; }
+  .B .bar2 { height:5px; background:#2E3236; border-radius:3px; width:70px; display:inline-block; vertical-align:middle; margin-right:8px; }
+  .B .bar2 i { display:block; height:100%; background:var(--amber); border-radius:3px; }
+  .B .film { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .B .film > div { background:var(--raise); border-radius:4px; padding:6px; border:1px solid transparent; font-size:12px; }
+  .B .film > div.on { border-color:var(--amber); }
+  .B .film .shot { height:62px; margin-bottom:6px; }
+  .B .film .pend { height:62px; margin-bottom:6px; border:1px dashed var(--line); border-radius:4px; display:flex; align-items:center; justify-content:center; color:var(--mute); }
+  .B .film b { color:var(--hi); font-weight:500; }
+  .B .seg { display:inline-flex; border:1px solid var(--line); border-radius:4px; overflow:hidden; font-size:12.5px; }
+  .B .seg span { padding:5px 11px; color:var(--mute2); border-right:1px solid var(--line); }
+  .B .seg span:last-child { border-right:0; }
+  .B .seg span.on { background:var(--raise); color:var(--hi); box-shadow: inset 0 -2px 0 var(--amber); }
+  .B .note { font-size:11.5px; color:var(--mute); }
+</style>
+
+<h2>Direction B across the other four pages</h2>
+<p class="subtitle">Every number here comes from your current <code>mock.js</code>, with nothing invented. Same shell and same rules on every page: amber means "needs attention", red-orange means bad, blue means water, green means OK. Scroll through all four and tell me what feels right or wrong.</p>
+
+<!-- ═══════════ FIRE ═══════════ -->
+<div class="pg">
+  <h3>Fire</h3>
+  <p>The analysed snapshot is the hero. The model's verdict (confidence, severity, behaviour, smoke) sits beside it in plain words. The detections table highlights its box on hover, as it does today. The snapshot history runs along the bottom.</p>
+  <div class="B">
+    <nav>
+      <div class="mark">DRMS<span>Bagong Silang ops</span></div>
+      <a>Live</a>
+      <a class="on">Fire <span class="t" style="color:var(--bad)">Severe</span></a>
+      <a>Flood <span class="t" style="color:var(--water)">3/5</span></a>
+      <a>Flight</a>
+      <a>Map</a>
+      <div class="foot">Dark · Light</div>
+    </nav>
+    <div class="main">
+      <div class="bar">
+        <h1>Fire assessment<span>Bagong Silang, Caloocan City</span></h1>
+        <span class="air">● DRMS-01 airborne</span>
+        <span class="m">PHT<b>14:06:12</b></span>
+        <span class="btn">Capture snapshot</span>
+      </div>
+      <div class="body" style="grid-template-columns: 1fr 290px; grid-template-rows: 1fr auto;">
+        <div style="display:grid; grid-template-rows: 1fr auto; gap:14px; min-height:0;">
+          <div class="shot">
+            <div class="bb" style="left:37%;top:4%;width:62%;height:89%"><i>fire 0.79</i></div>
+            <div class="bb" style="left:0;top:2%;width:61%;height:86%"><i style="top:24px">fire 0.73</i></div>
+            <div class="bb dim" style="left:13%;top:2%;width:75%;height:80%"></div>
+            <span class="tag">Frame 87 · latest · 14:06 PHT</span>
+          </div>
+          <div class="card" style="padding:6px 8px">
+            <table>
+              <tr><th>Box</th><th>Label</th><th>Score</th><th>Position (x, y)</th><th>Size (w × h)</th></tr>
+              <tr class="sel"><td>D3</td><td class="t">fire</td><td><span class="bar2"><i style="width:79%"></i></span>0.79</td><td>37%, 4%</td><td>63% × 89%</td></tr>
+              <tr><td>D1</td><td class="t">fire</td><td><span class="bar2"><i style="width:73%"></i></span>0.73</td><td>0%, 2%</td><td>62% × 86%</td></tr>
+              <tr><td>D2</td><td class="t">fire</td><td><span class="bar2"><i style="width:13%"></i></span>0.13</td><td>13%, 2%</td><td>76% × 80%</td></tr>
+            </table>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div class="card">
+            <div class="h"><b>Model result</b><span>Frame 87</span></div>
+            <div class="lbl">Active fire front</div>
+            <div class="num">85.2<small>% confidence</small></div>
+            <div class="rows" style="margin-top:10px">
+              <div><span>Severity</span><span class="chip bad">Severe</span></div>
+              <div><span>Behaviour</span><span class="chip bad">Growing</span></div>
+              <div><span>Smoke plume</span><span class="chip ok">Clear air</span></div>
+            </div>
+          </div>
+          <div class="card rows">
+            <div><span>Captured</span><span>Just now</span></div>
+            <div><span>Boxes</span><span>3</span></div>
+            <div><span>Source</span><span>DRMS-01 camera</span></div>
+          </div>
+        </div>
+        <div class="film" style="grid-column:1 / -1">
+          <div><div class="pend">Analysing…</div>New snapshot</div>
+          <div class="on"><div class="shot"></div><b>Frame 87</b> · latest<br><span style="color:var(--bad)">85.2% Severe</span> · just now</div>
+          <div><div class="shot"></div><b>Frame 72</b><br><span style="color:var(--bad)">79.4% Severe</span> · 3 min ago</div>
+          <div><div class="shot"></div><b>Frame 58</b><br><span style="color:var(--amber)">62.1% Moderate</span> · 7 min ago</div>
+          <div><div class="shot"></div><b>Frame 41</b><br><span style="color:var(--ok)">38.7% Low</span> · 12 min ago</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ FLOOD ═══════════ -->
+<div class="pg">
+  <h3>Flood</h3>
+  <p>Four summary numbers on top, the map and distance chart in the middle, the selected sensor on the right. The chart axis is <b>inverted</b>, so a line going <em>up</em> means water rising (the distance shrinking). That's the same data read in the direction people expect. The full readings table and the JSN spec sheet stay further down the page (scroll).</p>
+  <div class="B">
+    <nav>
+      <div class="mark">DRMS<span>Bagong Silang ops</span></div>
+      <a>Live</a>
+      <a>Fire <span class="t" style="color:var(--bad)">Severe</span></a>
+      <a class="on">Flood <span class="t" style="color:var(--water)">3/5</span></a>
+      <a>Flight</a>
+      <a>Map</a>
+      <div class="foot">Dark · Light</div>
+    </nav>
+    <div class="main">
+      <div class="bar">
+        <h1>Flood sensors<span>Floating JSN-SR04T modules · ESP32 · LoRa</span></h1>
+        <span class="air">● DRMS-01 airborne</span>
+        <span class="m">PHT<b>14:06:12</b></span>
+      </div>
+      <div class="body" style="grid-template-columns: 1fr 1fr 300px; grid-template-rows: auto 1fr;">
+        <div style="grid-column: 1 / 3; display:grid; grid-template-columns: repeat(4,1fr); gap:14px;">
+          <div class="card"><div class="lbl">Sensors reporting</div><div class="num">3<small>/ 5</small></div><div class="sub">2 still in dock</div></div>
+          <div class="card"><div class="lbl">Last reading</div><div class="num" style="font-size:20px">Just now</div><div class="sub">Every 5 s</div></div>
+          <div class="card"><div class="lbl">Valid readings</div><div class="num">3<small>/ 3</small></div><div class="sub">Range 25–450 cm</div></div>
+          <div class="card"><div class="lbl">Lowest battery</div><div class="num" style="color:var(--amber)">34<small>% · FM-03</small></div><div class="sub">Signal weak, −97 dBm</div></div>
+        </div>
+        <div class="card" style="grid-row: 1 / 3; grid-column:3; display:flex; flex-direction:column;">
+          <div class="h"><b>FM-01 · Package 6 Creek</b><span class="chip ok">Valid</span></div>
+          <div class="num" style="font-size:34px">146<small>cm to water</small></div>
+          <div class="sub" style="margin-bottom:10px">−1 cm in the last 5 min</div>
+          <div class="rows">
+            <div><span>First reading</span><span>188 cm</span></div>
+            <div><span>Echo time</span><span>8468 µs</span></div>
+            <div><span>Last reading</span><span>Just now</span></div>
+            <div><span>Deployed</span><span>40 min ago</span></div>
+            <div><span>Battery</span><span>82%</span></div>
+            <div><span>Signal</span><span>Good · −81 dBm</span></div>
+          </div>
+        </div>
+        <div class="card" style="display:flex; flex-direction:column; min-height:0;">
+          <div class="h"><b>Sensor positions</b><span>Click a sensor</span></div>
+          <div style="flex:1; background:#202326; border-radius:4px; min-height:0;">
+            <svg viewBox="0 0 500 360" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+              <g stroke="#2A2D31"><path d="M0 90H500M0 180H500M0 270H500M125 0V360M250 0V360M375 0V360"/></g>
+              <path d="M 0,230 C 80,200 140,280 230,255 C 320,230 380,300 500,270 L 500,340 C 380,360 300,310 220,330 C 140,350 80,290 0,310 Z" fill="#3E6E8C" opacity=".45"/>
+              <circle cx="110" cy="259" r="14" fill="none" stroke="#F2EFE8" stroke-width="2"/>
+              <circle cx="110" cy="259" r="6" fill="#7FB7D9"/><text x="124" y="248" fill="#F2EFE8" font-size="15" font-family="IBM Plex Mono">FM-01</text>
+              <circle cx="250" cy="274" r="6" fill="#7FB7D9"/><text x="262" y="266" fill="#9A9DA2" font-size="15" font-family="IBM Plex Mono">FM-02</text>
+              <circle cx="390" cy="295" r="6" fill="#F5B83D"/><text x="402" y="287" fill="#9A9DA2" font-size="15" font-family="IBM Plex Mono">FM-03</text>
+            </svg>
+          </div>
+        </div>
+        <div class="card" style="display:flex; flex-direction:column;">
+          <div class="h"><b>Distance to water</b><span>cm · every 5 min</span></div>
+          <svg viewBox="-34 -6 446 176" width="100%" style="flex:1">
+            <g stroke="#2C2F33"><path d="M0 0H400M0 50H400M0 100H400M0 150H400"/></g>
+            <g fill="#7F8389" font-size="10" font-family="IBM Plex Mono" text-anchor="end"><text x="-6" y="4">120</text><text x="-6" y="54">150</text><text x="-6" y="104">180</text><text x="-6" y="154">210</text></g>
+            <polyline fill="none" stroke="#7FB7D9" stroke-width="2.2" points="0,113.3 36.4,103.3 72.7,93.3 109.1,85 145.5,76.7 181.8,70 218.2,63.3 254.5,58.3 290.9,53.3 327.3,48.3 363.6,45 400,43.3"/>
+            <polyline fill="none" stroke="#B9A6E0" stroke-width="1.6" points="0,131.7 36.4,125 72.7,118.3 109.1,111.7 145.5,105 181.8,98.3 218.2,91.7 254.5,86.7 290.9,81.7 327.3,76.7 363.6,73.3 400,70"/>
+            <polyline fill="none" stroke="#C9B48A" stroke-width="1.6" points="0,113.3 36.4,111.7 72.7,110 109.1,108.3 145.5,106.7 181.8,105 218.2,103.3 254.5,101.7 290.9,100 327.3,98.3 363.6,96.7 400,95"/>
+          </svg>
+          <div class="note" style="display:flex; gap:14px; margin-top:4px">
+            <span><span style="color:#7FB7D9">━</span> FM-01 Package 6 Creek</span><span><span style="color:#B9A6E0">━</span> FM-02 Bridge</span><span><span style="color:#C9B48A">━</span> FM-03 Covered Court</span>
+          </div>
+          <div class="note">Axis inverted: lower distance = higher water = line goes up.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ FLIGHT ═══════════ -->
+<div class="pg">
+  <h3>Flight</h3>
+  <p>The decorative drone drawing, satellites and glow are replaced by a real <b>heading dial</b> (compass and heading: functional, not costume). Telemetry is grouped by what an operator checks: Power, Position, Motion, Link. The payload dock (deploy and recall flood modules) becomes a proper panel under it.</p>
+  <div class="B">
+    <nav>
+      <div class="mark">DRMS<span>Bagong Silang ops</span></div>
+      <a>Live</a>
+      <a>Fire <span class="t" style="color:var(--bad)">Severe</span></a>
+      <a>Flood <span class="t" style="color:var(--water)">3/5</span></a>
+      <a class="on">Flight</a>
+      <a>Map</a>
+      <div class="foot">Dark · Light</div>
+    </nav>
+    <div class="main">
+      <div class="bar">
+        <h1>Flight<span>DRMS-01</span></h1>
+        <span class="chip ok">Armed</span>
+        <span class="chip off" style="color:var(--hi)">Mode · Auto</span>
+        <span class="btn g">Demo state</span>
+      </div>
+      <div class="body" style="grid-template-columns: 330px 1fr; grid-template-rows: 1fr auto;">
+        <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <svg viewBox="0 0 300 300" width="270">
+            <circle cx="150" cy="150" r="128" fill="#1B1D20" stroke="#3A3E43" stroke-width="2"/>
+            <g transform="rotate(-62 150 150)" stroke="#5B6066">
+              <g id="tk">
+                <line x1="150" y1="26" x2="150" y2="42" stroke-width="2" stroke="#9A9DA2"/>
+                <line x1="150" y1="26" x2="150" y2="34" transform="rotate(30 150 150)"/><line x1="150" y1="26" x2="150" y2="34" transform="rotate(60 150 150)"/>
+                <line x1="150" y1="26" x2="150" y2="42" stroke-width="2" stroke="#9A9DA2" transform="rotate(90 150 150)"/>
+                <line x1="150" y1="26" x2="150" y2="34" transform="rotate(120 150 150)"/><line x1="150" y1="26" x2="150" y2="34" transform="rotate(150 150 150)"/>
+                <line x1="150" y1="26" x2="150" y2="42" stroke-width="2" stroke="#9A9DA2" transform="rotate(180 150 150)"/>
+                <line x1="150" y1="26" x2="150" y2="34" transform="rotate(210 150 150)"/><line x1="150" y1="26" x2="150" y2="34" transform="rotate(240 150 150)"/>
+                <line x1="150" y1="26" x2="150" y2="42" stroke-width="2" stroke="#9A9DA2" transform="rotate(270 150 150)"/>
+                <line x1="150" y1="26" x2="150" y2="34" transform="rotate(300 150 150)"/><line x1="150" y1="26" x2="150" y2="34" transform="rotate(330 150 150)"/>
+              </g>
+              <g fill="#D8D5CE" stroke="none" font-family="IBM Plex Sans" font-size="16" font-weight="600" text-anchor="middle">
+                <text x="150" y="62">N</text>
+                <text x="150" y="62" transform="rotate(90 150 150)">E</text>
+                <text x="150" y="62" transform="rotate(180 150 150)">S</text>
+                <text x="150" y="62" transform="rotate(270 150 150)">W</text>
+              </g>
+            </g>
+            <path d="M150 8 l9 14 h-18z" fill="#F5B83D"/>
+            <path d="M150 104 l20 58 l-20 -12 l-20 12z" fill="#F2EFE8"/>
+            <text x="150" y="208" text-anchor="middle" fill="#F2EFE8" font-family="IBM Plex Mono" font-size="28">062°</text>
+            <text x="150" y="228" text-anchor="middle" fill="#7F8389" font-family="IBM Plex Sans" font-size="12">Heading · ENE</text>
+          </svg>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div class="card">
+            <div class="h"><b>Power</b><span>Flight controller</span></div>
+            <div class="num">76<small>% · 15.2 V</small></div>
+            <div style="display:flex; gap:4px; margin:8px 0 6px">
+              <i style="flex:1;height:8px;background:var(--ok);border-radius:2px"></i><i style="flex:1;height:8px;background:var(--ok);border-radius:2px"></i><i style="flex:1;height:8px;background:var(--ok);border-radius:2px"></i><i style="flex:1;height:8px;background:var(--ok);border-radius:2px"></i><i style="flex:1;height:8px;background:var(--ok);border-radius:2px"></i><i style="flex:1;height:8px;background:#2E3236;border-radius:2px"></i>
+            </div>
+            <div class="sub">11 min estimated remaining · 6-cell</div>
+          </div>
+          <div class="card">
+            <div class="h"><b>Position</b><span>GPS · 3D fix</span></div>
+            <div class="num">680<small>m to home</small></div>
+            <div class="rows" style="margin-top:6px">
+              <div><span>Next waypoint</span><span>240 m</span></div>
+              <div><span>Satellites · HDOP</span><span>15 · 0.8</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="h"><b>Motion</b><span>Relative to home</span></div>
+            <div style="display:flex; gap:26px">
+              <div><div class="lbl">Altitude</div><div class="num">42.0<small>m</small></div><div class="sub">57.0 m AMSL</div></div>
+              <div><div class="lbl">Velocity</div><div class="num">8.4<small>m/s</small></div><div class="sub">Climb 0.3 m/s</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="h"><b>Telemetry link</b><span class="chip ok">Good</span></div>
+            <div class="num">−72<small>dBm</small></div>
+            <div class="rows" style="margin-top:6px">
+              <div><span>Heartbeat</span><span>0.4 s</span></div>
+              <div><span>Packet loss</span><span>1.2%</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="grid-column: 1 / -1;">
+          <div class="h"><b>Payload dock · flood modules</b><span>Latch <span class="chip ok">Ready</span></span></div>
+          <div style="display:grid; grid-template-columns: 260px 1fr; gap:22px;">
+            <div>
+              <div class="lbl" style="margin-bottom:6px">In dock (1/1)</div>
+              <div style="border:1px solid var(--amber); border-radius:4px; padding:8px 10px; display:flex; justify-content:space-between;"><span class="lbl">Slot 1</span><span class="mono" style="color:var(--hi)">FM-04</span><span class="lbl">Batt 100%</span></div>
+              <div class="note" style="margin-top:6px">Select a loaded slot to drop that module.</div>
+            </div>
+            <div>
+              <div class="lbl" style="margin-bottom:6px">On the water (3)</div>
+              <table>
+                <tr><td>FM-01</td><td class="t">Package 6 Creek</td><td style="text-align:right"><span class="btn r">Recall</span></td></tr>
+                <tr><td>FM-02</td><td class="t">Bagong Silang Bridge</td><td style="text-align:right"><span class="btn r">Recall</span></td></tr>
+                <tr><td>FM-03</td><td class="t">Phase 1 Covered Court</td><td style="text-align:right"><span class="btn r">Recall</span></td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MAP ═══════════ -->
+<div class="pg">
+  <h3>Map</h3>
+  <p>A full-height map with a quiet grid, the creek as blue water, fire zones in red-orange, the flight path dashed. Layer toggles sit at the top. The right column shows whatever you clicked (drone or a sensor), the position block and the legend.</p>
+  <div class="B">
+    <nav>
+      <div class="mark">DRMS<span>Bagong Silang ops</span></div>
+      <a>Live</a>
+      <a>Fire <span class="t" style="color:var(--bad)">Severe</span></a>
+      <a>Flood <span class="t" style="color:var(--water)">3/5</span></a>
+      <a>Flight</a>
+      <a class="on">Map</a>
+      <div class="foot">Dark · Light</div>
+    </nav>
+    <div class="main">
+      <div class="bar">
+        <h1>Site map<span>Bagong Silang · 14.7392° N · 121.0198° E</span></h1>
+        <span class="seg"><span class="on">Flight path</span><span class="on">Fire</span><span class="on">Flood</span></span>
+      </div>
+      <div class="body" style="grid-template-columns: 1fr 280px;">
+        <div style="background:#202326; border-radius:5px; overflow:hidden; position:relative;">
+          <svg viewBox="0 0 500 360" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+            <g stroke="#2A2D31"><path d="M0 45H500M0 90H500M0 135H500M0 180H500M0 225H500M0 270H500M0 315H500M62.5 0V360M125 0V360M187.5 0V360M250 0V360M312.5 0V360M375 0V360M437.5 0V360"/></g>
+            <path d="M 0,230 C 80,200 140,280 230,255 C 320,230 380,300 500,270 L 500,340 C 380,360 300,310 220,330 C 140,350 80,290 0,310 Z" fill="#3E6E8C" opacity=".45"/>
+            <circle cx="370" cy="140" r="75" fill="#E8806A" opacity=".08" stroke="#E8806A" stroke-opacity=".35" stroke-dasharray="4 4"/>
+            <circle cx="370" cy="140" r="45" fill="#E8806A" opacity=".14"/>
+            <circle cx="310" cy="65" r="8" fill="#9A9DA2" opacity=".6"/>
+            <circle cx="330" cy="108" r="6" fill="#E8806A"/><circle cx="400" cy="158" r="6" fill="#E8806A"/>
+            <path d="M 50,300 Q 140,190 230,120 T 360,215" stroke="#9A9DA2" stroke-width="2" fill="none" stroke-dasharray="6 5"/>
+            <rect x="44" y="296" width="12" height="12" fill="none" stroke="#F2EFE8" stroke-width="2"/>
+            <circle cx="230" cy="126" r="16" fill="none" stroke="#F5B83D" stroke-width="2"/>
+            <path d="M230 114 l8 18 l-8 -5 l-8 5z" fill="#F2EFE8" transform="rotate(62 230 126)"/>
+            <circle cx="110" cy="259" r="5" fill="#7FB7D9"/><circle cx="250" cy="274" r="5" fill="#7FB7D9"/><circle cx="390" cy="295" r="5" fill="#F5B83D"/>
+          </svg>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div class="card">
+            <div class="h"><b>Selected · Drone</b><span>DRMS-01</span></div>
+            <div class="rows">
+              <div><span>Battery</span><span>76%</span></div>
+              <div><span>GPS</span><span style="color:var(--ok)">Fixed</span></div>
+              <div><span>Link</span><span style="color:var(--ok)">Good</span></div>
+              <div><span>Status</span><span style="color:var(--ok)">Connected</span></div>
+              <div><span>Flight</span><span style="color:var(--ok)">Airborne</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="h"><b>Position</b><span>Sector A1</span></div>
+            <div class="rows">
+              <div><span>Altitude</span><span>42 m rel</span></div>
+              <div><span>Heading</span><span>062°</span></div>
+              <div><span>From home</span><span>680 m</span></div>
+            </div>
+          </div>
+          <div class="card" style="font-size:12.5px; display:grid; grid-template-columns:1fr 1fr; gap:6px 10px;">
+            <span><span style="color:#F5B83D">◯</span> Drone</span><span><span style="color:#9A9DA2">┅</span> Flight path</span>
+            <span>▢ Home point</span><span><span style="color:#7FB7D9">●</span> Flood module</span>
+            <span><span style="color:#E8806A">●</span> Flame</span><span><span style="color:#9A9DA2">●</span> Smoke</span>
+            <span><span style="color:#3E6E8C">■</span> Flood water</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
