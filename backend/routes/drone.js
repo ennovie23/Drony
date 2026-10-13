@@ -2,6 +2,7 @@ import express from 'express';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { resolvePythonBin } from '../lib/python.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +21,7 @@ router.post('/start-simulation', (req, res) => {
   }
 
   console.log('[drone] Starting ML detection simulation...');
-  simulationProcess = spawn('python3', ['ML/detect.py'], {
+  simulationProcess = spawn(resolvePythonBin(process.platform, process.env), ['ML/detect.py'], {
     cwd: backendRoot,
     env: { ...process.env, PYTHONUNBUFFERED: '1' },
   });
