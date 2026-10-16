@@ -45,6 +45,16 @@ def summarize(payloads):
     }
 
 
+def needs_separate_pass(baseline, stabilized):
+    """
+    The stabilized run can reuse the baseline detections only when it uses the
+    same image size and is at least as strict on confidence.
+    """
+    return (stabilized.detect_imgsz != baseline.detect_imgsz
+            or min(stabilized.fire_conf_min, stabilized.smoke_conf_min)
+            < min(baseline.fire_conf_min, baseline.smoke_conf_min))
+
+
 def default_load_models():
     from ultralytics import YOLO
     from severity import classify_fire_crop
@@ -75,7 +85,7 @@ def evaluate_video(path, detector, classify, baseline, stabilized, separate_pass
             stab_detections = stab.run_detector(frame)
             stab_ms += (time.perf_counter() - t0) * 1000
         else:
-            # Stabilized filtering is stricter, so the baseline pass contains everything it needs
+            # Same image size and at least as strict, so the baseline pass has everything it needs
             stab_detections = detections
 
         base_payloads.append(base.analyze(frame, detections, frame_index, ""))
@@ -103,7 +113,7 @@ def main(argv, load_models=None):
         print(f"Error: {e}")
         return 1
     baseline = PipelineSettings.baseline()
-    separate_pass = stabilized.detect_imgsz != baseline.detect_imgsz
+    separate_pass = needs_separate_pass(baseline, stabilized)
 
     names = args.videos or sorted(os.path.basename(p) for p in glob.glob(os.path.join(VIDEO_DIR, "*.mp4")))
     videos = []

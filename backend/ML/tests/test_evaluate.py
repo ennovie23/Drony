@@ -1,6 +1,8 @@
+import dataclasses
 import unittest
 
-from evaluate import main, summarize
+from evaluate import main, needs_separate_pass, summarize
+from pipeline import PipelineSettings
 
 
 def p(fire, smoke=False, sev=None):
@@ -24,6 +26,19 @@ class SummarizeTest(unittest.TestCase):
     def test_summarize_empty(self):
         self.assertEqual(summarize([]), {"frames": 0, "fire_pct": 0.0, "smoke_pct": 0.0,
                                          "flickers": 0, "sev_changes": 0})
+
+
+class SeparatePassTest(unittest.TestCase):
+    def test_shared_pass_when_stabilized_is_stricter(self):
+        self.assertFalse(needs_separate_pass(PipelineSettings.baseline(), PipelineSettings.from_env({})))
+
+    def test_separate_pass_for_other_imgsz(self):
+        stab = PipelineSettings.from_env({"DETECT_IMGSZ": "960"})
+        self.assertTrue(needs_separate_pass(PipelineSettings.baseline(), stab))
+
+    def test_separate_pass_when_threshold_below_baseline(self):
+        stab = dataclasses.replace(PipelineSettings.from_env({}), fire_conf_min=0.15)
+        self.assertTrue(needs_separate_pass(PipelineSettings.baseline(), stab))
 
 
 class MainTest(unittest.TestCase):
