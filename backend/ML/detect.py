@@ -9,7 +9,7 @@ import queue
 import base64
 from dotenv import load_dotenv
 from severity import classify_fire_crop
-from pipeline import FramePipeline, PipelineSettings
+from pipeline import FramePipeline, PipelineSettings, detector_weights_path
 from live_stream import LatestFrame, CaptureFlag, start_stream_server
 from snapshot_trigger import SnapshotTrigger
 from frame_grabber import FrameGrabber
@@ -21,6 +21,7 @@ load_dotenv(env_path)
 # Detection tuning (thresholds, frame voting, severity smoothing); fail fast on bad values
 try:
     settings = PipelineSettings.from_env(os.environ)
+    model_path = detector_weights_path(os.environ, os.path.dirname(os.path.abspath(__file__)))
 except ValueError as e:
     print(f"Error: {e}")
     exit(1)
@@ -50,8 +51,7 @@ elif not is_webcam:
     print(f"Error: Unknown VIDEO_SOURCE '{video_source}' (expected 'file' or 'webcam')")
     exit(1)
 
-# Load the custom-trained YOLO object detection model
-model_path = os.path.join(os.path.dirname(__file__), "best.pt")
+# Load the custom-trained YOLO object detection model (DETECTOR_WEIGHTS picks the file)
 model = YOLO(model_path)
 
 if is_webcam:

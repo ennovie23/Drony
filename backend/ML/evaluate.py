@@ -15,7 +15,7 @@ import time
 import cv2
 from dotenv import load_dotenv
 
-from pipeline import FramePipeline, PipelineSettings
+from pipeline import FramePipeline, PipelineSettings, detector_weights_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VIDEO_DIR = os.path.join(HERE, "test_video")
@@ -55,10 +55,10 @@ def needs_separate_pass(baseline, stabilized):
             < min(baseline.fire_conf_min, baseline.smoke_conf_min))
 
 
-def default_load_models():
+def default_load_models(weights_path):
     from ultralytics import YOLO
     from severity import classify_fire_crop
-    return YOLO(os.path.join(HERE, "best.pt")), classify_fire_crop
+    return YOLO(weights_path), classify_fire_crop
 
 
 def evaluate_video(path, detector, classify, baseline, stabilized, separate_pass):
@@ -101,6 +101,7 @@ def main(argv, load_models=None):
     parser = argparse.ArgumentParser(description="Compare baseline and stabilized fire detection.")
     parser.add_argument("videos", nargs="*", help="video names in test_video/ (default: all .mp4)")
     parser.add_argument("--imgsz", help="detector image size for the stabilized run")
+    parser.add_argument("--weights", help="detector file in backend/ML (default: DETECTOR_WEIGHTS or best.pt)")
     args = parser.parse_args(argv)
 
     load_dotenv(os.path.join(HERE, "..", ".env"))
@@ -109,6 +110,7 @@ def main(argv, load_models=None):
         if args.imgsz is not None:
             imgsz = PipelineSettings.from_env({"DETECT_IMGSZ": args.imgsz}).detect_imgsz
             stabilized = dataclasses.replace(stabilized, detect_imgsz=imgsz)
+        weights_path = detector_weights_path(os.environ, HERE, args.weights)
     except ValueError as e:
         print(f"Error: {e}")
         return 1
@@ -129,7 +131,8 @@ def main(argv, load_models=None):
         print("Error: no video could be processed")
         return 1
 
-    detector, classify = (load_models or default_load_models)()
+    detector, classify = (load_models or default_load_models)(weights_path)
+    print(f"Detector: {os.path.basename(weights_path)}")
     print(f"Stabilized settings: {stabilized}")
     header = (f"{'video':<26}{'frames':>7}  {'fire% base→stab':>16}  {'smoke% base→stab':>17}"
               f"  {'flickers base→stab':>19}  {'sev changes base→stab':>22}  {'ms/frame':>10}")

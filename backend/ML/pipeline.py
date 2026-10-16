@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 
 from stabilizer import PresenceVote, SeverityVote, filter_by_confidence, pad_box
@@ -16,6 +17,18 @@ def _setting(env, name, default, cast, check, range_text):
     if not check(value):
         raise ValueError(f"{name} must be {range_text} (got {raw!r})")
     return value
+
+
+def detector_weights_path(env, base_dir, override=None):
+    """
+    Path of the detector weights: `override`, else DETECTOR_WEIGHTS, else best.pt,
+    as a file name inside base_dir. Fails fast when the file is missing.
+    """
+    name = (override or env.get("DETECTOR_WEIGHTS") or "").strip() or "best.pt"
+    path = os.path.join(base_dir, name)
+    if not os.path.isfile(path):
+        raise ValueError(f"DETECTOR_WEIGHTS file not found: {path}")
+    return path
 
 
 @dataclass(frozen=True)

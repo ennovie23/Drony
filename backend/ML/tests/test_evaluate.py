@@ -43,9 +43,32 @@ class SeparatePassTest(unittest.TestCase):
 
 class MainTest(unittest.TestCase):
     def test_main_returns_1_when_no_video_opens(self):
-        def no_models():
+        def no_models(weights_path):
             raise AssertionError("models must not load when no video opens")
         self.assertEqual(main(["does_not_exist.mp4"], load_models=no_models), 1)
+
+
+class StopEvaluation(Exception):
+    pass
+
+
+class WeightsOptionTest(unittest.TestCase):
+    def test_main_passes_weights_to_loader(self):
+        seen = {}
+
+        def recorder(weights_path):
+            seen["path"] = weights_path
+            raise StopEvaluation
+
+        with self.assertRaises(StopEvaluation):
+            main(["smoke.mp4", "--weights", "best.pt"], load_models=recorder)
+        self.assertTrue(seen["path"].endswith("best.pt"))
+
+    def test_main_missing_weights_returns_1(self):
+        def never_called(weights_path):
+            raise AssertionError("models must not load when the weights file is missing")
+
+        self.assertEqual(main(["smoke.mp4", "--weights", "nope.pt"], load_models=never_called), 1)
 
 
 if __name__ == "__main__":
