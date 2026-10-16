@@ -6,7 +6,7 @@ from pipeline import PipelineSettings
 class PipelineSettingsTest(unittest.TestCase):
     def test_defaults_when_env_empty(self):
         self.assertEqual(PipelineSettings.from_env({}),
-                         PipelineSettings(0.40, 0.35, 3, 5, 9, 0.15, 640))
+                         PipelineSettings(0.25, 0.25, 3, 5, 9, 0.0, 640))
 
     def test_overrides_are_parsed(self):
         s = PipelineSettings.from_env({"FIRE_CONF_MIN": "0.5", "VOTE_K": "2",

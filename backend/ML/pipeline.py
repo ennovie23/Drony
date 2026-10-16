@@ -34,16 +34,16 @@ class PipelineSettings:
     def from_env(cls, env):
         vote_n = _setting(env, "VOTE_N", 5, int, lambda v: v >= 1, "an integer >= 1")
         return cls(
-            fire_conf_min=_setting(env, "FIRE_CONF_MIN", 0.40, float,
+            fire_conf_min=_setting(env, "FIRE_CONF_MIN", 0.25, float,
                                    lambda v: 0 < v <= 1, "a number in (0, 1]"),
-            smoke_conf_min=_setting(env, "SMOKE_CONF_MIN", 0.35, float,
+            smoke_conf_min=_setting(env, "SMOKE_CONF_MIN", 0.25, float,
                                     lambda v: 0 < v <= 1, "a number in (0, 1]"),
             vote_k=_setting(env, "VOTE_K", 3, int, lambda v: 1 <= v <= vote_n,
                             f"an integer from 1 to VOTE_N ({vote_n})"),
             vote_n=vote_n,
             severity_window=_setting(env, "SEVERITY_WINDOW", 9, int,
                                      lambda v: v >= 1, "an integer >= 1"),
-            crop_pad=_setting(env, "CROP_PAD", 0.15, float,
+            crop_pad=_setting(env, "CROP_PAD", 0.0, float,
                               lambda v: 0 <= v <= 1, "a number in [0, 1]"),
             detect_imgsz=_setting(env, "DETECT_IMGSZ", 640, int,
                                   lambda v: v >= 320 and v % 32 == 0,

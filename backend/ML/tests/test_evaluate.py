@@ -1,0 +1,37 @@
+import unittest
+
+from evaluate import main, summarize
+
+
+def p(fire, smoke=False, sev=None):
+    return {"fireDetected": fire, "smokeDetected": smoke, "fireSeverity": sev}
+
+
+class SummarizeTest(unittest.TestCase):
+    def test_summarize_rates(self):
+        s = summarize([p(True), p(True), p(False), p(False, True)])
+        self.assertEqual((s["frames"], s["fire_pct"], s["smoke_pct"]), (4, 50.0, 25.0))
+
+    def test_summarize_flickers_count_true_to_false(self):
+        s = summarize([p(True, False), p(False, True), p(True, False), p(False, False)])
+        self.assertEqual(s["flickers"], 3)
+
+    def test_summarize_sev_changes_only_while_fire(self):
+        s = summarize([p(True, sev="Minor"), p(True, sev="Severe"), p(False),
+                       p(True, sev="Minor"), p(True, sev="Minor")])
+        self.assertEqual(s["sev_changes"], 1)
+
+    def test_summarize_empty(self):
+        self.assertEqual(summarize([]), {"frames": 0, "fire_pct": 0.0, "smoke_pct": 0.0,
+                                         "flickers": 0, "sev_changes": 0})
+
+
+class MainTest(unittest.TestCase):
+    def test_main_returns_1_when_no_video_opens(self):
+        def no_models():
+            raise AssertionError("models must not load when no video opens")
+        self.assertEqual(main(["does_not_exist.mp4"], load_models=no_models), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

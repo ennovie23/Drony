@@ -49,7 +49,7 @@ class FramePipelineTest(unittest.TestCase):
         self.assertEqual([b["label"] for b in payloads[2]["boxes"]], ["fire"])
 
     def test_low_confidence_fire_ignored(self):
-        payloads = run([[F(0.39)]] * 5)
+        payloads = run([[F(0.24)]] * 5)
         self.assertFalse(any(p["fireDetected"] for p in payloads))
 
     def test_missed_frame_holds_last_box(self):
@@ -70,7 +70,7 @@ class FramePipelineTest(unittest.TestCase):
 
     def test_severity_crop_is_padded(self):
         classify = FakeClassify()
-        run([[F()]] * 3, classify=classify)
+        run([[F()]] * 3, settings=PipelineSettings.from_env({"CROP_PAD": "0.15"}), classify=classify)
         self.assertEqual(classify.shapes[0], (130, 130, 3))
 
     def test_box_out_of_frame_does_not_crash(self):
@@ -124,7 +124,7 @@ class FakeDetector:
         self.test = test
 
     def __call__(self, frame, conf, imgsz, verbose):
-        self.test.assertEqual((conf, imgsz, verbose), (0.35, 640, False))
+        self.test.assertEqual((conf, imgsz, verbose), (0.25, 640, False))
         return [FakeResult([FakeBox([1, 2, 3, 4], 0, 0.8)])]
 
 
