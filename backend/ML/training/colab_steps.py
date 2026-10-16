@@ -21,18 +21,18 @@ def mark_finished(run_dir):
 
 def run_state(run_dir, epochs):
     """
-    "new" when the run never saved a checkpoint, "done" when every epoch was
-    logged or the notebook marked it finished, otherwise "resume".
+    "new" when the run never saved a checkpoint, "done" when training finished,
+    otherwise "resume". Ultralytics stores the 0-based epoch in last.pt and sets it
+    to -1 once training ends (early stopping included), so a run that finished but
+    disconnected before the notebook marked it is still seen as done.
     """
-    if not os.path.exists(os.path.join(run_dir, "weights", "last.pt")):
+    last = os.path.join(run_dir, "weights", "last.pt")
+    if not os.path.exists(last):
         return "new"
     if (os.path.exists(os.path.join(run_dir, "finished"))
             and os.path.exists(os.path.join(run_dir, "weights", "best.pt"))):
         return "done"
-    results = os.path.join(run_dir, "results.csv")
-    if os.path.exists(results):
-        with open(results) as f:
-            logged = sum(1 for line in f if line.strip()) - 1  # minus the header
-        if logged >= epochs:
-            return "done"
-    return "resume"
+    import torch
+
+    epoch = torch.load(last, map_location="cpu", weights_only=False).get("epoch", -1)
+    return "done" if epoch == -1 or epoch >= epochs - 1 else "resume"

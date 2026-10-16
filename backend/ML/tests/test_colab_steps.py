@@ -3,6 +3,8 @@ import shutil
 import tempfile
 import unittest
 
+import torch
+
 from training.colab_steps import mark_finished, missing_inputs, run_state
 
 
@@ -12,9 +14,10 @@ def touch(*parts):
     open(path, "w").close()
 
 
-def write_results(run_dir, rows):
-    with open(os.path.join(run_dir, "results.csv"), "w") as f:
-        f.write("epoch,metrics\n" + "".join(f"{i},0\n" for i in range(1, rows + 1)))
+def save_last(run_dir, epoch):
+    """A checkpoint like Ultralytics saves: 0-based epoch, -1 once training finished."""
+    os.makedirs(os.path.join(run_dir, "weights"), exist_ok=True)
+    torch.save({"epoch": epoch}, os.path.join(run_dir, "weights", "last.pt"))
 
 
 class RunStateTest(unittest.TestCase):
@@ -29,19 +32,21 @@ class RunStateTest(unittest.TestCase):
         self.assertEqual(run_state(self.run, 30), "new")
 
     def test_resume_when_last_pt_unfinished(self):
-        touch(self.run, "weights", "last.pt")
-        write_results(self.run, 5)
+        save_last(self.run, 4)
         self.assertEqual(run_state(self.run, 30), "resume")
 
-    def test_done_when_all_epochs_logged(self):
-        touch(self.run, "weights", "last.pt")
-        write_results(self.run, 30)
+    def test_done_when_last_epoch_saved(self):
+        save_last(self.run, 29)
+        self.assertEqual(run_state(self.run, 30), "done")
+
+    def test_done_when_training_finished_but_not_marked(self):
+        # Early stop at epoch 22, then a disconnect before the notebook marked it finished
+        save_last(self.run, -1)
         self.assertEqual(run_state(self.run, 30), "done")
 
     def test_done_when_marked_finished(self):
-        touch(self.run, "weights", "last.pt")
+        save_last(self.run, 11)
         touch(self.run, "weights", "best.pt")
-        write_results(self.run, 12)
         mark_finished(self.run)
         self.assertEqual(run_state(self.run, 30), "done")
 
