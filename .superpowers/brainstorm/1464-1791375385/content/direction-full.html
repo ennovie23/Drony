@@ -1,0 +1,328 @@
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Archivo+Narrow:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  .full { margin: 18px 0 38px; }
+  .full .pick { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+  .full .pick h3 { margin:0; }
+  .full .pick p { margin:2px 0 0; opacity:.75; font-size:13px; }
+  .app { width:100%; height:660px; display:grid; grid-template-columns: 168px 1fr; overflow:hidden; border-radius:6px; font-size:13px; line-height:1.35; box-shadow:0 2px 18px rgba(0,0,0,.35); }
+  .app * { box-sizing:border-box; }
+  .app .main { display:grid; grid-template-rows: auto 1fr; min-width:0; }
+  .feedimg { position:relative; background:#2b2420 url('/files/fire.webp') center/cover; overflow:hidden; }
+  .feedimg .bb { position:absolute; border:2px solid; }
+  .feedimg .bb i { position:absolute; top:-19px; left:-2px; font-style:normal; font-size:11px; padding:1px 5px; white-space:nowrap; }
+  svg { display:block; }
+
+  /* ───────── A · FIELD SHEET ───────── */
+  .A { background:#F1EEE5; color:#1A1A17; font-family:'Archivo',sans-serif; }
+  .A nav { border-right:2px solid #1A1A17; display:flex; flex-direction:column; }
+  .A .mark { padding:16px 16px 14px; border-bottom:2px solid #1A1A17; }
+  .A .mark b { font-size:22px; font-weight:800; letter-spacing:-.03em; display:block; }
+  .A .mark span { font-family:'Archivo Narrow'; font-size:11.5px; color:#5E5B52; line-height:1.2; display:block; margin-top:2px; }
+  .A nav a { display:block; padding:11px 16px; border-bottom:1px solid #CFCABD; color:inherit; text-decoration:none; }
+  .A nav a b { font-weight:700; font-size:14px; display:block; }
+  .A nav a span { font-family:'Archivo Narrow'; font-size:12px; color:#5E5B52; }
+  .A nav a.on { background:#1A1A17; color:#F1EEE5; }
+  .A nav a.on span { color:#B9B4A6; }
+  .A nav a .hot { color:#C4410C; font-weight:600; }
+  .A nav .foot { margin-top:auto; padding:12px 16px; font-family:'Archivo Narrow'; font-size:12px; color:#5E5B52; border-top:1px solid #CFCABD; }
+  .A .bar { display:flex; align-items:center; gap:22px; padding:12px 20px; border-bottom:2px solid #1A1A17; }
+  .A .bar h1 { font-size:20px; font-weight:800; letter-spacing:-.02em; margin:0; margin-right:auto; }
+  .A .bar h1 span { font-weight:500; color:#5E5B52; font-size:15px; letter-spacing:0; margin-left:6px; }
+  .A .bar .m { font-family:'Archivo Narrow'; font-size:12px; color:#5E5B52; }
+  .A .bar .m b { display:block; font-family:'Archivo'; font-size:14px; color:#1A1A17; font-variant-numeric:tabular-nums; }
+  .A .grid { display:grid; grid-template-columns: 1fr 300px; min-height:0; }
+  .A .feedcol { display:grid; grid-template-rows: auto 1fr auto; border-right:2px solid #1A1A17; min-height:0; }
+  .A .tabs { display:flex; gap:18px; padding:9px 18px; border-bottom:1px solid #1A1A17; font-weight:600; font-size:13px; }
+  .A .tabs span { color:#77736A; }
+  .A .tabs span.on { color:#1A1A17; box-shadow: inset 0 -2px 0 #1A1A17; padding-bottom:3px; }
+  .A .tabs .r { margin-left:auto; font-weight:500; color:#5E5B52; }
+  .A .feedimg .bb { border-color:#fff; }
+  .A .feedimg .bb i { background:#fff; color:#1A1A17; font-weight:600; }
+  .A .log { border-top:1px solid #1A1A17; font-size:12.5px; }
+  .A .log div { display:grid; grid-template-columns: 54px 1fr auto; padding:6px 18px; border-bottom:1px solid #CFCABD; }
+  .A .log time { font-variant-numeric:tabular-nums; color:#5E5B52; }
+  .A .log .hot { color:#C4410C; font-weight:600; }
+  .A .log em { font-style:normal; color:#5E5B52; font-family:'Archivo Narrow'; }
+  .A aside { display:flex; flex-direction:column; min-height:0; }
+  .A .alarm { background:#D9480F; color:#fff; padding:14px 16px; }
+  .A .alarm .k { font-family:'Archivo Narrow'; font-size:12px; opacity:.9; }
+  .A .alarm .v { font-weight:800; font-size:30px; letter-spacing:-.03em; line-height:1.05; margin:2px 0 4px; }
+  .A .alarm .s { font-size:12.5px; }
+  .A h5 { margin:0; padding:10px 16px 6px; font-size:12px; font-weight:700; border-bottom:1px solid #1A1A17; }
+  .A table { width:100%; border-collapse:collapse; }
+  .A td { padding:6px 16px; border-bottom:1px solid #CFCABD; }
+  .A td:last-child { text-align:right; font-weight:600; font-variant-numeric:tabular-nums; }
+  .A td small { color:#5E5B52; font-weight:400; }
+  .A .warn { color:#B35C00; }
+  .A .map { flex:1; background:#EAE5D7; position:relative; min-height:150px; }
+  .A .map .cap { position:absolute; left:10px; bottom:8px; font-family:'Archivo Narrow'; font-size:11.5px; color:#5E5B52; }
+
+  /* ───────── B · NIGHT OPS DESK ───────── */
+  .B { background:#1B1D20; color:#D8D5CE; font-family:'IBM Plex Sans',sans-serif; grid-template-columns:150px 1fr; }
+  .B nav { background:#16181A; border-right:1px solid #2C2F33; display:flex; flex-direction:column; padding:14px 0; }
+  .B .mark { padding:0 16px 18px; font-weight:600; font-size:15px; color:#F2EFE8; }
+  .B .mark span { display:block; font-weight:400; font-size:11.5px; color:#7F8389; margin-top:2px; }
+  .B nav a { display:flex; justify-content:space-between; align-items:center; padding:9px 16px; color:#A9ACB1; text-decoration:none; font-size:13.5px; border-left:2px solid transparent; }
+  .B nav a.on { color:#F2EFE8; background:#212428; border-left-color:#F5B83D; }
+  .B nav a .t { font-size:11px; font-weight:600; color:#F5B83D; }
+  .B nav a .t.c { color:#7FB7D9; }
+  .B nav .foot { margin-top:auto; padding:0 16px; font-size:12px; color:#7F8389; }
+  .B .bar { display:flex; align-items:center; gap:26px; padding:11px 20px; border-bottom:1px solid #2C2F33; }
+  .B .bar h1 { font-size:16px; font-weight:600; margin:0; margin-right:auto; color:#F2EFE8; }
+  .B .bar h1 span { font-weight:400; color:#7F8389; margin-left:8px; font-size:14px; }
+  .B .bar .m { font-size:12px; color:#7F8389; }
+  .B .bar .m b { font-family:'IBM Plex Mono'; font-weight:500; color:#F2EFE8; margin-left:6px; font-size:13px; }
+  .B .bar .air { color:#8FCB9B; font-size:12.5px; font-weight:500; }
+  .B .grid { display:grid; grid-template-columns: 1fr 290px; gap:1px; background:#2C2F33; min-height:0; }
+  .B .feedcol { background:#1B1D20; display:grid; grid-template-rows: 1fr auto; min-height:0; }
+  .B .feedimg { margin:12px 12px 0; border-radius:4px; filter:saturate(.8) brightness(.9); }
+  .B .feedimg .bb { border-color:#F5B83D; border-radius:2px; }
+  .B .feedimg .bb i { background:#F5B83D; color:#1B1D20; font-weight:600; }
+  .B .feedimg .ov { position:absolute; left:10px; top:10px; display:flex; gap:6px; }
+  .B .feedimg .ov span { background:rgba(22,24,26,.82); color:#D8D5CE; font-size:12px; padding:3px 8px; border-radius:3px; }
+  .B .feedimg .ov span.on { color:#F2EFE8; box-shadow: inset 0 -2px 0 #F5B83D; }
+  .B .strip { display:grid; grid-template-columns: repeat(4,1fr); gap:1px; background:#2C2F33; margin:12px; border-radius:4px; overflow:hidden; }
+  .B .strip div { background:#212428; padding:10px 12px; }
+  .B .lbl { font-size:12px; color:#7F8389; }
+  .B .num { font-family:'IBM Plex Mono'; font-size:24px; color:#F2EFE8; font-weight:500; line-height:1.15; }
+  .B .num small { font-size:12px; color:#7F8389; margin-left:3px; font-family:'IBM Plex Sans'; }
+  .B aside { background:#1B1D20; display:flex; flex-direction:column; min-height:0; }
+  .B .att { margin:12px; background:#2E2412; border:1px solid #5A4419; border-radius:4px; padding:11px 12px; }
+  .B .att b { color:#F5B83D; font-weight:600; display:block; font-size:13.5px; }
+  .B .att span { font-size:12.5px; color:#CBB78F; }
+  .B .rows { padding:0 12px; }
+  .B .rows div { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid #2C2F33; font-size:13px; }
+  .B .rows div span:first-child { color:#9A9DA2; }
+  .B .rows div span:last-child { font-family:'IBM Plex Mono'; color:#F2EFE8; }
+  .B .rows .w span:last-child { color:#7FB7D9; }
+  .B .map { flex:1; margin:12px; border-radius:4px; background:#202326; position:relative; min-height:150px; }
+
+  /* ───────── C · SITUATION REPORT ───────── */
+  .C { background:#FBFAF7; color:#23221F; font-family:'Source Sans 3',sans-serif; grid-template-columns:176px 1fr; }
+  .C nav { border-right:1px solid #DDD8CC; padding:18px 0; display:flex; flex-direction:column; background:#F4F2EC; }
+  .C .mark { padding:0 18px 18px; font-family:'Source Serif 4'; font-weight:700; font-size:20px; }
+  .C .mark span { display:block; font-family:'Source Sans 3'; font-weight:400; font-size:12px; color:#7A7465; }
+  .C nav a { padding:7px 18px; color:#4A463E; text-decoration:none; font-size:14.5px; }
+  .C nav a.on { color:#23221F; font-weight:700; background:#FBFAF7; box-shadow: inset 3px 0 0 #9C3D13; }
+  .C nav a small { display:block; font-size:12px; color:#8A8476; font-weight:400; }
+  .C nav a small.hot { color:#B8350F; }
+  .C nav .foot { margin-top:auto; padding:0 18px; font-size:12px; color:#7A7465; }
+  .C .head { padding:16px 26px 14px; border-bottom:1px solid #DDD8CC; display:flex; align-items:flex-end; gap:30px; }
+  .C .head .k { font-size:12.5px; color:#8A6A2C; font-weight:600; }
+  .C .head h1 { font-family:'Source Serif 4'; font-weight:700; font-size:26px; line-height:1.15; margin:3px 0 4px; letter-spacing:-.01em; }
+  .C .head p { margin:0; color:#5E594E; font-size:14px; max-width:620px; }
+  .C .head .facts { margin-left:auto; display:flex; gap:22px; text-align:right; font-size:12px; color:#7A7465; }
+  .C .head .facts b { display:block; font-size:18px; color:#23221F; font-variant-numeric:tabular-nums; font-weight:600; }
+  .C .grid { display:grid; grid-template-columns: 300px 1fr; min-height:0; }
+  .C .log { border-right:1px solid #DDD8CC; padding:12px 22px; overflow:hidden; }
+  .C .log h5 { font-family:'Source Serif 4'; font-size:15px; margin:0 0 6px; font-weight:600; }
+  .C .ev { display:grid; grid-template-columns: 46px 1fr; padding:8px 0; border-bottom:1px solid #E6E1D5; font-size:13.5px; }
+  .C .ev time { color:#8A8476; font-variant-numeric:tabular-nums; }
+  .C .ev small { display:block; color:#7A7465; font-size:12px; }
+  .C .ev.hot b { color:#B8350F; }
+  .C .right { padding:14px 22px; display:grid; grid-template-columns: 1.5fr 1fr; grid-template-rows: 1fr auto; gap:14px; min-height:0; }
+  .C .fig { display:flex; flex-direction:column; min-height:0; }
+  .C .feedimg { flex:1; border-radius:2px; }
+  .C .feedimg .bb { border-color:#fff; }
+  .C .feedimg .bb i { background:#fff; color:#23221F; font-weight:600; }
+  .C .cap { font-family:'Source Serif 4'; font-style:italic; font-size:12.5px; color:#6E695E; margin-top:6px; }
+  .C .map { flex:1; background:#EFEBE1; border-radius:2px; position:relative; min-height:120px; }
+  .C .status { grid-column: 1 / -1; display:grid; grid-template-columns: repeat(5,1fr); border-top:1px solid #DDD8CC; padding-top:10px; }
+  .C .status div { font-size:12px; color:#7A7465; }
+  .C .status b { display:block; font-size:16px; color:#23221F; font-weight:600; font-variant-numeric:tabular-nums; }
+</style>
+
+<h2>Live page at full size, three directions</h2>
+<p class="subtitle">Scroll through all three. Each shows the whole shell (sidebar, top bar, page) with real content. Click "Pick" on the one you lean toward, or tell me what to mix.</p>
+
+<!-- ═════════════ A ═════════════ -->
+<div class="full">
+  <div class="pick">
+    <div><h3>A · Field sheet</h3><p>Paper, ink, rules. Navigation shows each hazard's state, so you see "Fire: 2nd alarm" without opening the page.</p></div>
+    <div class="option" data-choice="a-field-sheet" onclick="toggleSelect(this)" style="padding:8px 16px"><div class="content"><h3 style="margin:0">Pick A</h3></div></div>
+  </div>
+  <div class="app A">
+    <nav>
+      <div class="mark"><b>DRMS</b><span>Disaster Response<br>Management System</span></div>
+      <a class="on"><b>Live</b><span>Airborne · 46 min</span></a>
+      <a><b>Fire</b><span class="hot">2nd alarm · 3 detections</span></a>
+      <a><b>Flood</b><span class="hot">Creek 1.8 m, rising</span></a>
+      <a><b>Flight</b><span>Auto · 76% battery</span></a>
+      <a><b>Map</b><span>Sector A1</span></a>
+      <div class="foot">Operator: J. Dela Cruz<br>Light · <u>Dark</u></div>
+    </nav>
+    <div class="main">
+      <div class="bar">
+        <h1>Live feed<span>Bagong Silang, Caloocan</span></h1>
+        <div class="m">Drone<b>DRMS-01 · Airborne</b></div>
+        <div class="m">Mission time<b>00:46:12</b></div>
+        <div class="m">Local time<b>14:06:12 PHT</b></div>
+      </div>
+      <div class="grid">
+        <div class="feedcol">
+          <div class="tabs"><span class="on">RGB</span><span>Thermal</span><span>Detections shown</span><span class="r">30 fps · 1080p · link good</span></div>
+          <div class="feedimg">
+            <div class="bb" style="left:12%;top:30%;width:22%;height:40%"><i>Fire 0.85</i></div>
+            <div class="bb" style="left:42%;top:26%;width:26%;height:46%"><i>Fire 0.79</i></div>
+            <div class="bb" style="left:70%;top:34%;width:18%;height:34%"><i>Smoke 0.62</i></div>
+          </div>
+          <div class="log">
+            <div><time>14:04</time><span class="hot">Flame confirmed near Package 6 (85%)</span><em>Fire model</em></div>
+            <div><time>13:58</time><span>Module F-03 dropped at creek bend</span><em>Dock</em></div>
+            <div><time>13:51</time><span>Creek gauge passed 1.5 m</span><em>Module F-01</em></div>
+          </div>
+        </div>
+        <aside>
+          <div class="alarm"><div class="k">Fire status</div><div class="v">2nd Alarm</div><div class="s">Spreading northeast · 3 active sources</div></div>
+          <h5>Drone</h5>
+          <table>
+            <tr><td>Battery</td><td>76% <small>· 11 min left</small></td></tr>
+            <tr><td>Altitude</td><td>42 m</td></tr>
+            <tr><td>Speed</td><td>8.4 m/s</td></tr>
+            <tr><td>Heading</td><td>062° ENE</td></tr>
+            <tr><td>GPS</td><td>Fixed · 15 sats</td></tr>
+            <tr><td>Creek gauge</td><td class="warn">1.8 m ▲</td></tr>
+          </table>
+          <div class="map">
+            <svg viewBox="0 0 500 360" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+              <g fill="none" stroke="#C9C1AC" stroke-width="1">
+                <path d="M-10 80 C 120 40, 260 120, 520 60"/><path d="M-10 140 C 140 100, 280 180, 520 120"/><path d="M-10 210 C 150 170, 300 250, 520 190"/><path d="M-10 280 C 160 240, 310 320, 520 260"/>
+              </g>
+              <path d="M 0,250 C 120,230 200,300 500,270" stroke="#6E9BB5" stroke-width="7" fill="none" opacity=".55"/>
+              <path d="M 50,300 Q 140,190 230,120 T 360,215" stroke="#1A1A17" stroke-width="2" fill="none" stroke-dasharray="6 5"/>
+              <circle cx="330" cy="110" r="26" fill="#D9480F" opacity=".22"/><circle cx="330" cy="110" r="6" fill="#D9480F"/>
+              <rect x="44" y="294" width="12" height="12" fill="none" stroke="#1A1A17" stroke-width="2"/>
+              <path d="M230 108 l8 18 h-16z" fill="#1A1A17"/>
+            </svg>
+            <span class="cap">14.7392° N · 121.0198° E · 680 m from home</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════ B ═════════════ -->
+<div class="full">
+  <div class="pick">
+    <div><h3>B · Night ops desk</h3><p>Graphite, low glare. The video takes the most space. Amber is reserved for "needs attention", blue for water.</p></div>
+    <div class="option" data-choice="b-ops-desk" onclick="toggleSelect(this)" style="padding:8px 16px"><div class="content"><h3 style="margin:0">Pick B</h3></div></div>
+  </div>
+  <div class="app B">
+    <nav>
+      <div class="mark">DRMS<span>Bagong Silang ops</span></div>
+      <a class="on">Live</a>
+      <a>Fire <span class="t">2nd alarm</span></a>
+      <a>Flood <span class="t c">1.8 m</span></a>
+      <a>Flight</a>
+      <a>Map</a>
+      <div class="foot">J. Dela Cruz<br>Dark · Light</div>
+    </nav>
+    <div class="main">
+      <div class="bar">
+        <h1>Live feed<span>Bagong Silang, Caloocan City</span></h1>
+        <span class="air">● DRMS-01 airborne</span>
+        <span class="m">Mission<b>00:46:12</b></span>
+        <span class="m">PHT<b>14:06:12</b></span>
+      </div>
+      <div class="grid">
+        <div class="feedcol">
+          <div class="feedimg">
+            <div class="ov"><span class="on">RGB</span><span>Thermal</span><span>Detections on</span></div>
+            <div class="bb" style="left:12%;top:30%;width:22%;height:40%"><i>Fire 85%</i></div>
+            <div class="bb" style="left:42%;top:26%;width:26%;height:46%"><i>Fire 79%</i></div>
+            <div class="bb" style="left:70%;top:34%;width:18%;height:34%"><i>Smoke 62%</i></div>
+          </div>
+          <div class="strip">
+            <div><div class="lbl">Battery</div><div class="num">76<small>% · 11 min</small></div></div>
+            <div><div class="lbl">Altitude</div><div class="num">42<small>m</small></div></div>
+            <div><div class="lbl">Speed</div><div class="num">8.4<small>m/s</small></div></div>
+            <div><div class="lbl">Heading</div><div class="num">062<small>° ENE</small></div></div>
+          </div>
+        </div>
+        <aside>
+          <div class="att"><b>Fire at 2nd alarm</b><span>3 sources near Package 6, spreading northeast. Last confirmed 14:04.</span></div>
+          <div class="rows">
+            <div class="w"><span>Creek gauge (F-01)</span><span>1.8 m ▲</span></div>
+            <div><span>GPS</span><span>Fixed · 15</span></div>
+            <div><span>Link</span><span>−72 dBm</span></div>
+            <div><span>Distance home</span><span>680 m</span></div>
+          </div>
+          <div class="map">
+            <svg viewBox="0 0 500 360" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+              <g stroke="#2A2D31" stroke-width="1"><path d="M0 90H500M0 180H500M0 270H500M125 0V360M250 0V360M375 0V360"/></g>
+              <path d="M 0,250 C 120,230 200,300 500,270" stroke="#3E6E8C" stroke-width="8" fill="none" opacity=".7"/>
+              <path d="M 50,300 Q 140,190 230,120 T 360,215" stroke="#9A9DA2" stroke-width="2" fill="none" stroke-dasharray="6 5"/>
+              <circle cx="330" cy="110" r="28" fill="#F5B83D" opacity=".16"/><circle cx="330" cy="110" r="6" fill="#F5B83D"/>
+              <path d="M230 108 l8 18 h-16z" fill="#F2EFE8"/>
+            </svg>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════ C ═════════════ -->
+<div class="full">
+  <div class="pick">
+    <div><h3>C · Situation report</h3><p>The page opens with a sentence describing the situation. The event log on the left is the spine; video and map are figures with captions.</p></div>
+    <div class="option" data-choice="c-sitrep" onclick="toggleSelect(this)" style="padding:8px 16px"><div class="content"><h3 style="margin:0">Pick C</h3></div></div>
+  </div>
+  <div class="app C">
+    <nav>
+      <div class="mark">DRMS<span>Disaster Response Management System</span></div>
+      <a class="on">Live<small>Airborne, 46 min</small></a>
+      <a>Fire<small class="hot">2nd alarm</small></a>
+      <a>Flood<small class="hot">Creek rising</small></a>
+      <a>Flight<small>Auto mode</small></a>
+      <a>Map<small>Sector A1</small></a>
+      <div class="foot">J. Dela Cruz · Light / Dark</div>
+    </nav>
+    <div class="main">
+      <div class="head">
+        <div>
+          <div class="k">Live · Bagong Silang, Caloocan · 14:06 PHT</div>
+          <h1>Fire near Package 6 at 2nd alarm; Phase 1 creek at 1.8 m and rising</h1>
+          <p>DRMS-01 has been airborne 46 minutes. Three flame sources confirmed by the fire model; two flood modules deployed along the creek.</p>
+        </div>
+        <div class="facts"><div>Battery<b>76%</b></div><div>Time left<b>11 min</b></div></div>
+      </div>
+      <div class="grid">
+        <div class="log">
+          <h5>Events</h5>
+          <div class="ev hot"><time>14:04</time><div><b>Flame confirmed, 85%</b><small>Fire model · Package 6</small></div></div>
+          <div class="ev"><time>14:01</time><div>Alarm raised to 2nd<small>Spread northeast detected</small></div></div>
+          <div class="ev"><time>13:58</time><div>Module F-03 dropped<small>Creek bend, Phase 1</small></div></div>
+          <div class="ev hot"><time>13:51</time><div><b>Creek passed 1.5 m</b><small>Module F-01</small></div></div>
+          <div class="ev"><time>13:34</time><div>Smoke first detected<small>Fire model · 62%</small></div></div>
+          <div class="ev"><time>13:20</time><div>Takeoff<small>DRMS-01 · home point</small></div></div>
+        </div>
+        <div class="right">
+          <div class="fig">
+            <div class="feedimg">
+              <div class="bb" style="left:12%;top:30%;width:22%;height:40%"><i>Fire 85%</i></div>
+              <div class="bb" style="left:42%;top:26%;width:26%;height:46%"><i>Fire 79%</i></div>
+              <div class="bb" style="left:70%;top:34%;width:18%;height:34%"><i>Smoke 62%</i></div>
+            </div>
+            <div class="cap">Fig. 1 · Live RGB from DRMS-01 at 42 m. Switch to thermal.</div>
+          </div>
+          <div class="fig">
+            <div class="map">
+              <svg viewBox="0 0 500 360" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+                <path d="M 0,250 C 120,230 200,300 500,270" stroke="#7FA6BC" stroke-width="8" fill="none" opacity=".6"/>
+                <path d="M 50,300 Q 140,190 230,120 T 360,215" stroke="#4A463E" stroke-width="2" fill="none" stroke-dasharray="6 5"/>
+                <circle cx="330" cy="110" r="28" fill="#B8350F" opacity=".18"/><circle cx="330" cy="110" r="6" fill="#B8350F"/>
+                <path d="M230 108 l8 18 h-16z" fill="#23221F"/>
+              </svg>
+            </div>
+            <div class="cap">Fig. 2 · Flight path, fire and creek. 680 m from home.</div>
+          </div>
+          <div class="status">
+            <div>Altitude<b>42 m</b></div><div>Speed<b>8.4 m/s</b></div><div>Heading<b>062° ENE</b></div><div>GPS<b>Fixed</b></div><div>Link<b>Good</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

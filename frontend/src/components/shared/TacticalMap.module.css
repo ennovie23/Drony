@@ -1,0 +1,267 @@
+.frame {
+    position: relative;
+    background-color: var(--surface-sunken);
+    border-radius: 4px;
+    min-height: 400px;
+    overflow: hidden;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.tall {
+    min-height: 560px;
+    height: 100%;
+}
+
+.compact {
+    min-height: 240px;
+}
+
+.compass {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-weight: 600;
+    color: var(--text-strong);
+}
+
+.compassLine {
+    width: 1px;
+    height: 16px;
+    background-color: var(--text-muted);
+}
+
+.canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.gridLine {
+    stroke: var(--line);
+    stroke-width: 0.8;
+}
+
+.contour {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1;
+}
+
+.water {
+    fill: var(--water-fill);
+    fill-opacity: 0.55;
+    stroke: none;
+}
+
+.zoneInner {
+    fill: var(--bad);
+    fill-opacity: 0.14;
+    stroke: none;
+}
+
+.zoneOuter {
+    fill: var(--bad);
+    fill-opacity: 0.06;
+    stroke: var(--bad);
+    stroke-opacity: 0.4;
+    stroke-dasharray: 4 4;
+    vector-effect: non-scaling-stroke;
+}
+
+.flightPath {
+    fill: none;
+    stroke: var(--text-muted);
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+    vector-effect: non-scaling-stroke;
+}
+
+/* ── Markers ───────────────────────────────────────────── */
+.marker,
+.markerModule,
+.markerDrone,
+.markerHome {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: 12px;
+    color: inherit;
+}
+
+.marker,
+.markerDrone {
+    flex-direction: column;
+}
+
+.markerModule,
+.markerDrone,
+.dropPoint {
+    cursor: pointer;
+}
+
+.flameBox,
+.smokeBox {
+    padding: 0 5px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.flameBox {
+    background: var(--bad-soft);
+    color: var(--bad);
+}
+
+.smokeBox {
+    background: var(--surface);
+    color: var(--text-muted);
+}
+
+.flameRing,
+.smokeRing {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 3px;
+}
+
+.flameRing { background: var(--bad); }
+.smokeRing { background: var(--text-muted); opacity: 0.7; }
+
+.markerHome {
+    z-index: 5;
+}
+
+.homeBox {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--text-strong);
+    color: var(--text-strong);
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.markerDrone {
+    z-index: 7;
+}
+
+.droneIcon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--attention);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.droneIcon span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-strong);
+}
+
+.droneAlt {
+    color: var(--text-strong);
+    font-weight: 500;
+    margin-top: 3px;
+    white-space: nowrap;
+}
+
+.markerModule {
+    gap: 6px;
+    text-align: left;
+}
+
+.moduleBox {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--water);
+}
+
+.moduleDot {
+    display: none;
+}
+
+.moduleLabel {
+    color: var(--text-strong);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.moduleLevel {
+    color: var(--water);
+}
+
+.moduleSub {
+    color: var(--text-muted);
+}
+
+.dropRing {
+    width: 12px;
+    height: 12px;
+    border: 2px dashed var(--attention);
+    border-radius: 50%;
+}
+
+.dropLabel {
+    color: var(--attention-text);
+    margin-top: 2px;
+}
+
+.selected {
+    outline: 2px solid var(--text-strong);
+    outline-offset: 4px;
+    border-radius: 3px;
+}
+
+.footer {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 10px;
+    z-index: 8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+}
+
+.scaleBar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.scaleLine {
+    width: 48px;
+    height: 6px;
+    border: 1.5px solid var(--text-muted);
+    border-top: 0;
+}
+
+.sectorBadge {
+    background: var(--surface);
+    padding: 2px 8px;
+    border-radius: 3px;
+    color: var(--text-muted);
+}

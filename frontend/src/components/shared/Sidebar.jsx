@@ -1,47 +1,55 @@
-import { Gauge, Radio, RotateCcwClock, Sun, Moon } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Radio, Flame, Waves, Drone, Map, Sun, Moon } from 'lucide-react';
 import styles from './Sidebar.module.css';
-import { useState, useEffect } from 'react';
+import useTheme from '../../hooks/useTheme';
+import { useAppData } from '../../context/AppDataContext';
+import { SEVERITY_TONE, toneFor } from '../ui/tones';
+import { reportingSensors } from '../../utils/flood';
 
-export default function SideBar({ activeTab, setActiveTab }) {
-  const [isLightMode, setIsLightMode] = useState(false);
+const NAV_ITEMS = [
+  { to: '/live', label: 'Live', icon: Radio },
+  { to: '/fire', label: 'Fire', icon: Flame },
+  { to: '/flood', label: 'Flood', icon: Waves },
+  { to: '/flight', label: 'Flight', icon: Drone },
+  { to: '/map', label: 'Map', icon: Map },
+];
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isLightMode ? 'light' : 'dark');
-  }, [isLightMode]);
+export default function SideBar() {
+  const [theme, toggleTheme] = useTheme();
+  const { fireSnapshots, modules } = useAppData();
+  const isLightMode = theme === 'light';
+
+  // Dots let the operator see hazard state without opening the page.
+  const fireTone = toneFor(SEVERITY_TONE, fireSnapshots[0]?.severity);
+  const dots = {
+    '/fire': fireTone !== 'off' ? styles[fireTone] : null,
+    '/flood': reportingSensors(modules).length > 0 ? styles.water : null,
+  };
 
   return (
     <aside className={styles.container}>
-      <div id={styles.titleBox}>
-        <span>DRMS</span>
-      </div>
+      <div className={styles.mark}>DRMS</div>
 
-      <div
-        className={`${styles.iconBox} ${activeTab === 'dashboard' ? styles.active : ''}`}
-        onClick={() => setActiveTab('dashboard')}>
-        <Gauge />
-        <span className={styles.iconText}>Dashboard</span>
-      </div>
+      <nav className={styles.nav}>
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+              <Icon />
+              <span>{item.label}</span>
+              {dots[item.to] && <span className={`${styles.dot} ${dots[item.to]}`}></span>}
+            </NavLink>
+          );
+        })}
+      </nav>
 
-      <div
-        className={`${styles.iconBox} ${activeTab === 'live' ? styles.active : ''}`}
-        onClick={() => setActiveTab('live')}>
-        <Radio />
-        <span className={styles.iconText}>Live</span>
-      </div>
-
-      <div
-        className={`${styles.iconBox} ${activeTab === 'history' ? styles.active : ''}`}
-        onClick={() => setActiveTab('history')}>
-        <RotateCcwClock />
-        <span className={styles.iconText}>History</span>
-      </div>
-
-      <div
-        className={`${styles.iconBox} ${styles.bottom}`}
-        onClick={() => setIsLightMode(!isLightMode)}>
+      <button className={`${styles.item} ${styles.bottom}`} onClick={toggleTheme}>
         {isLightMode ? <Sun /> : <Moon />}
-        <span className={styles.iconText}>{isLightMode ? 'Light' : 'Dark'}</span>
-      </div>
+        <span>{isLightMode ? 'Light' : 'Dark'}</span>
+      </button>
     </aside>
   );
 }

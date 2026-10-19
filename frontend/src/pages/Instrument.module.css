@@ -1,0 +1,261 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 14px;
+}
+
+.demoActive {
+    border-color: var(--attention);
+    color: var(--attention-text);
+}
+
+/* ── Instrument grid: telemetry cards around the drone view ── */
+.instrumentGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 460px) minmax(0, 1fr);
+    gap: 14px;
+}
+
+.side {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.side > section {
+    flex: 1;
+}
+
+.kv {
+    margin-top: 8px;
+}
+
+.pair {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.centerColumn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+
+.viewLabel {
+    align-self: flex-start;
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ── Drone view (same geometry, quiet palette) ─────────── */
+.droneSvg {
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    overflow: visible;
+}
+
+.satellite {
+    fill: var(--text-faint);
+    opacity: 0.6;
+}
+
+.ringOuter {
+    fill: none;
+    stroke: var(--text-muted);
+    stroke-width: 1.2;
+}
+
+.ringDotted {
+    fill: none;
+    stroke: var(--text-faint);
+    stroke-width: 1;
+    stroke-dasharray: 1 5;
+}
+
+.compassRose {
+    transition: transform 0.9s linear;
+}
+
+.tick {
+    stroke: var(--text-faint);
+    stroke-width: 1;
+}
+
+.tickMajor {
+    stroke: var(--text-strong);
+    stroke-width: 2;
+}
+
+.cardinal {
+    fill: var(--text-strong);
+    font-size: 13px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+.headingArrow {
+    fill: var(--attention);
+}
+
+.headingText {
+    fill: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: 18px;
+    text-anchor: middle;
+}
+
+.proximityRing {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1.2;
+}
+
+.arm {
+    stroke: var(--text-faint);
+    stroke-width: 9;
+    stroke-linecap: round;
+}
+
+.rotorGuard {
+    fill: var(--surface-sunken);
+    stroke: var(--text-faint);
+    stroke-width: 1.2;
+}
+
+.rotorArc {
+    fill: none;
+    stroke: var(--text-faint);
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+.propeller {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: spin 0.6s linear infinite;
+}
+
+.propBlade {
+    fill: none;
+    stroke: var(--text-muted);
+    stroke-width: 3;
+}
+
+.propShaft {
+    stroke: var(--text-muted);
+    stroke-width: 2;
+}
+
+.propHub {
+    fill: var(--text-muted);
+}
+
+.body {
+    fill: var(--surface-sunken);
+    stroke: var(--text-muted);
+    stroke-width: 1.5;
+}
+
+.bodyPanel {
+    fill: none;
+    stroke: var(--text-faint);
+    stroke-width: 1.5;
+}
+
+.ledFront {
+    fill: var(--ok);
+}
+
+.ledRear {
+    fill: var(--bad);
+}
+
+.tail {
+    fill: var(--text-muted);
+}
+
+.payloadFrame {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+}
+
+.payloadBox {
+    fill: var(--surface);
+    stroke: var(--text-faint);
+    stroke-width: 1.5;
+}
+
+.payloadCore {
+    fill: var(--line);
+}
+
+.payloadWheel {
+    fill: none;
+    stroke: var(--text-faint);
+    stroke-width: 1.5;
+}
+
+.payloadLabel {
+    fill: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    text-anchor: middle;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .propeller,
+    .compassRose {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* ── Cell capacity bar ─────────────────────────────────── */
+.cellBar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.cells {
+    display: flex;
+    gap: 4px;
+}
+
+.cell {
+    width: 30px;
+    height: 10px;
+    border-radius: 2px;
+    background-color: var(--line);
+}
+
+.cellFilled {
+    background-color: var(--ok);
+}
+
+.cellLow {
+    background-color: var(--attention);
+}

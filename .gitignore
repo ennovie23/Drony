@@ -15,3 +15,8 @@ dist/
 # IDEs
 .vscode/
 .idea/
+
+.superpowers/
+
+# Webcam test snapshots (local only)
+backend/ML/snapshots/

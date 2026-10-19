@@ -1,0 +1,48 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model TelemetryLog {
+  id            Int      @id @default(autoincrement())
+  droneCode     String   @map("drone_code")
+  hazardType    String   @map("hazard_type")    // 'fire', 'flood', 'landslide', 'beacon'
+  latitude      Decimal? @db.Decimal(10, 8)
+  longitude     Decimal? @db.Decimal(11, 8)
+  batteryLevel  Int      @map("battery_level")
+  payload       Json?    // Flexible: stores ML confidence/bounding boxes for fire, or water level / sensor metrics for others
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("telemetry_logs")
+}
+
+
+model FrameAssessment {
+  id               String   @id @default(uuid())
+  timestamp        DateTime @default(now())
+  
+  // Fire-specific metrics
+  fireDetected     Boolean  @default(false)
+  fireConfidence   Float?
+  fireSeverity     String?  // "Minor", "Moderate", or "Severe"
+  fireSeverityConf Float?   // Secondary classifier confidence
+  fireTrend        String?  // "GROWING", "STABLE", or "DIMINISHING"
+  fireTrendSlope   Float?   // Numerical regression slope for fire
+  
+  // Smoke-specific metrics
+  smokeDetected    Boolean  @default(false)
+  smokeConfidence  Float?
+  smokeTrend       String?  // "EXPANDING", "STABLE", or "DISPERSING" (Plume dynamics)
+  smokeTrendSlope  Float?   // Numerical regression slope for smoke
+  
+  // Decision Fusion
+  threatScore      Int?     // Fusion urgency score (0-100)
+  
+  // Raw bounding boxes stored as JSON for your canvas overlays
+  boxes            Json?
+  
+  createdAt        DateTime @default(now())
+}

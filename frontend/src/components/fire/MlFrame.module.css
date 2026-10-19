@@ -1,0 +1,95 @@
+/* Boxes sit on imagery, so they use fixed amber and scrim colours in both themes. */
+.frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #16181A;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.small {
+    border-radius: 3px;
+}
+
+.image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.box {
+    position: absolute;
+    border: 2px solid #F5B83D;
+    border-radius: 2px;
+    box-sizing: border-box;
+    transition: opacity 0.2s ease;
+}
+
+.small .box {
+    border-width: 1px;
+}
+
+.boxOn {
+    border-width: 3px;
+    z-index: 2;
+}
+
+.boxDim {
+    opacity: 0.35;
+}
+
+.label {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    padding: 1px 5px;
+    background-color: #F5B83D;
+    color: #1B1D20;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.frameTag {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background-color: rgba(22, 24, 26, 0.85);
+    color: #E6E3DC;
+    font-size: 12px;
+}
+
+/* Webcam images keep their own aspect ratio (centred, letterboxed) so the
+   percentage boxes stay aligned with the picture. */
+.stage {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
+}
+
+.fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    color: #9A968E;
+    font-size: 13px;
+    text-align: center;
+}

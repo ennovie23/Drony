@@ -1,0 +1,188 @@
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  .pg { margin: 14px 0 36px; }
+  .pg > h3 { margin:0 0 8px; }
+  .X { width:100%; height:600px; display:grid; grid-template-columns:64px 1fr; overflow:hidden; border-radius:6px;
+       background:var(--bg); color:var(--tx); font-family:'IBM Plex Sans',sans-serif; font-size:13px; line-height:1.35; box-shadow:0 2px 18px rgba(0,0,0,.35); }
+  .X * { box-sizing:border-box; }
+  .X svg { display:block; }
+  .D { --bg:#1B1D20; --rail:#16181A; --raise:#212428; --line:#2C2F33; --tx:#D8D5CE; --hi:#F2EFE8; --mute:#7F8389; --mute2:#9A9DA2;
+       --amber:#F5B83D; --amberTx:#F5B83D; --onAmber:#1B1D20; --ok:#8FCB9B; --bad:#E8806A; --water:#7FB7D9;
+       --badBg:#3A2420; --okBg:#1F3226; --track:#2E3236; --mapbg:#202326; --grid:#2A2D31; --waterFill:#3E6E8C; }
+  .L { --bg:#F3F1EC; --rail:#E9E6DF; --raise:#FFFFFF; --line:#DDD9D0; --tx:#3A3B3E; --hi:#141517; --mute:#6F7378; --mute2:#5B5F64;
+       --amber:#E6A52A; --amberTx:#9A6410; --onAmber:#141517; --ok:#2E7A47; --bad:#B9442A; --water:#2C6A91;
+       --badBg:#F8E4DE; --okBg:#E0EFE4; --track:#E4E1DA; --mapbg:#E9E6DE; --grid:#DAD6CC; --waterFill:#8DB6CF; }
+  .X nav { background:var(--rail); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:14px 0; color:var(--mute2); }
+  .X nav .mark { text-align:center; font-weight:600; font-size:13px; color:var(--hi); padding-bottom:18px; }
+  .X nav a { display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; font-size:10.5px; position:relative; }
+  .X nav a svg { width:18px; height:18px; stroke-width:1.75; }
+  .X nav a.on { background:var(--raise); color:var(--hi); box-shadow: inset 2px 0 0 var(--amber); }
+  .X nav a.on svg { color:var(--amberTx); }
+  .X nav a .dot { position:absolute; top:7px; right:13px; width:7px; height:7px; border-radius:50%; }
+  .X nav .foot { margin-top:auto; }
+  .X .main { display:grid; grid-template-rows:auto 1fr; min-width:0; min-height:0; }
+  .X .bar { display:flex; align-items:center; gap:22px; padding:11px 20px; border-bottom:1px solid var(--line); }
+  .X .bar h1 { font-size:16px; font-weight:600; margin:0; margin-right:auto; color:var(--hi); }
+  .X .bar h1 span { font-weight:400; color:var(--mute); margin-left:8px; font-size:14px; }
+  .X .bar .m { font-size:12px; color:var(--mute); }
+  .X .bar .m b { font-family:'IBM Plex Mono'; font-weight:500; color:var(--hi); margin-left:6px; font-size:13px; }
+  .X .air { color:var(--ok); font-size:12.5px; font-weight:500; }
+  .X .btn { background:var(--amber); color:var(--onAmber); font-weight:600; font-size:12.5px; padding:6px 12px; border-radius:4px; }
+  .X .body { padding:14px; display:grid; gap:14px; min-height:0; overflow:hidden; }
+  .X .card { background:var(--raise); border-radius:5px; padding:12px 14px; min-width:0; border:1px solid var(--line); }
+  .X .h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .X .h b { font-weight:600; color:var(--hi); font-size:13.5px; }
+  .X .h span { font-size:12px; color:var(--mute); }
+  .X .lbl { font-size:12px; color:var(--mute); }
+  .X .num { font-family:'IBM Plex Mono'; font-size:24px; color:var(--hi); font-weight:500; line-height:1.15; }
+  .X .num small { font-size:12px; color:var(--mute); margin-left:3px; font-family:'IBM Plex Sans'; }
+  .X .rows div { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line); }
+  .X .rows div:last-child { border-bottom:0; }
+  .X .rows div span:first-child { color:var(--mute2); }
+  .X .rows div span:last-child { font-family:'IBM Plex Mono'; color:var(--hi); }
+  .X .chip { font-size:12px; font-weight:600; padding:2px 8px; border-radius:3px; }
+  .X .chip.bad { background:var(--badBg); color:var(--bad); }
+  .X .chip.ok { background:var(--okBg); color:var(--ok); }
+  .X .shot { position:relative; background:#2b2420 url('/files/fire.webp') center/cover; border-radius:4px; overflow:hidden; }
+  .X .shot .bb { position:absolute; border:2px solid #F5B83D; border-radius:2px; }
+  .X .shot .bb i { position:absolute; top:4px; left:4px; font-style:normal; font-size:11px; background:#F5B83D; color:#1B1D20; font-weight:600; padding:1px 5px; }
+  .X .shot .ov { position:absolute; left:10px; top:10px; display:flex; gap:6px; }
+  .X .shot .ov span { background:rgba(22,24,26,.82); color:#D8D5CE; font-size:12px; padding:3px 8px; border-radius:3px; }
+  .X .shot .ov span.on { color:#F2EFE8; box-shadow: inset 0 -2px 0 #F5B83D; }
+  .X .strip { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .X .map { background:var(--mapbg); border-radius:4px; flex:1; min-height:0; }
+  .X table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .X th { text-align:left; font-weight:500; color:var(--mute); padding:6px 8px; border-bottom:1px solid var(--line); }
+  .X td { padding:6px 8px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono'; color:var(--hi); }
+  .X td.t { font-family:'IBM Plex Sans'; color:var(--mute2); }
+  .X .bar2 { height:5px; background:var(--track); border-radius:3px; width:70px; display:inline-block; vertical-align:middle; margin-right:8px; }
+  .X .bar2 i { display:block; height:100%; background:var(--amber); border-radius:3px; }
+</style>
+
+<h2>B in light vs dark</h2>
+<p class="subtitle">Same layout, same colour rules, swapped palette. The video and snapshots stay as they are in both. Light uses darker amber, red and green so text stays readable on a pale background. Click the theme(s) you want to keep.</p>
+
+<template id="live">
+  <nav>
+    <div class="mark">DRMS</div>
+    <a class="on"><i data-lucide="radio"></i>Live</a>
+    <a><i data-lucide="flame"></i>Fire<span class="dot" style="background:var(--bad)"></span></a>
+    <a><i data-lucide="waves"></i>Flood<span class="dot" style="background:var(--water)"></span></a>
+    <a><i data-lucide="drone"></i>Flight</a>
+    <a><i data-lucide="map"></i>Map</a>
+    <a class="foot"><i data-lucide="__THEME__"></i>__THEMELABEL__</a>
+  </nav>
+  <div class="main">
+    <div class="bar">
+      <h1>Live feed<span>Barangay Bagong Silang, Caloocan City</span></h1>
+      <span class="air">● DRMS-01 airborne</span>
+      <span class="m">Elapsed<b>T+00:46:12</b></span>
+      <span class="m">PHT<b>14:06:12</b></span>
+    </div>
+    <div class="body" style="grid-template-columns: 1fr 280px;">
+      <div style="display:grid; grid-template-rows: 1fr auto; gap:14px; min-height:0;">
+        <div class="shot">
+          <div class="ov"><span class="on">RGB</span><span>Thermal</span><span>Detections on</span></div>
+          <div class="bb" style="left:37%;top:4%;width:62%;height:89%"><i>fire 0.79</i></div>
+          <div class="bb" style="left:0;top:2%;width:61%;height:86%"><i style="top:24px">fire 0.73</i></div>
+        </div>
+        <div class="strip">
+          <div class="card"><div class="lbl">Battery</div><div class="num">76<small>%</small></div></div>
+          <div class="card"><div class="lbl">Altitude</div><div class="num">42<small>m</small></div></div>
+          <div class="card"><div class="lbl">Speed</div><div class="num">8.4<small>m/s</small></div></div>
+          <div class="card"><div class="lbl">Heading</div><div class="num">062<small>°</small></div></div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; min-height:0;">
+        <div class="card rows">
+          <div><span>GPS</span><span style="color:var(--ok)">Fixed</span></div>
+          <div><span>Link</span><span style="color:var(--ok)">Good</span></div>
+        </div>
+        <div class="card" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+          <div class="h"><b>Flight map</b><span>680 m from home</span></div>
+          <div class="map">
+            <svg viewBox="0 0 500 360" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+              <g stroke="var(--grid)"><path d="M0 90H500M0 180H500M0 270H500M125 0V360M250 0V360M375 0V360"/></g>
+              <path d="M 50,300 Q 140,190 230,120 T 360,215" stroke="var(--mute)" stroke-width="2.5" fill="none" stroke-dasharray="6 5"/>
+              <rect x="44" y="294" width="12" height="12" fill="none" stroke="var(--hi)" stroke-width="2"/>
+              <circle cx="230" cy="126" r="16" fill="none" stroke="var(--amber)" stroke-width="2.5"/>
+              <path d="M230 114 l8 18 l-8 -5 l-8 5z" fill="var(--hi)" transform="rotate(62 230 126)"/>
+            </svg>
+          </div>
+          <div class="lbl" style="margin-top:6px">14.7392° N · 121.0198° E</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="fire">
+  <nav>
+    <div class="mark">DRMS</div>
+    <a><i data-lucide="radio"></i>Live</a>
+    <a class="on"><i data-lucide="flame"></i>Fire<span class="dot" style="background:var(--bad)"></span></a>
+    <a><i data-lucide="waves"></i>Flood<span class="dot" style="background:var(--water)"></span></a>
+    <a><i data-lucide="drone"></i>Flight</a>
+    <a><i data-lucide="map"></i>Map</a>
+    <a class="foot"><i data-lucide="__THEME__"></i>__THEMELABEL__</a>
+  </nav>
+  <div class="main">
+    <div class="bar">
+      <h1>Fire assessment<span>Barangay Bagong Silang, Caloocan City</span></h1>
+      <span class="air">● DRMS-01 airborne</span>
+      <span class="btn">Capture snapshot</span>
+    </div>
+    <div class="body" style="grid-template-columns: 1fr 280px;">
+      <div style="display:grid; grid-template-rows: 1fr auto; gap:14px; min-height:0;">
+        <div class="shot">
+          <div class="bb" style="left:37%;top:4%;width:62%;height:89%"><i>fire 0.79</i></div>
+          <div class="bb" style="left:0;top:2%;width:61%;height:86%"><i style="top:24px">fire 0.73</i></div>
+        </div>
+        <div class="card" style="padding:6px 8px">
+          <table>
+            <tr><th>Box</th><th>Label</th><th>Score</th><th>Position (x, y)</th><th>Size (w × h)</th></tr>
+            <tr><td>D3</td><td class="t">fire</td><td><span class="bar2"><i style="width:79%"></i></span>0.79</td><td>37%, 4%</td><td>63% × 89%</td></tr>
+            <tr><td>D1</td><td class="t">fire</td><td><span class="bar2"><i style="width:73%"></i></span>0.73</td><td>0%, 2%</td><td>62% × 86%</td></tr>
+          </table>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card">
+          <div class="h"><b>Model result</b><span>Frame 87</span></div>
+          <div class="lbl">Active fire front</div>
+          <div class="num">85.2<small>% confidence</small></div>
+          <div class="rows" style="margin-top:10px">
+            <div><span>Severity</span><span class="chip bad">Severe</span></div>
+            <div><span>Behaviour</span><span class="chip bad">Growing</span></div>
+            <div><span>Smoke plume</span><span class="chip ok">Clear air</span></div>
+          </div>
+        </div>
+        <div class="card rows">
+          <div><span>Captured</span><span>Just now</span></div>
+          <div><span>Boxes</span><span>3</span></div>
+          <div><span>Source</span><span>DRMS-01 camera</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<div class="pg"><h3>Live · light</h3><div class="X L" data-t="live" data-theme="sun" data-label="Light"></div></div>
+<div class="pg"><h3>Live · dark</h3><div class="X D" data-t="live" data-theme="moon" data-label="Dark"></div></div>
+<div class="pg"><h3>Fire · light</h3><div class="X L" data-t="fire" data-theme="sun" data-label="Light"></div></div>
+<div class="pg"><h3>Fire · dark</h3><div class="X D" data-t="fire" data-theme="moon" data-label="Dark"></div></div>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="keep-both" onclick="toggleSelect(this)"><div class="letter">1</div><div class="content"><h3>Keep both, with the toggle</h3><p>Dark is the default and light is one click away.</p></div></div>
+  <div class="option" data-choice="dark-only" onclick="toggleSelect(this)"><div class="letter">2</div><div class="content"><h3>Dark only</h3><p>Drop the toggle.</p></div></div>
+  <div class="option" data-choice="light-default" onclick="toggleSelect(this)"><div class="letter">3</div><div class="content"><h3>Keep both, light as default</h3><p>Toggle stays; the app opens in light.</p></div></div>
+</div>
+
+<script>
+  document.querySelectorAll('.X[data-t]').forEach(el => {
+    el.innerHTML = document.getElementById(el.dataset.t).innerHTML
+      .replace('__THEME__', el.dataset.theme).replace('__THEMELABEL__', el.dataset.label);
+  });
+  lucide.createIcons();
+</script>

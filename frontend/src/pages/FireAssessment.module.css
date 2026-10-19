@@ -1,0 +1,110 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 14px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 14px;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.verdict {
+    margin-top: 10px;
+}
+
+/* ── Snapshot strip ────────────────────────────────────── */
+.strip {
+    gap: 10px;
+    padding-bottom: 6px; /* room for the scrollbar */
+}
+
+/* Eight tiles fit across; more scroll sideways instead of adding rows */
+.strip > * {
+    flex: 0 0 calc((100% - 7 * 10px) / 8);
+    min-width: 130px;
+}
+
+.snap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    text-align: left;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.snap:hover {
+    border-color: var(--text-faint);
+}
+
+.snapOn,
+.snapOn:hover {
+    border-color: var(--attention);
+    box-shadow: inset 0 0 0 1px var(--attention);
+}
+
+.snapHead {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2px;
+    color: var(--text-strong);
+    font-weight: 500;
+}
+
+.snapMeta {
+    color: var(--text-muted);
+}
+
+.ok { color: var(--ok); }
+.warn { color: var(--attention-text); }
+.danger { color: var(--bad); }
+.off { color: var(--text-muted); }
+
+.pending {
+    cursor: default;
+    border-style: dashed;
+}
+
+.pendingThumb {
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+}
+
+/* The empty message spans the row rather than taking one tile's width */
+.strip > .stripEmpty {
+    flex: 1 0 100%;
+}
+
+.stripMeta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
