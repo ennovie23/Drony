@@ -61,3 +61,6 @@ export function toModelResult(d) {
             : null,
     };
 }
+
+// Boxes of the newest snapshot; none while the list is still loading or was cleared.
+export const latestDetections = (snapshots) => snapshots[0]?.detections ?? [];

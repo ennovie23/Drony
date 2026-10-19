@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toUiSnapshot, toModelResult } from '../src/utils/snapshots.js';
+import { toUiSnapshot, toModelResult, latestDetections } from '../src/utils/snapshots.js';
 
 const entry = (assessment) => ({
     id: 'SNAP-000001-1',
@@ -54,4 +54,13 @@ test('toModelResult on /latest shape', () => {
     assert.equal(r.smoke.confidence, '50.0');
     assert.equal(r.smoke.trendSlope, '0.00');
     assert.equal(r.fire, null);
+});
+
+test('latestDetections is empty when there is no snapshot yet', () => {
+    assert.deepEqual(latestDetections([]), []);
+});
+
+test('latestDetections returns the newest snapshot\'s boxes', () => {
+    const boxes = [{ id: 'fire_0' }];
+    assert.deepEqual(latestDetections([{ detections: boxes }, { detections: [] }]), boxes);
 });

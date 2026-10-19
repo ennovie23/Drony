@@ -1,6 +1,7 @@
 import styles from './CameraFeed.module.css';
 import useVideoUrl from '../../hooks/useVideoUrl';
 import { useAppData } from '../../context/AppDataContext';
+import { latestDetections } from '../../utils/snapshots';
 
 // Drone camera view. The image stands in for the video stream until the backend
 // provides one (swap the <img> for a <video> / WebRTC element).
@@ -12,7 +13,7 @@ export default function CameraFeed({
     highlightId = null,
 }) {
     const { drone, site, fireSnapshots } = useAppData();
-    const latest = fireSnapshots[0];
+    const detections = latestDetections(fireSnapshots);
     const modeLabel = mode === 'thermal' ? 'Thermal' : 'RGB';
     const videoUrl = useVideoUrl().videoUrl;
 
@@ -28,7 +29,7 @@ export default function CameraFeed({
             />
 
             {showDetections &&
-                latest.detections.map((d) => (
+                detections.map((d) => (
                     <div
                         key={d.id}
                         className={`${styles.box} ${highlightId === d.id ? styles.boxHighlight : ''} ${highlightId && highlightId !== d.id ? styles.boxDim : ''}`}
