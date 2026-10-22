@@ -1,11 +1,19 @@
+import { useEffect, useState } from 'react';
 import styles from './CameraFeed.module.css';
 import useVideoUrl from '../../hooks/useVideoUrl';
+import useLiveDetections from '../../hooks/useLiveDetections';
 import { useAppData } from '../../context/AppDataContext';
 import { latestDetections } from '../../utils/snapshots';
 
-// Drone camera view. The image stands in for the video stream until the backend
-// provides one (swap the <img> for a <video> / WebRTC element).
+// The stream can briefly fail while detect.py (re)starts, so keep retrying
+const STREAM_RETRY_MS = 3000;
+const NO_CAMERA = 'No camera connected — plug in a webcam';
+
+// Drone camera view: the live webcam stream (VIDEO_SOURCE=webcam) with the
+// detector's live boxes, otherwise the test video with the latest snapshot's boxes.
+// `live` (from useLatestDetection) is true while the detector is sending frames.
 export default function CameraFeed({
+    live = false,
     mode = 'rgb',
     showDetections = true,
     recording = false,
@@ -13,39 +21,89 @@ export default function CameraFeed({
     highlightId = null,
 }) {
     const { drone, site, fireSnapshots } = useAppData();
-    const detections = latestDetections(fireSnapshots);
+    const { videoUrl, streamUrl, source } = useVideoUrl();
+    const isWebcam = source === 'webcam' && Boolean(streamUrl);
+    const liveDetections = useLiveDetections(isWebcam && live && showDetections);
+    const detections = isWebcam ? liveDetections : latestDetections(fireSnapshots);
     const modeLabel = mode === 'thermal' ? 'Thermal' : 'RGB';
-    const videoUrl = useVideoUrl().videoUrl;
+
+    const [streamError, setStreamError] = useState(false);
+    const [streamAttempt, setStreamAttempt] = useState(0);
+    // Boxes are percentages of the image, so the stage takes the stream's aspect ratio
+    const [aspect, setAspect] = useState('4 / 3');
+
+    useEffect(() => {
+        if (!streamError) return;
+        const id = setTimeout(() => {
+            setStreamError(false);
+            setStreamAttempt((n) => n + 1);
+        }, STREAM_RETRY_MS);
+        return () => clearTimeout(id);
+    }, [streamError]);
+
+    const onStreamLoad = (e) => {
+        const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+        if (w && h) setAspect(`${w} / ${h}`);
+    };
+
+    const boxes =
+        showDetections &&
+        detections.map((d) => (
+            <div
+                key={d.id}
+                className={`${styles.box} ${highlightId === d.id ? styles.boxHighlight : ''} ${highlightId && highlightId !== d.id ? styles.boxDim : ''}`}
+                style={{ left: `${d.box.x}%`, top: `${d.box.y}%`, width: `${d.box.w}%`, height: `${d.box.h}%` }}>
+                <span className={`${styles.boxLabel} mono`}>
+                    {d.label} {d.confidence.toFixed(2)}
+                </span>
+            </div>
+        ));
+
+    let media;
+    if (!isWebcam) {
+        media = (
+            <>
+                <video
+                    className={styles.media}
+                    src={videoUrl || undefined}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                />
+                {boxes}
+            </>
+        );
+    } else if (!live || streamError) {
+        media = <span className={styles.placeholder}>{NO_CAMERA}</span>;
+    } else {
+        media = (
+            <div className={styles.stage} style={{ aspectRatio: aspect }}>
+                <img
+                    key={streamAttempt}
+                    className={styles.stream}
+                    src={`${streamUrl}?attempt=${streamAttempt}`}
+                    alt=""
+                    onLoad={onStreamLoad}
+                    onError={() => setStreamError(true)}
+                />
+                {boxes}
+            </div>
+        );
+    }
 
     return (
         <div className={`${styles.feed} ${mode === 'thermal' ? styles.thermal : ''}`}>
-            <video
-                className={styles.media}
-                src={videoUrl}
-                autoPlay
-                loop
-                muted
-                playsInline
-            />
-
-            {showDetections &&
-                detections.map((d) => (
-                    <div
-                        key={d.id}
-                        className={`${styles.box} ${highlightId === d.id ? styles.boxHighlight : ''} ${highlightId && highlightId !== d.id ? styles.boxDim : ''}`}
-                        style={{ left: `${d.box.x}%`, top: `${d.box.y}%`, width: `${d.box.w}%`, height: `${d.box.h}%` }}>
-                        <span className={`${styles.boxLabel} mono`}>
-                            {d.label} {d.confidence.toFixed(2)}
-                        </span>
-                    </div>
-                ))}
+            {media}
 
             <div className={styles.topRight}>
                 <span className={styles.pill}>
                     {recording && <span className={styles.recDot}></span>}
                     {recording ? `Rec ${recordTime}` : 'Live'} · {modeLabel}
                 </span>
-                <span className={`${styles.pill} mono`}>30 fps · {mode === 'thermal' ? 'IR' : '4K'}</span>
+                <span className={`${styles.pill} mono`}>
+                    {isWebcam ? 'Webcam' : `30 fps · ${mode === 'thermal' ? 'IR' : '4K'}`}
+                </span>
             </div>
 
             <div className={styles.bottom}>

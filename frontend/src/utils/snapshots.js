@@ -64,3 +64,12 @@ export function toModelResult(d) {
 
 // Boxes of the newest snapshot; none while the list is still loading or was cleared.
 export const latestDetections = (snapshots) => snapshots[0]?.detections ?? [];
+
+// A live box from /api/detections/live (corner percentages) → the detection shape
+// the frame overlays render (origin + size percentages).
+export const toDetection = (d, idx) => ({
+    id: d.id ?? idx,
+    label: d.label,
+    confidence: Number(d.confidence),
+    box: { x: d.bboxX1, y: d.bboxY1, w: d.bboxX2 - d.bboxX1, h: d.bboxY2 - d.bboxY1 },
+});

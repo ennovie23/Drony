@@ -16,3 +16,10 @@ export function toneFor(map, word) {
     if (!word) return 'off';
     return map[String(word).toUpperCase()] ?? map[word] ?? 'off';
 }
+
+// Threat fusion score (0–100) → tone: above 75 is critical, above 40 elevated.
+export function threatTone(score) {
+    if (score > 75) return 'danger';
+    if (score > 40) return 'warn';
+    return 'ok';
+}

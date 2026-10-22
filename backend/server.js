@@ -7,9 +7,9 @@ import { fileURLToPath } from 'url';
 
 // ── Route modules ─────────────────────────────────────────────────────────────
 import detectionRoutes from './routes/detections.js';
-import droneRoutes     from './routes/drone.js';
 import configRoutes    from './routes/config.js';
 import snapshotRoutes, { SNAPSHOTS_DIR } from './routes/snapshots.js';
+import { superviseDetector } from './lib/detector.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -32,7 +32,6 @@ app.use('/snapshots', express.static(SNAPSHOTS_DIR));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/detections', detectionRoutes);
-app.use('/api/drone',      droneRoutes);
 app.use('/api/config',     configRoutes);
 
 // ── Root ─────────────────────────────────────────────────────────────────────
@@ -44,4 +43,11 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running → http://localhost:${PORT}`);
   console.log(`Active video   → ${process.env.ACTIVE_VIDEO || 'smoke.mp4'}`);
+
+  // Detection runs whenever the backend does; in webcam mode detect.py starts
+  // analysing as soon as a camera is plugged in. DETECTOR_AUTOSTART=0 opts out
+  // (e.g. to run ML/detect.py by hand).
+  if (process.env.DETECTOR_AUTOSTART !== '0') {
+    superviseDetector({ cwd: __dirname });
+  }
 });

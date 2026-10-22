@@ -2,25 +2,20 @@ import { useRef, useEffect, useState } from 'react';
 import styles from './MlFrame.module.css';
 import useVideoUrl from '../../hooks/useVideoUrl';
 import { API_BASE_URL } from '../../config';
+import { toDetection } from '../../utils/snapshots';
 
-const CAMERA_UNAVAILABLE = 'Camera unavailable — check that the simulation is running';
+const CAMERA_UNAVAILABLE = 'No camera connected — plug in a webcam';
 const CAMERA_CONNECTING = 'Connecting to camera…';
 // detect.py takes a while to load its models before the stream is up
 const STREAM_RETRY_MS = 3000;
 
-// Live boxes from /api/detections/live → the snapshot detection shape.
-const toDetection = (d, idx) => ({
-    id: d.id ?? idx,
-    label: d.label,
-    confidence: Number(d.confidence),
-    box: { x: d.bboxX1, y: d.bboxY1, w: d.bboxX2 - d.bboxX1, h: d.bboxY2 - d.bboxY1 },
-});
 
 // One drone frame as analysed by the fire model, with the model's bounding boxes
 // labelled "<label> <score>". `small` renders a thumbnail without labels. Renders, in order:
 //   - a webcam snapshot (`snapshot.imageUrl`): the saved JPEG with its saved boxes
 //   - the live webcam stream (VIDEO_SOURCE=webcam) with live boxes while `playing`
 //   - the test video file, played with live boxes while `playing`
+// `playing` is true while the detector is sending frames (see useLatestDetection).
 export default function MlFrame({ snapshot, highlightId = null, small = false, tag, playing = false }) {
     const { videoUrl, streamUrl, source, loading } = useVideoUrl();
     const videoRef = useRef(null);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import styles from "./FireAssessment.module.css";
 import table from "../components/ui/Table.module.css";
@@ -10,11 +10,10 @@ import { formatStatus } from "../components/ui/format";
 import { useAppData } from "../context/AppDataContext";
 import { formatTime, timeAgo } from "../utils/format";
 import useNow from "../hooks/useNow";
-import SimulateBtn from "../components/fire/SimulateBtn";
 import ScrollStrip from "../components/shared/ScrollStrip";
 
-import { API_BASE_URL } from "../config";
 import { toModelResult } from "../utils/snapshots";
+import useLatestDetection from "../hooks/useLatestDetection";
 
 // Box coordinates are percentages; webcam boxes carry 4 decimals, so show one.
 const pct = (v) => Number(Number(v).toFixed(1));
@@ -26,7 +25,6 @@ export default function FireAssessment() {
   const isWebcam = videoSource === "webcam";
   const [selectedId, setSelectedId] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
-  const [isSimulating, setIsSimulating] = useState(false);
 
   // Webcam mode starts on the live stream (no snapshot selected) and the list may be
   // empty; file mode keeps showing the latest mock snapshot by default.
@@ -54,33 +52,8 @@ export default function FireAssessment() {
     else window.alert("Couldn't clear snapshots — check that the backend is running.");
   };
 
-  const [latestDetection, setLatestDetection] = useState({
-    timestamp: "",
-    primaryHazard: null,
-    threatScore: 0,
-    fire: null,
-    smoke: null,
-  });
-
-  useEffect(() => {
-    const fetchLatestDetection = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/detections/latest`);
-        const body = await response.json();
-
-        if (body.success && body.data) {
-          setLatestDetection(toModelResult(body.data));
-        }
-      } catch (error) {
-        console.error("Failed to fetch latest detection.", error);
-      }
-    };
-
-    fetchLatestDetection();
-    const interval = setInterval(fetchLatestDetection, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Live result from the detector, which runs whenever a camera is connected
+  const { result: latestDetection, live } = useLatestDetection();
 
   // A selected webcam snapshot shows its saved assessment; otherwise the live one
   const result = snap?.assessment ? toModelResult(snap.assessment) : latestDetection;
@@ -118,7 +91,7 @@ export default function FireAssessment() {
                   ? `Frame ${snap.frame}${isLatest ? " · latest" : ""} · ${formatTime(snap.capturedAt)}`
                   : "Live · Webcam"
               }
-              playing={isSimulating}
+              playing={live}
             />
 
             <Card title={`Detections (${detections.length})`}>
@@ -452,13 +425,6 @@ export default function FireAssessment() {
                 ]}
               />
             </Card>
-
-            <div style={{ display: "flex", justifyContent: "end" }}>
-              <SimulateBtn
-                onStart={() => setIsSimulating(true)}
-                onPause={() => setIsSimulating(false)}
-              />
-            </div>
           </div>
         </div>
 

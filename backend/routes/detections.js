@@ -2,6 +2,7 @@ import express from 'express';
 import pkg from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pkgPg from 'pg';
+import { isFresh } from '../lib/freshness.js';
 
 const { Pool } = pkgPg;
 const { PrismaClient } = pkg;
@@ -18,6 +19,18 @@ const prisma  = new PrismaClient({ adapter });
 
 // In-memory cache for ultra-fast polling response
 let latestAssessmentCache = null;
+
+const IDLE_ASSESSMENT = {
+  stale: true,
+  timestamp: null,
+  fireDetected: false,
+  smokeDetected: false,
+  threatScore: 0,
+  boxes: [],
+  primaryHazard: null,
+  fire: null,
+  smoke: null,
+};
 
 // POST unified frame assessment snapshot from Python
 router.post('/', async (req, res) => {
@@ -42,7 +55,7 @@ router.post('/', async (req, res) => {
       },
     });
 
-    latestAssessmentCache = record;
+    latestAssessmentCache = { ...record, receivedAt: Date.now() };
 
     res.status(201).json({ success: true, record });
   } catch (error) {
@@ -51,43 +64,21 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET live bounding boxes for canvas overlays from the latest frame record
-router.get('/live', async (req, res) => {
-  try {
-    if (latestAssessmentCache && latestAssessmentCache.boxes) {
-      return res.json(latestAssessmentCache.boxes);
-    }
-
-    const latest = await prisma.frameAssessment.findFirst({
-      orderBy: { timestamp: 'desc' },
-      select: { boxes: true },
-    });
-
-    if (!latest || !latest.boxes) {
-      return res.json([]);
-    }
-
-    // Return the raw boxes JSON array for canvas rendering
-    res.json(latest.boxes);
-  } catch (error) {
-    console.error('Error fetching live boxes:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+// GET live bounding boxes for canvas overlays from the latest frame record.
+// Only a frame detect.py sent in the last few seconds counts as live.
+router.get('/live', (req, res) => {
+  res.json(isFresh(latestAssessmentCache) ? latestAssessmentCache.boxes ?? [] : []);
 });
 
 // GET latest unified frame assessment for the command center dashboard
 router.get('/latest', async (req, res) => {
   try {
-    let latest = latestAssessmentCache;
+    const latest = latestAssessmentCache;
 
-    if (!latest) {
-      latest = await prisma.frameAssessment.findFirst({
-        orderBy: { timestamp: 'desc' },
-      });
-    }
-
-    if (!latest) {
-      return res.status(404).json({ success: false, message: 'No frame assessments found.' });
+    // Detector stopped or never started: report "nothing detected" rather than
+    // replaying the last frame it sent as if it were live.
+    if (!isFresh(latest)) {
+      return res.status(200).json({ success: true, data: IDLE_ASSESSMENT });
     }
 
     // Format timestamp PHT for convenience

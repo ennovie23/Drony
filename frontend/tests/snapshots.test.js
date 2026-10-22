@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toUiSnapshot, toModelResult, latestDetections } from '../src/utils/snapshots.js';
+import { toUiSnapshot, toModelResult, latestDetections, toDetection } from '../src/utils/snapshots.js';
 
 const entry = (assessment) => ({
     id: 'SNAP-000001-1',
@@ -63,4 +63,13 @@ test('latestDetections is empty when there is no snapshot yet', () => {
 test('latestDetections returns the newest snapshot\'s boxes', () => {
     const boxes = [{ id: 'fire_0' }];
     assert.deepEqual(latestDetections([{ detections: boxes }, { detections: [] }]), boxes);
+});
+
+test('toDetection turns a live box into origin + size percents', () => {
+    const d = toDetection({ id: 'fire_0', label: 'fire', confidence: '0.82', bboxX1: 10, bboxY1: 20, bboxX2: 40, bboxY2: 70 }, 0);
+    assert.deepEqual(d, { id: 'fire_0', label: 'fire', confidence: 0.82, box: { x: 10, y: 20, w: 30, h: 50 } });
+});
+
+test('toDetection falls back to the index for an id', () => {
+    assert.equal(toDetection({ label: 'smoke', confidence: 0.5, bboxX1: 0, bboxY1: 0, bboxX2: 1, bboxY2: 1 }, 3).id, 3);
 });

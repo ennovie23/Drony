@@ -6,6 +6,8 @@ import CameraFeed from '../components/shared/CameraFeed';
 import TacticalMap from '../components/shared/TacticalMap';
 import { Card, Readout, Chip, KeyValue, Segmented, Button } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
+import useLatestDetection from '../hooks/useLatestDetection';
+import { threatTone } from '../components/ui/tones';
 import { formatElapsed } from '../utils/format';
 import useNow from '../hooks/useNow';
 
@@ -19,6 +21,10 @@ const MODES = [
 export default function Live() {
     useNow();
     const { drone, site } = useAppData();
+    // The Live page is where detection is watched: feed boxes + this summary
+    const { result, live } = useLatestDetection();
+    const hazard = result.primaryHazard;
+    const confidence = hazard === 'fire' ? result.fire?.confidence : result.smoke?.confidence;
     const [mode, setMode] = useState('rgb');
     const [showDetections, setShowDetections] = useState(true);
 
@@ -45,7 +51,7 @@ export default function Live() {
                             </Button>
                         </div>
                         <div className={styles.feed}>
-                            <CameraFeed mode={mode} showDetections={showDetections} />
+                            <CameraFeed live={live} mode={mode} showDetections={showDetections} />
                         </div>
                     </div>
 
@@ -58,6 +64,24 @@ export default function Live() {
                 </div>
 
                 <aside className={styles.side}>
+                    <Card title="Detection" meta={<span>{live ? 'Live' : 'No camera'}</span>}>
+                        <KeyValue
+                            rows={[
+                                {
+                                    label: 'Detected',
+                                    value: hazard
+                                        ? <Chip tone="danger">{hazard === 'fire' ? 'Fire' : 'Smoke'}</Chip>
+                                        : <Chip tone={live ? 'ok' : 'off'}>{live ? 'Clear' : '—'}</Chip>,
+                                },
+                                { label: 'Confidence', value: <span className="mono">{confidence ? `${confidence}%` : '—'}</span> },
+                                {
+                                    label: 'Threat',
+                                    value: <Chip tone={live ? threatTone(result.threatScore) : 'off'}>{`${result.threatScore} / 100`}</Chip>,
+                                },
+                            ]}
+                        />
+                    </Card>
+
                     <Card>
                         <KeyValue
                             rows={[
