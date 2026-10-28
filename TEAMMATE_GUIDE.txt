@@ -1,0 +1,248 @@
+DRONY - TEAMMATE GUIDE: SETUP, PULLING, AND PUSHING YOUR WORK
+==============================================================
+
+All commands are for Windows PowerShell (or the VS Code terminal).
+Type each line on its own and press Enter. Lines starting with # are notes,
+don't type them.
+
+Branches we use:
+  main     - stable version
+  staging  - shared testing branch; new work goes here first
+  feat/... - your own branch for one feature or fix
+
+
+--------------------------------------------------------------
+PART 1. FIRST-TIME SETUP (only once per computer)
+--------------------------------------------------------------
+
+1. Install these if you don't have them:
+   - Git            https://git-scm.com/download/win
+   - Node.js (LTS)  https://nodejs.org
+   - Python 3       https://www.python.org/downloads/
+                    (tick "Add python.exe to PATH" in the installer)
+
+   Check they work:
+     git --version
+     node -v
+     python --version
+
+2. Tell Git who you are (use your GitHub name and email):
+     git config --global user.name "Your Name"
+     git config --global user.email "you@example.com"
+
+3. Download the project:
+     cd C:\xampp\htdocs
+     git clone https://github.com/ennovie23/Drony.git drony
+     cd drony
+
+4. Switch to the staging branch:
+     git switch staging
+
+5. Install the backend packages:
+     cd backend
+     npm install
+
+6. Create the backend settings file.
+   Make a file named  .env  inside the backend folder and paste the
+   values the team lead gives you (never share them in chat or commit them):
+     DATABASE_URL="..."
+     DATABASE_URL_UNPOOLED="..."
+     ACTIVE_VIDEO=...
+     VIDEO_SOURCE=file
+   Optional settings (defaults shown):
+     DETECTION_SAVE_INTERVAL_S=5
+     DETECTION_RETENTION_DAYS=30
+     FLOOD_RETENTION_DAYS=90
+     SITE_LAT=14.7392
+     SITE_LON=121.0198
+     SITE_NAME=Bagong Silang, Caloocan
+
+7. Set up the database (still inside backend):
+     npx prisma generate --config=database/prisma7.config.ts
+     npx prisma migrate deploy --config=database/prisma7.config.ts
+   It should end with "All migrations have been successfully applied"
+   or "No pending migrations to apply".
+
+   IMPORTANT: always run prisma commands from the backend folder.
+   If npx asks "Need to install the following packages ... Ok to proceed?"
+   answer n - you're in the wrong folder.
+
+8. Install the Python packages for the fire detector:
+     pip install -r ML\requirements.txt
+
+9. Install the frontend packages:
+     cd ..\frontend
+     npm install
+
+10. Sign in to GitHub (needed the first time you push).
+    The first "git push" opens a browser window - sign in there.
+    If push says "Invalid username or token":
+      - Open Windows "Credential Manager" > Windows Credentials
+      - Remove the entry  git:https://github.com
+      - Push again and sign in in the browser
+    You must be added as a collaborator on ennovie23/Drony to push.
+
+
+--------------------------------------------------------------
+PART 2. RUNNING THE APP
+--------------------------------------------------------------
+
+Use two terminals.
+
+Terminal 1 - backend (also starts the fire detector):
+  cd C:\xampp\htdocs\drony\backend
+  npm run dev
+
+Terminal 2 - frontend:
+  cd C:\xampp\htdocs\drony\frontend
+  npm run dev
+
+Open the address it prints (usually http://localhost:5173) in Chrome or Edge.
+(The flood sensor's USB connection only works in Chrome or Edge.)
+
+Stop either one with Ctrl + C.
+
+
+--------------------------------------------------------------
+PART 3. EVERY TIME YOU START WORKING (get the latest code)
+--------------------------------------------------------------
+
+  cd C:\xampp\htdocs\drony
+  git switch staging
+  git pull
+
+If someone added packages or database changes, also run:
+  cd backend
+  npm install
+  npx prisma generate --config=database/prisma7.config.ts
+  npx prisma migrate deploy --config=database/prisma7.config.ts
+  cd ..\frontend
+  npm install
+  cd ..
+
+
+--------------------------------------------------------------
+PART 4. MAKING A CHANGE AND PUSHING IT
+--------------------------------------------------------------
+
+1. Start a new branch from the latest staging
+   (name it after what you're doing, no spaces):
+     cd C:\xampp\htdocs\drony
+     git switch staging
+     git pull
+     git switch -c feat/short-description
+   Examples: feat/drone-gps, fix/flood-chart, feat/fire-history-page
+
+2. Make your changes in the code.
+
+3. Run the tests before committing:
+     cd backend
+     npm test
+     cd ..\frontend
+     npm test
+     npm run lint
+     cd ..
+   Everything should say "fail 0" and lint should show no errors.
+
+4. See what you changed:
+     git status
+   Make sure these are NOT in the list (they must never be committed):
+     .env, node_modules, __pycache__, backend/ML/snapshots
+   If one shows up, ask before committing.
+
+5. Save (commit) your changes:
+     git add -A
+     git commit -m "feat: short description of what you did"
+   Start the message with:
+     feat:  new feature        fix:  bug fix
+     docs:  documentation      chore: cleanup / settings
+
+6. Upload (push) your branch:
+     git push -u origin feat/short-description
+   (After the first push, just "git push" is enough on that branch.)
+
+7. Open a Pull Request on GitHub:
+   - Go to https://github.com/ennovie23/Drony
+   - Click "Compare & pull request" on the yellow banner
+   - Set  base: staging   and   compare: feat/short-description
+   - Write what you changed and how you tested it
+   - Click "Create pull request" and ask a teammate to review
+   - After it's approved, click "Merge pull request"
+
+8. After merging, go back to staging and update:
+     git switch staging
+     git pull
+
+
+--------------------------------------------------------------
+PART 5. IF YOU CHANGE THE DATABASE (schema.prisma)
+--------------------------------------------------------------
+
+Everyone shares ONE Neon database, so a migration changes it for everybody.
+Do NOT use "prisma migrate dev" - it can offer to RESET the database,
+which deletes everyone's data. Use these steps instead (from backend):
+
+1. Get the latest staging and apply existing migrations first:
+     git switch staging
+     git pull
+     cd backend
+     npx prisma migrate deploy --config=database/prisma7.config.ts
+
+2. Edit backend/database/prisma/schema.prisma
+
+3. Make a folder for the migration. The name is the date/time + a short
+   description, e.g. 20261105093000_add_drone_positions:
+     mkdir database\prisma\migrations\20261105093000_add_drone_positions
+
+4. Write the SQL for your change into that folder:
+     npx prisma migrate diff --config=database/prisma7.config.ts --from-config-datasource --to-schema database/prisma/schema.prisma --script -o database/prisma/migrations/20261105093000_add_drone_positions/migration.sql
+
+5. Open that migration.sql and read it. If it contains DROP or
+   "data will be lost", STOP and ask the team first.
+
+6. Apply it and update the code's database client:
+     npx prisma migrate deploy --config=database/prisma7.config.ts
+     npx prisma generate --config=database/prisma7.config.ts
+
+7. Commit BOTH schema.prisma and the new migrations folder, then
+   tell the team so they run "git pull" and the generate command.
+
+
+--------------------------------------------------------------
+PART 6. COMMON PROBLEMS
+--------------------------------------------------------------
+
+"Your local changes would be overwritten" when pulling or switching:
+  Save your work first:
+    git stash
+    git pull
+    git stash pop
+
+"rejected ... fetch first" when pushing:
+  Someone pushed before you. Get their changes, then push again:
+    git pull
+    git push
+
+Merge conflict (files with <<<<<<< and >>>>>>> markers):
+  Open each file, keep the right code, delete the marker lines, then:
+    git add -A
+    git commit
+    git push
+  Ask for help if you're unsure which code to keep.
+
+"Invalid username or token" when pushing:
+  See Part 1, step 10.
+
+Backend says "Database query failed" or a table doesn't exist:
+  cd backend
+  npx prisma migrate deploy --config=database/prisma7.config.ts
+
+Which branch am I on?
+  git branch --show-current
+
+Undo changes to one file you haven't committed yet (this loses them):
+  git restore path\to\file
+
+Never use these unless the team agrees:
+  git push --force       (overwrites other people's work)
+  git reset --hard       (deletes your uncommitted work)
