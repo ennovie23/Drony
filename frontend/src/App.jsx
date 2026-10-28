@@ -5,6 +5,7 @@ import FireAssessment from "./pages/FireAssessment";
 import FloodAssessment from "./pages/FloodAssessment";
 import Instrument from "./pages/Instrument";
 import MapPage from "./pages/MapPage";
+import History from "./pages/History";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/flood" element={<FloodAssessment />} />
             <Route path="/flight" element={<Instrument />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/history" element={<History />} />
             <Route path="*" element={<Navigate to="/live" replace />} />
           </Routes>
         </main>

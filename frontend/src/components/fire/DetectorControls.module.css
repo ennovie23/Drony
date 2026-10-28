@@ -1,0 +1,38 @@
+.controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: auto;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.state strong { font-weight: 600; }
+
+.label {
+    color: var(--text-muted);
+    margin-right: 2px;
+}
+
+.source { color: var(--text-muted); }
+
+.error {
+    font-size: 11px;
+    color: var(--bad);
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

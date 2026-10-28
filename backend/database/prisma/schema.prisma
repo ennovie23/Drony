@@ -44,7 +44,18 @@ model FrameAssessment {
   // Raw bounding boxes stored as JSON for your canvas overlays
   boxes            Json?
 
+  // Set when the frame was saved as a snapshot (see lib/snapshotStore.js)
+  snapshotId       String?  @unique
+  imageUrl         String?  // Cloudinary https URL
+  imagePublicId    String?
+  trigger          String?  // "auto" or "manual" snapshot; "stop" marks the operator stopping detection
+
+  // When the hazard stopped showing in the video; null = still active
+  resolvedAt       DateTime?
+
   createdAt        DateTime @default(now())
+
+  @@index([timestamp])
 }
 
 // One flood sensor packet as the dashboard received it over USB (see frontend floodSerial.js)
@@ -73,6 +84,9 @@ model FloodReading {
   latitude    Float?
   longitude   Float?
   satellites  Int?
+
+  // When the water fell back below the alert level; null = still active (see lib/floodLevel.js)
+  resolvedAt  DateTime?
 
   createdAt   DateTime @default(now())
 

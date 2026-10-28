@@ -121,20 +121,25 @@ test('a failed index read is retried, not cached as empty', async () => {
   assert.equal((await store.list()).length, 2);
 });
 
-test('clear removes every snapshot image and empties the index', async () => {
+test('clear archives all snapshots from live view while preserving images for history', async () => {
   const dir = await tmpDir();
   let t = 0;
   const store = createSnapshotStore({ dir, now: () => ++t });
   await store.add({ imageBase64: img('a'), trigger: 'auto', assessment: { frameIndex: 1 } });
   await store.add({ imageBase64: img('b'), trigger: 'auto', assessment: { frameIndex: 2 } });
-  await fs.writeFile(path.join(dir, 'SNAP-000009-99.jpg'), 'orphan'); // image with no index entry
   await fs.writeFile(path.join(dir, 'notes.txt'), 'keep');
 
   await store.clear();
 
+  // Live strip is empty
   assert.deepEqual(await store.list(), []);
-  assert.deepEqual((await fs.readdir(dir)).sort(), ['notes.txt', 'snapshots.json']);
-  assert.deepEqual(JSON.parse(await fs.readFile(path.join(dir, 'snapshots.json'), 'utf8')), []);
+  // History still has both entries marked archived: true
+  const all = await store.listAll();
+  assert.equal(all.length, 2);
+  assert.equal(all.every((e) => e.archived), true);
+  // Images on disk are preserved
+  assert.equal(await exists(path.join(dir, `${all[0].id}.jpg`)), true);
+  assert.equal(await exists(path.join(dir, `${all[1].id}.jpg`)), true);
 });
 
 test('adds after clear start a fresh list', async () => {
@@ -145,6 +150,7 @@ test('adds after clear start a fresh list', async () => {
   await store.clear();
   await store.add({ imageBase64: img('b'), trigger: 'manual', assessment: { frameIndex: 2 } });
   assert.deepEqual((await store.list()).map((e) => e.frame), [2]);
+  assert.equal((await store.listAll()).length, 2);
 });
 
 test('clear works when the dir does not exist yet', async () => {
@@ -152,4 +158,97 @@ test('clear works when the dir does not exist yet', async () => {
   const store = createSnapshotStore({ dir });
   await store.clear();
   assert.deepEqual(await store.list(), []);
+});
+
+test('uploader stores secure_url and publicId; FIFO eviction keeps the Cloudinary copy', async () => {
+  process.env.CLOUDINARY_CLOUD_NAME = 'demo';
+  process.env.CLOUDINARY_API_KEY = 'key';
+  process.env.CLOUDINARY_API_SECRET = 'secret';
+
+  const deletedIds = [];
+  const dummyUploader = async (source, options) => ({
+    secure_url: `https://res.cloudinary.com/demo/image/upload/${options.public_id}.jpg`,
+    public_id: `drony_snapshots/${options.public_id}`,
+  });
+  const dummyDeleter = async (publicId) => { deletedIds.push(publicId); };
+
+  const dir = await tmpDir();
+  let t = 0;
+  const store = createSnapshotStore({
+    dir,
+    max: 2,
+    now: () => ++t,
+    uploader: dummyUploader,
+    deleter: dummyDeleter,
+  });
+
+  const snap1 = await store.add({ imageBase64: img('a'), trigger: 'auto', assessment: { frameIndex: 1 } });
+  assert.equal(snap1.imageUrl, 'https://res.cloudinary.com/demo/image/upload/SNAP-000001-1.jpg');
+  assert.equal(snap1.publicId, 'drony_snapshots/SNAP-000001-1');
+
+  await store.add({ imageBase64: img('b'), trigger: 'auto', assessment: { frameIndex: 2 } });
+  await store.add({ imageBase64: img('c'), trigger: 'auto', assessment: { frameIndex: 3 } });
+
+  // snap1 is dropped from the index and disk, but History still links its Cloudinary image
+  assert.equal((await store.listAll()).some((e) => e.id === snap1.id), false);
+  assert.equal(await exists(path.join(dir, `${snap1.id}.jpg`)), false);
+  assert.deepEqual(deletedIds, []);
+
+  // Clean up env
+  delete process.env.CLOUDINARY_CLOUD_NAME;
+  delete process.env.CLOUDINARY_API_KEY;
+  delete process.env.CLOUDINARY_API_SECRET;
+});
+
+test('remove(id) soft-archives snapshot (removes from list, keeps in history & disk)', async () => {
+  const dir = await tmpDir();
+  const store = createSnapshotStore({ dir, now: () => 100 });
+  const snap = await store.add({ imageBase64: img('target'), trigger: 'auto', assessment: { frameIndex: 5 } });
+  assert.equal((await store.list()).length, 1);
+
+  const removed = await store.remove(snap.id);
+  assert.equal(removed, true);
+  // Removed from live list
+  assert.equal((await store.list()).length, 0);
+  // Preserved in history with archived: true
+  const inHistory = (await store.listAll()).find((e) => e.id === snap.id);
+  assert.equal(inHistory?.archived, true);
+  // File on disk remains
+  assert.equal(await exists(path.join(dir, `${snap.id}.jpg`)), true);
+});
+
+test('destroy(id) permanently deletes snapshot from disk, Cloudinary, and index', async () => {
+  process.env.CLOUDINARY_CLOUD_NAME = 'demo';
+  process.env.CLOUDINARY_API_KEY = 'key';
+  process.env.CLOUDINARY_API_SECRET = 'secret';
+
+  const deletedIds = [];
+  const dummyUploader = async (source, options) => ({
+    secure_url: `https://res.cloudinary.com/demo/${options.public_id}.jpg`,
+    public_id: `drony_snapshots/${options.public_id}`,
+  });
+  const dummyDeleter = async (publicId) => { deletedIds.push(publicId); };
+
+  const dir = await tmpDir();
+  const store = createSnapshotStore({
+    dir,
+    now: () => 100,
+    uploader: dummyUploader,
+    deleter: dummyDeleter,
+  });
+
+  const snap = await store.add({ imageBase64: img('target'), trigger: 'auto', assessment: { frameIndex: 5 } });
+  assert.equal((await store.list()).length, 1);
+  assert.equal(await exists(path.join(dir, `${snap.id}.jpg`)), true);
+
+  const destroyed = await store.destroy(snap.id);
+  assert.equal(destroyed, true);
+  assert.equal((await store.list()).length, 0);
+  assert.equal((await store.listAll()).length, 0);
+  assert.equal(await exists(path.join(dir, `${snap.id}.jpg`)), false);
+  assert.deepEqual(deletedIds, ['drony_snapshots/SNAP-000005-100']);
+
+  delete process.env.CLOUDINARY_CLOUD_NAME;
+  delete process.env.CLOUDINARY_API_KEY;
+  delete process.env.CLOUDINARY_API_SECRET;
 });

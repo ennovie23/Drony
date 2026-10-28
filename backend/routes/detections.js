@@ -28,6 +28,23 @@ export function createDetectionsRouter({ db = prisma, saveIntervalMs = envSaveIn
 
   // In-memory cache for ultra-fast polling response
   let latestAssessmentCache = null;
+  // Whether fire/smoke rows may still be open; starts true so the first clear frame
+  // closes anything left active by an earlier run
+  let hazardOpen = true;
+
+  // Fire/smoke has left the video: every still-active fire record is resolved
+  async function resolveIfCleared(data) {
+    const hazard = data.fireDetected || data.smokeDetected;
+    if (hazard) { hazardOpen = true; return; }
+    if (!hazardOpen) return;
+    hazardOpen = false;
+    try {
+      await db.frameAssessment.updateMany({ where: { resolvedAt: null }, data: { resolvedAt: data.timestamp } });
+    } catch (error) {
+      hazardOpen = true; // try again on the next clear frame
+      console.error('Error resolving fire records:', error);
+    }
+  }
 
   // POST unified frame assessment snapshot from Python. Every frame updates the live
   // view; only some are saved (see lib/saveThrottle.js): 201 when saved, 200 when not.
@@ -49,10 +66,13 @@ export function createDetectionsRouter({ db = prisma, saveIntervalMs = envSaveIn
       boxes: payload.boxes ?? [],
     };
     latestAssessmentCache = { id: randomUUID(), ...data, receivedAt: now() };
+    await resolveIfCleared(data);
 
     if (!throttle.take(data)) return res.json({ success: true, saved: false });
     try {
-      const record = await db.frameAssessment.create({ data: { ...data, id: latestAssessmentCache.id } });
+      // A frame with nothing in it was never an active hazard
+      const resolvedAt = data.fireDetected || data.smokeDetected ? null : data.timestamp;
+      const record = await db.frameAssessment.create({ data: { ...data, resolvedAt, id: latestAssessmentCache.id } });
       res.status(201).json({ success: true, saved: true, record });
     } catch (error) {
       throttle.forget();

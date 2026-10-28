@@ -28,7 +28,7 @@ function harness() {
     children,
     timers,
     advance: (ms) => { clock += ms; },
-    supervise: () => superviseDetector({ cwd: '/backend', env: {}, spawn, setTimer, now: () => clock, log: () => {} }),
+    supervise: (opts = {}) => superviseDetector({ cwd: '/backend', env: {}, spawn, setTimer, now: () => clock, log: () => {}, ...opts }),
   };
   return h;
 }
@@ -92,4 +92,28 @@ test('a restart is not counted as a crash', () => {
   h.children[1].emit('close', null, 'SIGTERM');
   h.children[2].emit('close', 1, null);
   assert.equal(h.timers[1].ms, 1000);
+});
+
+test('start brings detect.py back after stop', () => {
+  const h = harness();
+  const sup = h.supervise();
+  assert.equal(sup.state, 'running');
+  sup.stop();
+  assert.equal(sup.state, 'stopped');
+  // Started again before the old child has exited: it replaces it once it closes
+  assert.equal(sup.start(), true);
+  assert.equal(h.children.length, 1);
+  h.children[0].emit('close', null, 'SIGTERM');
+  assert.equal(h.children.length, 2);
+  assert.equal(h.timers.length, 0, 'not treated as a crash');
+  assert.equal(sup.start(), false, 'already running');
+});
+
+test('autostart: false waits for start()', () => {
+  const h = harness();
+  const sup = h.supervise({ autostart: false });
+  assert.equal(sup.state, 'stopped');
+  assert.equal(h.children.length, 0);
+  sup.start();
+  assert.equal(h.children.length, 1);
 });

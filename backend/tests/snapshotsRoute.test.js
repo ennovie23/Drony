@@ -14,6 +14,12 @@ function fakeStore() {
       return entry;
     },
     clear: async () => { entries.length = 0; },
+    remove: async (id) => {
+      const idx = entries.findIndex((e) => e.id === id);
+      if (idx === -1) return false;
+      entries.splice(idx, 1);
+      return true;
+    },
   };
 }
 
@@ -110,5 +116,20 @@ test('DELETE reports a failed clear as 500', async () => {
     const res = await fetch(base, { method: 'DELETE' });
     assert.equal(res.status, 500);
     assert.equal((await res.json()).success, false);
+  } finally { await close(); }
+});
+
+test('DELETE /:id removes single snapshot or returns 404', async () => {
+  const store = fakeStore();
+  store.entries.push({ id: 'SNAP-A' }, { id: 'SNAP-B' });
+  const { base, close } = await serve({ store });
+  try {
+    const resA = await fetch(`${base}/SNAP-A`, { method: 'DELETE' });
+    assert.equal(resA.status, 200);
+    assert.deepEqual(await resA.json(), { success: true, id: 'SNAP-A' });
+    assert.deepEqual(store.entries.map((e) => e.id), ['SNAP-B']);
+
+    const resUnknown = await fetch(`${base}/SNAP-UNKNOWN`, { method: 'DELETE' });
+    assert.equal(resUnknown.status, 404);
   } finally { await close(); }
 });

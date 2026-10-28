@@ -10,7 +10,7 @@ import base64
 from dotenv import load_dotenv
 from severity import classify_fire_crop
 from pipeline import FramePipeline, PipelineSettings, detector_weights_path
-from live_stream import LatestFrame, CaptureFlag, start_stream_server
+from live_stream import LatestFrame, CaptureFlag, PauseState, start_stream_server
 from snapshot_trigger import SnapshotTrigger
 from frame_grabber import FrameGrabber
 from parent_watch import watch_parent_pipe
@@ -129,13 +129,14 @@ def analyse(pipeline, frame):
 
 def start_live_outputs():
     """
-    Live stream for the Live/Fire pages, the manual capture hook and the
+    Live stream for the Live/Fire pages, the manual capture and pause hooks and the
     auto-snapshot policy, shared by webcam and video-file mode. Returns
-    publish_frame(frame) and save_snapshot_if_due(frame, payload).
+    publish_frame(frame), save_snapshot_if_due(frame, payload) and the PauseState.
     """
     latest_frame = LatestFrame()
     capture_flag = CaptureFlag()
-    start_stream_server(stream_port, latest_frame, capture_flag)
+    pause_state = PauseState()
+    start_stream_server(stream_port, latest_frame, capture_flag, pause_state)
     snapshot_trigger = SnapshotTrigger(snapshot_cooldown_s)
     send_snapshot = make_sender(snapshots_url, 2, "snapshot")
 
@@ -157,11 +158,11 @@ def start_live_outputs():
                 "assessment": frame_payload,
             })
 
-    return publish_frame, save_snapshot_if_due
+    return publish_frame, save_snapshot_if_due, pause_state
 
 
 def run_webcam():
-    publish_frame, save_snapshot_if_due = start_live_outputs()
+    publish_frame, save_snapshot_if_due, pause_state = start_live_outputs()
     log(f"Webcam mode (stream: http://localhost:{stream_port}/stream)")
 
     # Detection starts when the webcam is plugged in and pauses when it's unplugged
@@ -186,6 +187,9 @@ def run_webcam():
             if new_version == grabbed_version:
                 continue
             grabbed_version = new_version
+            # Paused: the camera keeps streaming, the models stop analysing
+            if pause_state.paused:
+                continue
 
             frame_payload = analyse(pipeline, frame)
             save_snapshot_if_due(frame, frame_payload)
@@ -201,7 +205,7 @@ def run_file():
         log(f"Error: Unable to open video source at {video_path}")
         exit(1)
     pipeline = make_pipeline(cap)
-    publish_frame, save_snapshot_if_due = start_live_outputs()
+    publish_frame, save_snapshot_if_due, pause_state = start_live_outputs()
 
     # Synchronize processing frame rate with the video's actual playback speed
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
@@ -210,6 +214,10 @@ def run_file():
         f"(stream: http://localhost:{stream_port}/stream)...")
 
     while cap.isOpened():
+        # Paused: hold the video where it is; the stream keeps showing the last frame
+        if pause_state.paused:
+            time.sleep(0.1)
+            continue
         t_frame_start = time.time()
         ret, frame = cap.read()
         if not ret:

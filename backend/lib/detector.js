@@ -11,7 +11,8 @@ export function restartDelayMs(crashesInARow) {
   return Math.min(1000 * 2 ** Math.max(0, crashesInARow - 1), MAX_DELAY_MS);
 }
 
-// Keeps ML/detect.py running for as long as the backend runs. detect.py waits
+// Keeps ML/detect.py running until stop() (the Fire page's Stop button); start()
+// brings it back. `autostart: false` starts in the stopped state. detect.py waits
 // for the webcam itself, so "plugged in" / "unplugged" never needs a restart here;
 // this only recovers from crashes. detect.py exits when its stdin pipe closes, so it
 // never outlives this process (restart, crash or Ctrl+C).
@@ -22,11 +23,12 @@ export function superviseDetector({
   setTimer = setTimeout,
   now = Date.now,
   log = console.log,
+  autostart = true,
 } = {}) {
   let child = null;
   let crashes = 0;
   let startedAt = 0;
-  let stopped = false;
+  let stopped = !autostart;
   let restarting = false;
   let timer = null;
 
@@ -62,6 +64,20 @@ export function superviseDetector({
   start();
 
   return {
+    // 'running' once started (detect.py may still be loading), 'stopped' after stop()
+    get state() {
+      return stopped ? 'stopped' : 'running';
+    },
+    // Launch detect.py again after stop(); does nothing while it is running
+    start() {
+      if (!stopped) return false;
+      stopped = false;
+      crashes = 0;
+      // A stopped child that hasn't exited yet is replaced as soon as it closes
+      if (child) restarting = true;
+      else start();
+      return true;
+    },
     // Restart detect.py at once with `overrides` merged into its env (e.g. a new
     // VIDEO_SOURCE). A deliberate restart isn't a crash, so the backoff resets.
     restart(overrides = {}) {
@@ -79,7 +95,9 @@ export function superviseDetector({
     },
     stop() {
       stopped = true;
+      restarting = false;
       if (timer) clearTimeout(timer);
+      timer = null;
       if (child) {
         child.stdin?.end();
         child.kill('SIGTERM');
