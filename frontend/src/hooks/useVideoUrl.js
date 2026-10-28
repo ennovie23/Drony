@@ -5,13 +5,40 @@ import { API_BASE_URL } from '../config';
 // `source` is 'file' (play `videoUrl`) or 'webcam' (show the MJPEG `streamUrl`
 // served by detect.py). Falls back to the file source if the backend is unreachable.
 // CameraFeed (Live), MlFrame and AppDataProvider all use this hook so they follow
-// whatever VIDEO_SOURCE / ACTIVE_VIDEO is set to in the backend .env.
+// whatever VIDEO_SOURCE / ACTIVE_VIDEO is set to in the backend .env, and refetch
+// when switchVideoSource() changes it.
+const SOURCE_CHANGED = 'drony:video-source-changed';
+
+// Switches the backend (and detect.py) to 'file' or 'webcam'. Resolves to true on success.
+export async function switchVideoSource(source) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/config/video`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ source }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        window.dispatchEvent(new Event(SOURCE_CHANGED));
+        return true;
+    } catch (err) {
+        console.error('[useVideoUrl] Could not switch video source:', err.message);
+        return false;
+    }
+}
+
 export default function useVideoUrl(fallbackFilename = 'smoke.mp4') {
     const [videoUrl, setVideoUrl] = useState('');
     const [streamUrl, setStreamUrl] = useState(null);
     const [source, setSource] = useState('file');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+    const [version, setVersion] = useState(0);
+
+    useEffect(() => {
+        const onChange = () => setVersion((v) => v + 1);
+        window.addEventListener(SOURCE_CHANGED, onChange);
+        return () => window.removeEventListener(SOURCE_CHANGED, onChange);
+    }, []);
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/api/config/video`)
@@ -34,7 +61,7 @@ export default function useVideoUrl(fallbackFilename = 'smoke.mp4') {
                 setError(true);
                 setLoading(false);
             });
-    }, [fallbackFilename]);
+    }, [fallbackFilename, version]);
 
     return { videoUrl, streamUrl, source, loading, error };
 }

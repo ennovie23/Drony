@@ -6,7 +6,7 @@ import { createSnapshotStore } from '../lib/snapshotStore.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const SNAPSHOTS_DIR = path.resolve(__dirname, '..', 'ML', 'snapshots');
 
-// Webcam snapshots posted by detect.py: JPEG + the frame's assessment.
+// Snapshots posted by detect.py: JPEG + the frame's assessment.
 export function createSnapshotsRouter({ store, streamPort, fetchImpl = fetch }) {
   const router = express.Router();
   // Base64 JPEGs are well over express.json()'s 100 KB default
@@ -48,7 +48,7 @@ export function createSnapshotsRouter({ store, streamPort, fetchImpl = fetch }) 
       if (!upstream.ok) throw new Error(`stream server responded ${upstream.status}`);
       res.json({ success: true });
     } catch {
-      res.status(503).json({ success: false, message: 'Simulation is not running in webcam mode' });
+      res.status(503).json({ success: false, message: 'The detector is not running' });
     }
   });
 

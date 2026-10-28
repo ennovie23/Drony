@@ -3,14 +3,14 @@ import styles from './CameraFeed.module.css';
 import useVideoUrl from '../../hooks/useVideoUrl';
 import useLiveDetections from '../../hooks/useLiveDetections';
 import { useAppData } from '../../context/AppDataContext';
-import { latestDetections } from '../../utils/snapshots';
 
 // The stream can briefly fail while detect.py (re)starts, so keep retrying
 const STREAM_RETRY_MS = 3000;
 const NO_CAMERA = 'No camera connected — plug in a webcam';
+const NO_DETECTOR = 'Starting the detector…';
 
-// Drone camera view: the live webcam stream (VIDEO_SOURCE=webcam) with the
-// detector's live boxes, otherwise the test video with the latest snapshot's boxes.
+// Drone camera view: detect.py's stream of the frames it analysed (webcam or test
+// video) with the model's live boxes for those frames.
 // `live` (from useLatestDetection) is true while the detector is sending frames.
 export default function CameraFeed({
     live = false,
@@ -20,11 +20,10 @@ export default function CameraFeed({
     recordTime = '',
     highlightId = null,
 }) {
-    const { drone, site, fireSnapshots } = useAppData();
-    const { videoUrl, streamUrl, source } = useVideoUrl();
-    const isWebcam = source === 'webcam' && Boolean(streamUrl);
-    const liveDetections = useLiveDetections(isWebcam && live && showDetections);
-    const detections = isWebcam ? liveDetections : latestDetections(fireSnapshots);
+    const { drone, site } = useAppData();
+    const { streamUrl, source } = useVideoUrl();
+    const isWebcam = source === 'webcam';
+    const detections = useLiveDetections(live && showDetections);
     const modeLabel = mode === 'thermal' ? 'Thermal' : 'RGB';
 
     const [streamError, setStreamError] = useState(false);
@@ -60,22 +59,8 @@ export default function CameraFeed({
         ));
 
     let media;
-    if (!isWebcam) {
-        media = (
-            <>
-                <video
-                    className={styles.media}
-                    src={videoUrl || undefined}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                />
-                {boxes}
-            </>
-        );
-    } else if (!live || streamError) {
-        media = <span className={styles.placeholder}>{NO_CAMERA}</span>;
+    if (!streamUrl || !live || streamError) {
+        media = <span className={styles.placeholder}>{isWebcam ? NO_CAMERA : NO_DETECTOR}</span>;
     } else {
         media = (
             <div className={styles.stage} style={{ aspectRatio: aspect }}>
@@ -102,7 +87,7 @@ export default function CameraFeed({
                     {recording ? `Rec ${recordTime}` : 'Live'} · {modeLabel}
                 </span>
                 <span className={`${styles.pill} mono`}>
-                    {isWebcam ? 'Webcam' : `30 fps · ${mode === 'thermal' ? 'IR' : '4K'}`}
+                    {isWebcam ? 'Webcam' : 'Test video'}
                 </span>
             </div>
 

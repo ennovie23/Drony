@@ -44,31 +44,31 @@
     gap: 14px;
 }
 
+/* height: 0 + min-height: 100% → the panel takes the feed column's height instead of
+   growing the row, so the video frame never stretches to fit it */
 .side {
     display: flex;
     flex-direction: column;
     gap: 14px;
     min-width: 0;
+    height: 0;
+    min-height: 100%;
 }
 
-.mapCard {
+/* Fills what's left of the panel and scrolls inside itself */
+.weather {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
 }
 
-.map {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.map > div {
-    flex: 1;
-}
-
-.coords {
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--text-muted);
+/* Inline (not flex) so the header's ellipsis still applies when it runs out of room */
+.location .liveDot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 6px;
+    vertical-align: 1px;
+    border-radius: 50%;
+    background: var(--ok);
 }

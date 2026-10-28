@@ -87,7 +87,7 @@ test('capture when stream down → 503', async () => {
   try {
     const res = await fetch(`${base}/capture`, { method: 'POST' });
     assert.equal(res.status, 503);
-    assert.deepEqual(await res.json(), { success: false, message: 'Simulation is not running in webcam mode' });
+    assert.deepEqual(await res.json(), { success: false, message: 'The detector is not running' });
   } finally { await close(); }
 });
 

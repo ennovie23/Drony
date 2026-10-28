@@ -1,7 +1,13 @@
-// What the Fire page should play: the test video file, or the live webcam stream
-// served by detect.py when VIDEO_SOURCE=webcam.
+// 'file' or 'webcam' (any case), otherwise null
+export function parseVideoSource(value) {
+  const source = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return source === 'file' || source === 'webcam' ? source : null;
+}
+
+// What the detector analyses: the test video file or the webcam. Either way the
+// pages show detect.py's stream of the frames it analysed, so the live boxes match.
 export function buildVideoConfig(env) {
-  const source = env.VIDEO_SOURCE?.trim().toLowerCase() === 'webcam' ? 'webcam' : 'file';
+  const source = parseVideoSource(env.VIDEO_SOURCE) === 'webcam' ? 'webcam' : 'file';
   const filename = env.ACTIVE_VIDEO || 'smoke.mp4';
   const port = env.PORT || 5001;
   const streamPort = env.STREAM_PORT || 5002;
@@ -9,6 +15,6 @@ export function buildVideoConfig(env) {
     source,
     filename,
     videoUrl: `http://localhost:${port}/videos/${filename}`,
-    streamUrl: source === 'webcam' ? `http://localhost:${streamPort}/stream` : null,
+    streamUrl: `http://localhost:${streamPort}/stream`,
   };
 }

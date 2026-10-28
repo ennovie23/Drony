@@ -71,3 +71,25 @@ test('stop ends the child and prevents restarts', () => {
   h.children[0].emit('close', null, 'SIGTERM');
   assert.equal(h.timers.length, 0);
 });
+
+test('restart kills the child and starts a new one at once with the overrides', () => {
+  const h = harness();
+  const sup = h.supervise();
+  sup.restart({ VIDEO_SOURCE: 'webcam' });
+  assert.equal(h.children[0].killed, true);
+  h.children[0].emit('close', null, 'SIGTERM');
+  assert.equal(h.timers.length, 0);
+  assert.equal(h.children.length, 2);
+  assert.equal(h.children[1].opts.env.VIDEO_SOURCE, 'webcam');
+});
+
+test('a restart is not counted as a crash', () => {
+  const h = harness();
+  const sup = h.supervise();
+  h.children[0].emit('close', 1, null);
+  h.timers[0].fn();
+  sup.restart({ VIDEO_SOURCE: 'file' });
+  h.children[1].emit('close', null, 'SIGTERM');
+  h.children[2].emit('close', 1, null);
+  assert.equal(h.timers[1].ms, 1000);
+});

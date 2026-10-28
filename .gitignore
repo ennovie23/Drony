@@ -20,3 +20,6 @@ dist/
 
 # Webcam test snapshots (local only)
 backend/ML/snapshots/
+
+# Python bytecode
+__pycache__/

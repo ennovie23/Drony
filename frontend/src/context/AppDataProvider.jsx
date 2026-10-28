@@ -7,10 +7,8 @@ import { toUiSnapshot } from '../utils/snapshots';
 
 // How long a mock drop takes before the floating module starts reporting.
 const DEPLOY_DELAY_MS = 4000;
-// How long the mock ML model takes to analyse a new snapshot.
-const ANALYSIS_DELAY_MS = 1500;
-// Webcam mode: how often the snapshot strip refreshes, and how long a manual
-// capture waits for its snapshot to show up.
+// How often the snapshot strip refreshes, and how long a manual capture waits for
+// its snapshot to show up.
 const SNAPSHOT_POLL_MS = 2000;
 const CAPTURE_TIMEOUT_MS = 5000;
 
@@ -18,10 +16,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function AppDataProvider({ children }) {
     const [modules, setModules] = useState(mock.modules);
-    const [snapshots, setSnapshots] = useState(mock.fireSnapshots);
     const [analyzing, setAnalyzing] = useState(false);
 
-    // VIDEO_SOURCE=webcam: snapshots are real frames saved by detect.py
+    // Snapshots are real frames saved by detect.py, from the webcam or the test video
     const { source: videoSource } = useVideoUrl();
     const [liveSnapshots, setLiveSnapshots] = useState([]);
     const latestLiveIdRef = useRef(null);
@@ -40,16 +37,15 @@ export default function AppDataProvider({ children }) {
     }, []);
 
     useEffect(() => {
-        if (videoSource !== 'webcam') return;
         const first = setTimeout(fetchLiveSnapshots, 0);
         const id = setInterval(fetchLiveSnapshots, SNAPSHOT_POLL_MS);
         return () => {
             clearTimeout(first);
             clearInterval(id);
         };
-    }, [videoSource, fetchLiveSnapshots]);
+    }, [fetchLiveSnapshots]);
 
-    // Webcam: ask detect.py to save the next frame, then wait for it to land in the strip.
+    // Ask detect.py to save the next frame, then wait for it to land in the strip.
     const captureLiveSnapshot = useCallback(async () => {
         setAnalyzing(true);
         const beforeId = latestLiveIdRef.current;
@@ -73,7 +69,7 @@ export default function AppDataProvider({ children }) {
         }
     }, [fetchLiveSnapshots]);
 
-    // Webcam: delete every saved snapshot. Returns false if the backend refused.
+    // Delete every saved snapshot. Returns false if the backend refused.
     const clearSnapshots = useCallback(async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/snapshots`, { method: 'DELETE' });
@@ -85,32 +81,6 @@ export default function AppDataProvider({ children }) {
             console.error('[clearSnapshots] Backend unreachable:', err.message);
             return false;
         }
-    }, []);
-
-    // Ask the drone for a snapshot and run it through the fire model. Mock: reuses the
-    // latest result with slightly shifted scores until the backend sends real frames.
-    const captureMockSnapshot = useCallback(() => {
-        setAnalyzing(true);
-        setTimeout(() => {
-            setSnapshots((prev) => {
-                const last = prev[0];
-                const nudge = (v) => Math.min(0.99, Math.max(0.05, v + (Math.random() - 0.5) * 0.1));
-                const detections = last.detections.map((d) => ({ ...d, confidence: Number(nudge(d.confidence).toFixed(2)) }));
-                const frame = last.frame + 5 + Math.floor(Math.random() * 10);
-                return [
-                    {
-                        ...last,
-                        id: `SNAP-${String(frame).padStart(3, '0')}`,
-                        frame,
-                        capturedAt: new Date().toISOString(),
-                        detections,
-                        fireConfidence: Number(Math.min(99.9, last.fireConfidence + (Math.random() - 0.4) * 4).toFixed(1)),
-                    },
-                    ...prev,
-                ];
-            });
-            setAnalyzing(false);
-        }, ANALYSIS_DELAY_MS);
     }, []);
 
     const deployModule = useCallback((moduleId, dropPoint) => {
@@ -144,16 +114,16 @@ export default function AppDataProvider({ children }) {
             drone: mock.drone,
             site: mock.site,
             map: mock.map,
-            fireSnapshots: videoSource === 'webcam' ? liveSnapshots : snapshots,
+            fireSnapshots: liveSnapshots,
             videoSource,
             analyzing,
-            captureSnapshot: videoSource === 'webcam' ? captureLiveSnapshot : captureMockSnapshot,
+            captureSnapshot: captureLiveSnapshot,
             clearSnapshots,
             modules: Object.values(modules),
             deployModule,
             recallModule,
         }),
-        [modules, snapshots, liveSnapshots, videoSource, analyzing, captureLiveSnapshot, captureMockSnapshot, clearSnapshots, deployModule, recallModule],
+        [modules, liveSnapshots, videoSource, analyzing, captureLiveSnapshot, clearSnapshots, deployModule, recallModule],
     );
 
     return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

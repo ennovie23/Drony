@@ -27,6 +27,7 @@ export function superviseDetector({
   let crashes = 0;
   let startedAt = 0;
   let stopped = false;
+  let restarting = false;
   let timer = null;
 
   const start = () => {
@@ -46,6 +47,11 @@ export function superviseDetector({
     child.on('close', (code, signal) => {
       child = null;
       if (stopped) return;
+      if (restarting) {
+        restarting = false;
+        start();
+        return;
+      }
       crashes = now() - startedAt >= HEALTHY_RUN_MS ? 1 : crashes + 1;
       const delay = restartDelayMs(crashes);
       log(`[detector] detect.py exited (code: ${code}, signal: ${signal}); restarting in ${delay / 1000} s`);
@@ -56,6 +62,21 @@ export function superviseDetector({
   start();
 
   return {
+    // Restart detect.py at once with `overrides` merged into its env (e.g. a new
+    // VIDEO_SOURCE). A deliberate restart isn't a crash, so the backoff resets.
+    restart(overrides = {}) {
+      env = { ...env, ...overrides };
+      if (stopped) return;
+      crashes = 0;
+      if (child) {
+        restarting = true;
+        child.stdin?.end();
+        child.kill('SIGTERM');
+        return;
+      }
+      if (timer) clearTimeout(timer);
+      start();
+    },
     stop() {
       stopped = true;
       if (timer) clearTimeout(timer);

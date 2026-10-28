@@ -127,8 +127,12 @@ def analyse(pipeline, frame):
     return frame_payload
 
 
-def run_webcam():
-    # Live stream for the Live/Fire pages + manual capture hook, and auto-snapshot policy
+def start_live_outputs():
+    """
+    Live stream for the Live/Fire pages, the manual capture hook and the
+    auto-snapshot policy, shared by webcam and video-file mode. Returns
+    publish_frame(frame) and save_snapshot_if_due(frame, payload).
+    """
     latest_frame = LatestFrame()
     capture_flag = CaptureFlag()
     start_stream_server(stream_port, latest_frame, capture_flag)
@@ -140,6 +144,24 @@ def run_webcam():
         if ok:
             latest_frame.set(buf.tobytes())
 
+    def save_snapshot_if_due(frame, frame_payload):
+        # Save this frame as a snapshot on detection (cooldown) or manual request
+        trigger_kind = snapshot_trigger.check(frame_payload["fireDetected"], frame_payload["smokeDetected"],
+                                              capture_flag.consume())
+        # Encode the analysed frame (not the newest one) so the saved boxes match it
+        ok, jpeg_buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80]) if trigger_kind else (False, None)
+        if ok:
+            send_snapshot({
+                "imageBase64": base64.b64encode(jpeg_buf.tobytes()).decode("ascii"),
+                "trigger": trigger_kind,
+                "assessment": frame_payload,
+            })
+
+    return publish_frame, save_snapshot_if_due
+
+
+def run_webcam():
+    publish_frame, save_snapshot_if_due = start_live_outputs()
     log(f"Webcam mode (stream: http://localhost:{stream_port}/stream)")
 
     # Detection starts when the webcam is plugged in and pauses when it's unplugged
@@ -166,18 +188,7 @@ def run_webcam():
             grabbed_version = new_version
 
             frame_payload = analyse(pipeline, frame)
-
-            # Save this frame as a snapshot on detection (cooldown) or manual request
-            trigger_kind = snapshot_trigger.check(frame_payload["fireDetected"], frame_payload["smokeDetected"],
-                                                  capture_flag.consume())
-            # Encode the analysed frame (not the newest one) so the saved boxes match it
-            ok, jpeg_buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80]) if trigger_kind else (False, None)
-            if ok:
-                send_snapshot({
-                    "imageBase64": base64.b64encode(jpeg_buf.tobytes()).decode("ascii"),
-                    "trigger": trigger_kind,
-                    "assessment": frame_payload,
-                })
+            save_snapshot_if_due(frame, frame_payload)
 
         grabber.stop()
         cap.release()
@@ -190,11 +201,13 @@ def run_file():
         log(f"Error: Unable to open video source at {video_path}")
         exit(1)
     pipeline = make_pipeline(cap)
+    publish_frame, save_snapshot_if_due = start_live_outputs()
 
     # Synchronize processing frame rate with the video's actual playback speed
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
     frame_delay = 1.0 / fps
-    log(f"Starting detection on {os.path.basename(video_path)} @ {fps:.1f} FPS...")
+    log(f"Starting detection on {os.path.basename(video_path)} @ {fps:.1f} FPS "
+        f"(stream: http://localhost:{stream_port}/stream)...")
 
     while cap.isOpened():
         t_frame_start = time.time()
@@ -206,7 +219,10 @@ def run_file():
             if not ret:
                 break
 
-        analyse(pipeline, frame)
+        frame_payload = analyse(pipeline, frame)
+        # Streamed after analysis, so the page shows the very frame the live boxes came from
+        publish_frame(frame)
+        save_snapshot_if_due(frame, frame_payload)
 
         # Maintain real-time sync by throttling execution to match video frame rate
         sleep_for = frame_delay - (time.time() - t_frame_start)

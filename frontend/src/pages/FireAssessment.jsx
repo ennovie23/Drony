@@ -20,17 +20,16 @@ const pct = (v) => Number(Number(v).toFixed(1));
 
 export default function FireAssessment() {
   useNow(5000);
-  const { drone, site, fireSnapshots, analyzing, captureSnapshot, clearSnapshots, videoSource } =
+  const { site, fireSnapshots, analyzing, captureSnapshot, clearSnapshots, videoSource } =
     useAppData();
   const isWebcam = videoSource === "webcam";
   const [selectedId, setSelectedId] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
 
-  // Webcam mode starts on the live stream (no snapshot selected) and the list may be
-  // empty; file mode keeps showing the latest mock snapshot by default.
+  // Starts on the live stream (no snapshot selected); the list may be empty
   const latest = fireSnapshots[0];
   const selected = fireSnapshots.find((s) => s.id === selectedId);
-  const snap = isWebcam ? selected : (selected ?? latest);
+  const snap = selected;
   const isLatest = Boolean(snap && snap.id === latest?.id);
   const detections = snap
     ? [...snap.detections].sort((a, b) => b.confidence - a.confidence)
@@ -65,7 +64,7 @@ export default function FireAssessment() {
         subtitle={`${site.area}, ${site.city}`}
         actions={
           <>
-            {isWebcam && snap && (
+            {snap && (
               <Button onClick={() => selectSnapshot(null)}>Back to live</Button>
             )}
             <Button
@@ -89,7 +88,7 @@ export default function FireAssessment() {
               tag={
                 snap
                   ? `Frame ${snap.frame}${isLatest ? " · latest" : ""} · ${formatTime(snap.capturedAt)}`
-                  : "Live · Webcam"
+                  : `Live · ${isWebcam ? "Webcam" : "Test video"}`
               }
               playing={live}
             />
@@ -421,7 +420,7 @@ export default function FireAssessment() {
                     value: snap ? formatStatus(timeAgo(snap.capturedAt)) : "Live",
                   },
                   { label: "Boxes", value: snap ? snap.detections.length : "—" },
-                  { label: "Source", value: isWebcam ? "Webcam" : `${drone.id} camera` },
+                  { label: "Source", value: isWebcam ? "Webcam" : "Test video" },
                 ]}
               />
             </Card>
@@ -433,7 +432,7 @@ export default function FireAssessment() {
           meta={
             <span className={styles.stripMeta}>
               Click a snapshot to view its result
-              {isWebcam && fireSnapshots.length > 0 && (
+              {fireSnapshots.length > 0 && (
                 <Button size="sm" onClick={onClearSnapshots} disabled={clearing}>
                   <Trash2 />
                   {clearing ? "Clearing…" : "Clear"}

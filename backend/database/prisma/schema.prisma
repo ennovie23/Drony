@@ -43,6 +43,39 @@ model FrameAssessment {
   
   // Raw bounding boxes stored as JSON for your canvas overlays
   boxes            Json?
-  
+
   createdAt        DateTime @default(now())
+}
+
+// One flood sensor packet as the dashboard received it over USB (see frontend floodSerial.js)
+model FloodReading {
+  id          String   @id @default(uuid())
+  recordedAt  DateTime // when the ground station delivered it
+  nodeId      String   // sensor node id; "USB" for a plain USB ultrasonic sensor
+  seq         Int?     // node packet counter (restarts when the node reboots)
+  source      String   // "lora" (via ground station), "usb" (node plugged in) or "serial" (plain sensor)
+
+  // Depth
+  distanceCm  Float?   // air-calibrated echo distance; null when the sensor got no echo
+  heightCm    Float?   // flood height using the mount settings below
+  mount       String   // "float" or "fixed"
+  medium      String   // what the sound travelled through: "water" or "air"
+  probeDepthCm Float?
+  referenceCm Float?
+
+  // Radio link
+  rssi        Float?
+  snr         Float?
+  lost        Int?     // packets the node knows were lost
+
+  // Node GPS
+  gpsFix      Boolean  @default(false)
+  latitude    Float?
+  longitude   Float?
+  satellites  Int?
+
+  createdAt   DateTime @default(now())
+
+  @@index([nodeId, recordedAt])
+  @@index([recordedAt])
 }

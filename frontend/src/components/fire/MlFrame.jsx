@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './MlFrame.module.css';
 import useVideoUrl from '../../hooks/useVideoUrl';
 import { API_BASE_URL } from '../../config';
@@ -6,22 +6,20 @@ import { toDetection } from '../../utils/snapshots';
 
 const CAMERA_UNAVAILABLE = 'No camera connected — plug in a webcam';
 const CAMERA_CONNECTING = 'Connecting to camera…';
+const DETECTOR_STARTING = 'Starting the detector…';
 // detect.py takes a while to load its models before the stream is up
 const STREAM_RETRY_MS = 3000;
 
 
 // One drone frame as analysed by the fire model, with the model's bounding boxes
 // labelled "<label> <score>". `small` renders a thumbnail without labels. Renders, in order:
-//   - a webcam snapshot (`snapshot.imageUrl`): the saved JPEG with its saved boxes
-//   - the live webcam stream (VIDEO_SOURCE=webcam) with live boxes while `playing`
-//   - the test video file, played with live boxes while `playing`
+//   - a saved snapshot (`snapshot.imageUrl`): the JPEG with its saved boxes
+//   - detect.py's live stream (webcam or test video) with live boxes while `playing`
 // `playing` is true while the detector is sending frames (see useLatestDetection).
 export default function MlFrame({ snapshot, highlightId = null, small = false, tag, playing = false }) {
-    const { videoUrl, streamUrl, source, loading } = useVideoUrl();
-    const videoRef = useRef(null);
+    const { streamUrl, source } = useVideoUrl();
 
     const isSnapshotImage = Boolean(snapshot?.imageUrl);
-    const isLiveStream = !isSnapshotImage && source === 'webcam' && !small;
 
     // Live detections fetched from /api/detections/live while simulation is running
     const [liveBoxes, setLiveBoxes] = useState([]);
@@ -29,17 +27,6 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
     const [streamAttempt, setStreamAttempt] = useState(0);
     // Images are letterboxed at their own aspect ratio so % boxes line up (webcams are 4:3)
     const [aspect, setAspect] = useState('4 / 3');
-
-    // Play / pause the video element when `playing` changes
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video || loading) return;
-        if (playing) {
-            video.play().catch(() => {}); // ignore autoplay policy errors
-        } else {
-            video.pause();
-        }
-    }, [playing, loading, videoUrl]);
 
     // Poll the live detections endpoint every 500 ms while simulation is running
     useEffect(() => {
@@ -107,7 +94,9 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
                 {renderBoxes(snapshot.detections ?? [], true)}
             </div>
         );
-    } else if (isLiveStream) {
+    } else if (small) {
+        content = null;
+    } else {
         content = playing && streamUrl && !streamError ? (
             <div className={styles.stage} style={{ aspectRatio: aspect }}>
                 <img
@@ -121,22 +110,9 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
                 {renderBoxes(liveBoxes.map(toDetection), false)}
             </div>
         ) : (
-            <span className={styles.placeholder}>{playing ? CAMERA_CONNECTING : CAMERA_UNAVAILABLE}</span>
-        );
-    } else {
-        content = (
-            <>
-                <video
-                    ref={videoRef}
-                    className={styles.image}
-                    src={videoUrl || undefined}
-                    loop
-                    muted
-                    playsInline
-                />
-                {/* Live bounding boxes from detect.py (shown only in the main frame, not thumbnails) */}
-                {!small && renderBoxes(liveBoxes.map(toDetection), false)}
-            </>
+            <span className={styles.placeholder}>
+                {source !== 'webcam' ? DETECTOR_STARTING : playing ? CAMERA_CONNECTING : CAMERA_UNAVAILABLE}
+            </span>
         );
     }
 

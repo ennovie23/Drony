@@ -3,19 +3,25 @@ import { Eye, EyeOff } from 'lucide-react';
 import styles from './Live.module.css';
 import TopBar from '../components/shared/TopBar';
 import CameraFeed from '../components/shared/CameraFeed';
-import TacticalMap from '../components/shared/TacticalMap';
+import FlightWeather from '../components/shared/FlightWeather';
 import { Card, Readout, Chip, KeyValue, Segmented, Button } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import useLatestDetection from '../hooks/useLatestDetection';
+import useDeviceLocation from '../hooks/useDeviceLocation';
+import useFlightWeather from '../hooks/useFlightWeather';
+import useVideoUrl, { switchVideoSource } from '../hooks/useVideoUrl';
 import { threatTone } from '../components/ui/tones';
 import { formatElapsed } from '../utils/format';
+import { formatCoords, isLiveLocation } from '../utils/flightWeather';
 import useNow from '../hooks/useNow';
 
-// Flight map shows only where the drone is and where it has flown.
-const FLIGHT_LAYERS = { path: true, fire: false, flood: false };
 const MODES = [
     { key: 'rgb', label: 'RGB' },
     { key: 'thermal', label: 'Thermal' },
+];
+const SOURCES = [
+    { key: 'file', label: 'Video file' },
+    { key: 'webcam', label: 'Webcam' },
 ];
 
 export default function Live() {
@@ -23,16 +29,39 @@ export default function Live() {
     const { drone, site } = useAppData();
     // The Live page is where detection is watched: feed boxes + this summary
     const { result, live } = useLatestDetection();
+    // Where this device is: the header names it and the weather card forecasts for it
+    const device = useDeviceLocation();
+    const { weather, error: weatherError } = useFlightWeather(device.coords);
+    const liveLocation = isLiveLocation(device, weather);
     const hazard = result.primaryHazard;
     const confidence = hazard === 'fire' ? result.fire?.confidence : result.smoke?.confidence;
     const [mode, setMode] = useState('rgb');
     const [showDetections, setShowDetections] = useState(true);
+    // Switching restarts detect.py on the other source
+    const { source } = useVideoUrl();
+    const [switching, setSwitching] = useState(false);
+    const changeSource = async (next) => {
+        if (next === source || switching) return;
+        setSwitching(true);
+        await switchVideoSource(next);
+        setSwitching(false);
+    };
 
     return (
         <div className={styles.page}>
             <TopBar
                 title="Live feed"
-                subtitle={`${site.area}, ${site.city}`}
+                subtitle={
+                    liveLocation ? (
+                        <span className={styles.location}>
+                            <span className={styles.liveDot} aria-hidden />
+                            {weather.location.name ?? 'This device'}
+                            {' · '}<span className="mono">{formatCoords(device.coords.lat, device.coords.lon, 3)}</span>
+                        </span>
+                    ) : (
+                        `${site.area}, ${site.city}`
+                    )
+                }
                 actions={
                     <span>
                         Elapsed <span className="mono">{formatElapsed(site.startedAt)}</span>
@@ -44,6 +73,7 @@ export default function Live() {
                 <div className={styles.feedColumn}>
                     <div className={styles.feedBlock}>
                         <div className={styles.toolbar}>
+                            <Segmented options={SOURCES} value={source} onChange={changeSource} />
                             <Segmented options={MODES} value={mode} onChange={setMode} />
                             <Button size="sm" onClick={() => setShowDetections(!showDetections)}>
                                 {showDetections ? <Eye /> : <EyeOff />}
@@ -91,12 +121,7 @@ export default function Live() {
                         />
                     </Card>
 
-                    <Card title="Flight map" meta={<span><span className="mono">{drone.distanceHome}</span> m from home</span>} className={styles.mapCard}>
-                        <div className={styles.map}>
-                            <TacticalMap layers={FLIGHT_LAYERS} compact />
-                        </div>
-                        <div className={`${styles.coords} mono`}>{site.coords}</div>
-                    </Card>
+                    <FlightWeather device={device} weather={weather} error={weatherError} className={styles.weather} />
                 </aside>
             </div>
         </div>
