@@ -1,0 +1,64 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(3px);
+    animation: fadeIn 120ms ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.figure {
+    position: relative;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.img {
+    display: block;
+    max-width: min(1280px, calc(100vw - 48px));
+    max-height: calc(100vh - 110px);
+    object-fit: contain;
+    border-radius: 6px;
+    background: #000;
+}
+
+.caption {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    font-family: var(--font-mono, monospace);
+}
+
+.toolbar {
+    align-self: flex-end;
+    display: flex;
+    gap: 6px;
+}
+
+.tool {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    cursor: pointer;
+}
+
+.tool:hover { background: rgba(255, 255, 255, 0.15); }

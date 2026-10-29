@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera, Trash2, Archive } from "lucide-react";
 import styles from "./FireAssessment.module.css";
 import table from "../components/ui/Table.module.css";
 import TopBar from "../components/shared/TopBar";
 import MlFrame from "../components/fire/MlFrame";
-import { Card, Chip, KeyValue, Button } from "../components/ui";
+import { Card, Chip, KeyValue, Button, Modal } from "../components/ui";
 import { SEVERITY_TONE, BEHAVIOR_TONE, toneFor } from "../components/ui/tones";
 import { formatStatus } from "../components/ui/format";
 import { useAppData } from "../context/AppDataContext";
@@ -14,15 +14,18 @@ import ScrollStrip from "../components/shared/ScrollStrip";
 
 import { toModelResult } from "../utils/snapshots";
 import useLatestDetection from "../hooks/useLatestDetection";
+import useDetectorControl from "../hooks/useDetectorControl";
+import DetectorControls from "../components/fire/DetectorControls";
 
 // Box coordinates are percentages; webcam boxes carry 4 decimals, so show one.
 const pct = (v) => Number(Number(v).toFixed(1));
 
 export default function FireAssessment() {
   useNow(5000);
-  const { site, fireSnapshots, analyzing, captureSnapshot, clearSnapshots, videoSource } =
+  const { site, fireSnapshots, analyzing, captureSnapshot, clearSnapshots, deleteSnapshot, videoSource } =
     useAppData();
   const isWebcam = videoSource === "webcam";
+  const detector = useDetectorControl();
   const [selectedId, setSelectedId] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
 
@@ -40,15 +43,27 @@ export default function FireAssessment() {
     setHighlightId(null);
   };
 
+  // Modal state
+  const [clearModal, setClearModal] = useState(false);
+  const [archiveModal, setArchiveModal] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const onClearSnapshots = async () => {
-    const count = fireSnapshots.length;
-    if (!window.confirm(`Delete all ${count} snapshot${count === 1 ? "" : "s"}? This can't be undone.`)) return;
+  const [deleting, setDeleting] = useState(false);
+
+  const onConfirmClear = async () => {
+    setClearModal(false);
     setClearing(true);
     const ok = await clearSnapshots();
     setClearing(false);
     if (ok) selectSnapshot(null);
-    else window.alert("Couldn't clear snapshots — check that the backend is running.");
+  };
+
+  const onConfirmArchive = async () => {
+    setArchiveModal(false);
+    if (!snap) return;
+    setDeleting(true);
+    const ok = await deleteSnapshot(snap.id);
+    setDeleting(false);
+    if (ok) selectSnapshot(null);
   };
 
   // Live result from the detector, which runs whenever a camera is connected
@@ -59,18 +74,51 @@ export default function FireAssessment() {
 
   return (
     <div className={styles.page}>
+      {/* ── Clear All Confirmation Modal ─────────────────────────── */}
+      <Modal
+        open={clearModal}
+        title="Clear snapshots from live view?"
+        confirmLabel={clearing ? "Clearing…" : "Clear view"}
+        onConfirm={onConfirmClear}
+        onClose={() => setClearModal(false)}
+      >
+        <p>
+          This will clear the current display. All <strong>{fireSnapshots.length}</strong> snapshot{fireSnapshots.length !== 1 ? 's' : ''} remain safely saved and accessible in the <strong>History</strong> page.
+        </p>
+      </Modal>
+
+      {/* ── Single Snapshot Archive Modal ────────────────────────── */}
+      <Modal
+        open={archiveModal}
+        title="Remove snapshot from live view?"
+        confirmLabel={deleting ? "Removing…" : "Remove from view"}
+        confirmVariant="default"
+        onConfirm={onConfirmArchive}
+        onClose={() => setArchiveModal(false)}
+      >
+        <p>
+          Frame <strong>{snap?.frame}</strong> will be cleared from the live strip. It remains safely saved and accessible in the <strong>History</strong> page.
+        </p>
+      </Modal>
+
       <TopBar
         title="Fire assessment"
         subtitle={`${site.area}, ${site.city}`}
         actions={
           <>
             {snap && (
-              <Button onClick={() => selectSnapshot(null)}>Back to live</Button>
+              <>
+                <Button onClick={() => selectSnapshot(null)}>Back to live</Button>
+                <Button variant="default" onClick={() => setArchiveModal(true)} disabled={deleting}>
+                  <Archive size={16} />
+                  {deleting ? "Archiving…" : "Archive"}
+                </Button>
+              </>
             )}
             <Button
               variant="primary"
               onClick={captureSnapshot}
-              disabled={analyzing}
+              disabled={analyzing || detector.state !== "running"}
             >
               <Camera />
               {analyzing ? "Analysing…" : "Capture snapshot"}
@@ -82,15 +130,17 @@ export default function FireAssessment() {
       <div className={styles.body}>
         <div className={styles.grid}>
           <div className={styles.column}>
+            <DetectorControls detector={detector} source={isWebcam ? "Webcam" : "Test video"} />
             <MlFrame
               snapshot={snap}
               highlightId={highlightId}
               tag={
                 snap
                   ? `Frame ${snap.frame}${isLatest ? " · latest" : ""} · ${formatTime(snap.capturedAt)}`
-                  : `Live · ${isWebcam ? "Webcam" : "Test video"}`
+                  : `${{ paused: "Paused", stopped: "Stopped" }[detector.state] ?? "Live"} · ${isWebcam ? "Webcam" : "Test video"}`
               }
               playing={live}
+              detectorState={detector.state}
             />
 
             <Card title={`Detections (${detections.length})`}>
@@ -433,7 +483,7 @@ export default function FireAssessment() {
             <span className={styles.stripMeta}>
               Click a snapshot to view its result
               {fireSnapshots.length > 0 && (
-                <Button size="sm" onClick={onClearSnapshots} disabled={clearing}>
+                <Button size="sm" onClick={() => setClearModal(true)} disabled={clearing}>
                   <Trash2 />
                   {clearing ? "Clearing…" : "Clear"}
                 </Button>

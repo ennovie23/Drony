@@ -7,6 +7,7 @@ import { toDetection } from '../../utils/snapshots';
 const CAMERA_UNAVAILABLE = 'No camera connected — plug in a webcam';
 const CAMERA_CONNECTING = 'Connecting to camera…';
 const DETECTOR_STARTING = 'Starting the detector…';
+const DETECTOR_STOPPED = 'Detector stopped — press Start to analyse';
 // detect.py takes a while to load its models before the stream is up
 const STREAM_RETRY_MS = 3000;
 
@@ -15,9 +16,12 @@ const STREAM_RETRY_MS = 3000;
 // labelled "<label> <score>". `small` renders a thumbnail without labels. Renders, in order:
 //   - a saved snapshot (`snapshot.imageUrl`): the JPEG with its saved boxes
 //   - detect.py's live stream (webcam or test video) with live boxes while `playing`
-// `playing` is true while the detector is sending frames (see useLatestDetection).
-export default function MlFrame({ snapshot, highlightId = null, small = false, tag, playing = false }) {
+// `playing` is true while the detector is sending frames (see useLatestDetection);
+// `detectorState` comes from useDetectorControl: while 'paused' the stream stays up
+// (the held video frame, or the live webcam) without live boxes.
+export default function MlFrame({ snapshot, highlightId = null, small = false, tag, playing = false, detectorState }) {
     const { streamUrl, source } = useVideoUrl();
+    const streaming = playing || detectorState === 'paused';
 
     const isSnapshotImage = Boolean(snapshot?.imageUrl);
 
@@ -51,13 +55,13 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
 
     // While running, keep retrying a stream that failed to load (e.g. models still loading)
     useEffect(() => {
-        if (!playing || !streamError) return;
+        if (!streaming || !streamError) return;
         const id = setTimeout(() => {
             setStreamError(false);
             setStreamAttempt((n) => n + 1);
         }, STREAM_RETRY_MS);
         return () => clearTimeout(id);
-    }, [playing, streamError]);
+    }, [streaming, streamError]);
 
     // Clear boxes when the simulation stops; retry the stream when it starts again
     const [prevPlaying, setPrevPlaying] = useState(playing);
@@ -88,16 +92,19 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
 
     let content;
     if (isSnapshotImage) {
+        const imageSrc = snapshot.imageUrl?.startsWith('http')
+            ? snapshot.imageUrl
+            : `${API_BASE_URL}${snapshot.imageUrl}`;
         content = (
             <div className={styles.stage} style={{ aspectRatio: aspect }}>
-                <img className={styles.fill} src={`${API_BASE_URL}${snapshot.imageUrl}`} alt="" onLoad={onImageLoad} />
+                <img className={styles.fill} src={imageSrc} alt="" onLoad={onImageLoad} />
                 {renderBoxes(snapshot.detections ?? [], true)}
             </div>
         );
     } else if (small) {
         content = null;
     } else {
-        content = playing && streamUrl && !streamError ? (
+        content = streaming && streamUrl && !streamError ? (
             <div className={styles.stage} style={{ aspectRatio: aspect }}>
                 <img
                     key={streamAttempt}
@@ -111,7 +118,9 @@ export default function MlFrame({ snapshot, highlightId = null, small = false, t
             </div>
         ) : (
             <span className={styles.placeholder}>
-                {source !== 'webcam' ? DETECTOR_STARTING : playing ? CAMERA_CONNECTING : CAMERA_UNAVAILABLE}
+                {detectorState === 'stopped'
+                    ? DETECTOR_STOPPED
+                    : source !== 'webcam' ? DETECTOR_STARTING : playing ? CAMERA_CONNECTING : CAMERA_UNAVAILABLE}
             </span>
         );
     }

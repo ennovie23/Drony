@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Radio, Flame, Waves, Drone, Map, Sun, Moon } from 'lucide-react';
+import { Radio, Flame, Waves, Drone, Map, History as HistoryIcon, Sun, Moon } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import useTheme from '../../hooks/useTheme';
 import { useAppData } from '../../context/AppDataContext';
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { to: '/flood', label: 'Flood', icon: Waves },
   { to: '/flight', label: 'Flight', icon: Drone },
   { to: '/map', label: 'Map', icon: Map },
+  { to: '/history', label: 'History', icon: HistoryIcon },
 ];
 
 export default function SideBar() {

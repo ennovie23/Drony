@@ -54,6 +54,11 @@ function fakeDb() {
     floodReading: {
       create: async ({ data }) => { const row = { id: String(rows.length + 1), ...data }; rows.push(row); return row; },
       findMany: async (args) => { fakeDb.lastQuery = args; return rows; },
+      updateMany: async ({ where, data }) => {
+        const hit = rows.filter((r) => r.nodeId === where.nodeId && r.resolvedAt == null && r.recordedAt <= where.recordedAt.lte);
+        hit.forEach((r) => Object.assign(r, data));
+        return { count: hit.length };
+      },
     },
   };
 }
@@ -101,5 +106,20 @@ test('a database failure is a 500', async () => {
   const { base, close } = await serve(db);
   try {
     assert.equal((await post(base, READING)).status, 500);
+  } finally { await close(); }
+});
+
+test('a flood reading stays active until its node drops below the alert level', async () => {
+  const db = fakeDb();
+  const { base, close } = await serve(db);
+  try {
+    await post(base, { ...READING, heightCm: 131.6 });
+    await post(base, { ...READING, nodeId: 'N2', heightCm: 90 });
+    assert.equal(db.rows[0].resolvedAt, null);
+
+    await post(base, { ...READING, recordedAt: '2026-10-28T11:00:00.000Z', heightCm: 20 });
+    assert.equal(db.rows[0].resolvedAt.toISOString(), '2026-10-28T11:00:00.000Z');
+    assert.equal(db.rows[1].resolvedAt, null, 'other nodes stay active');
+    assert.ok(db.rows[2].resolvedAt, 'a normal reading is never active');
   } finally { await close(); }
 });

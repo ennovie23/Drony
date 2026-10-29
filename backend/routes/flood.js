@@ -1,5 +1,6 @@
 import express from 'express';
 import { toFloodRecord } from '../lib/floodRecord.js';
+import { isFloodHazard } from '../lib/floodLevel.js';
 
 const MAX_LIMIT = 1000;
 
@@ -14,7 +15,15 @@ export function createFloodRouter({ db }) {
     const { record, error } = toFloodRecord(req.body);
     if (error) return res.status(400).json({ success: false, error });
     try {
-      const saved = await db.floodReading.create({ data: record });
+      const hazard = isFloodHazard(record.heightCm);
+      const saved = await db.floodReading.create({ data: { ...record, resolvedAt: hazard ? null : record.recordedAt } });
+      // Water back below the alert level resolves that node's active flood readings
+      if (!hazard && record.heightCm != null) {
+        await db.floodReading.updateMany({
+          where: { nodeId: record.nodeId, resolvedAt: null, recordedAt: { lte: record.recordedAt } },
+          data: { resolvedAt: record.recordedAt },
+        });
+      }
       res.status(201).json({ success: true, record: saved });
     } catch (err) {
       console.error('Error saving flood reading:', err);

@@ -56,6 +56,12 @@ PART 1. FIRST-TIME SETUP (only once per computer)
      SITE_LAT=14.7392
      SITE_LON=121.0198
      SITE_NAME=Bagong Silang, Caloocan
+  Cloudinary:
+    CLOUDINARY_CLOUD_NAME
+    CLOUDINARY_API_KEY
+    CLOUDINARY_API_SECRET
+
+
 
 7. Set up the database (still inside backend):
      npx prisma generate --config=database/prisma7.config.ts

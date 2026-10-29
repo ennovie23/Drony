@@ -69,7 +69,8 @@ export default function AppDataProvider({ children }) {
         }
     }, [fetchLiveSnapshots]);
 
-    // Delete every saved snapshot. Returns false if the backend refused.
+    // Archive every active snapshot on the backend so the live strip is empty.
+    // Images are preserved in Cloudinary and visible in History.
     const clearSnapshots = useCallback(async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/snapshots`, { method: 'DELETE' });
@@ -79,6 +80,30 @@ export default function AppDataProvider({ children }) {
             return true;
         } catch (err) {
             console.error('[clearSnapshots] Backend unreachable:', err.message);
+            return false;
+        }
+    }, []);
+
+    // Archive a single snapshot by id (removes from live strip, stays in History).
+    const deleteSnapshot = useCallback(async (id) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/snapshots/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            if (!res.ok) return false;
+            setLiveSnapshots((prev) => prev.filter((s) => s.id !== id));
+            return true;
+        } catch (err) {
+            console.error('[deleteSnapshot] Backend unreachable:', err.message);
+            return false;
+        }
+    }, []);
+
+    // Permanently delete a snapshot from disk, Cloudinary, and index — only used from History page.
+    const destroySnapshot = useCallback(async (id) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/snapshots/${encodeURIComponent(id)}/destroy`, { method: 'DELETE' });
+            return res.ok;
+        } catch (err) {
+            console.error('[destroySnapshot] Backend unreachable:', err.message);
             return false;
         }
     }, []);
@@ -119,11 +144,13 @@ export default function AppDataProvider({ children }) {
             analyzing,
             captureSnapshot: captureLiveSnapshot,
             clearSnapshots,
+            deleteSnapshot,
+            destroySnapshot,
             modules: Object.values(modules),
             deployModule,
             recallModule,
         }),
-        [modules, liveSnapshots, videoSource, analyzing, captureLiveSnapshot, clearSnapshots, deployModule, recallModule],
+        [modules, liveSnapshots, videoSource, analyzing, captureLiveSnapshot, clearSnapshots, destroySnapshot, deployModule, recallModule],
     );
 
     return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
