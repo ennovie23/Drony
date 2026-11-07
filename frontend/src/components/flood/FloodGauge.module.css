@@ -1,0 +1,39 @@
+.gauge {
+    width: 120px;
+    height: 240px;
+    flex: none;
+}
+
+.tube {
+    fill: var(--surface-sunken);
+    stroke: var(--line-strong);
+    stroke-width: 1;
+}
+
+.water { fill: var(--water-fill); }
+.surface {
+    stroke: var(--water);
+    stroke-width: 2;
+}
+
+.mark {
+    stroke-width: 2.5;
+}
+
+.ground {
+    stroke: var(--text-strong);
+    stroke-width: 2;
+}
+
+.label {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--text-strong);
+}
+
+.value {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    fill: var(--text-muted);
+}

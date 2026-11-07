@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import AppDataProvider from './context/AppDataProvider.jsx'
+import FloodSensorProvider from './context/FloodSensorProvider.jsx'
+import LocationProvider from './context/LocationProvider.jsx'
 import { readStoredTheme } from './hooks/themeStorage'
 
 // Apply the saved theme before the first render so dark users don't see a light flash.
@@ -13,7 +15,11 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AppDataProvider>
-        <App />
+        <LocationProvider>
+          <FloodSensorProvider>
+            <App />
+          </FloodSensorProvider>
+        </LocationProvider>
       </AppDataProvider>
     </BrowserRouter>
   </StrictMode>,

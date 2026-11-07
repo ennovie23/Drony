@@ -6,7 +6,7 @@
     padding: 8px 10px;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
 
 .state {
@@ -14,7 +14,7 @@
     align-items: center;
     gap: 6px;
     margin-right: auto;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--text);
     white-space: nowrap;
 }
@@ -29,10 +29,18 @@
 .source { color: var(--text-muted); }
 
 .error {
-    font-size: 11px;
-    color: var(--bad);
+    font-size: 13px;
+    color: var(--red-text);
     max-width: 240px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* Detector down or fighting another one: the whole bar says so */
+.alert {
+    background: var(--red-soft);
+    border-color: color-mix(in srgb, var(--red) 40%, transparent);
+}
+
+.alert .state strong { color: var(--red-text); }

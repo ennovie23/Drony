@@ -7,6 +7,14 @@
 .body {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 14px;
+    gap: 16px;
+    padding: 16px 22px 22px;
+}
+
+.link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text);
+    white-space: nowrap;
 }

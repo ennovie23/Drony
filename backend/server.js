@@ -10,6 +10,7 @@ import detectionRoutes from './routes/detections.js';
 import { createConfigRouter } from './routes/config.js';
 import snapshotRoutes, { SNAPSHOTS_DIR, snapshotStore } from './routes/snapshots.js';
 import { createWeatherRouter } from './routes/weather.js';
+import { createPlaceRouter } from './routes/place.js';
 import { createFloodRouter } from './routes/flood.js';
 import { createHistoryRouter } from './routes/history.js';
 import { createDetectorRouter } from './routes/detector.js';
@@ -59,6 +60,8 @@ app.use('/api/detector',   createDetectorRouter({
 app.use('/api/history',    createHistoryRouter({ db: prisma }));
 // Site weather + GO / CAUTION / NO-GO flight advice
 app.use('/api/weather',    createWeatherRouter());
+// Street name for a flood sensor's GPS position (Flood page)
+app.use('/api/place',      createPlaceRouter());
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {

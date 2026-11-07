@@ -3,9 +3,12 @@ import { Camera, Trash2, Archive } from "lucide-react";
 import styles from "./FireAssessment.module.css";
 import table from "../components/ui/Table.module.css";
 import TopBar from "../components/shared/TopBar";
+import LocationLine from "../components/shared/LocationLine";
 import MlFrame from "../components/fire/MlFrame";
 import { Card, Chip, KeyValue, Button, Modal } from "../components/ui";
-import { SEVERITY_TONE, BEHAVIOR_TONE, toneFor } from "../components/ui/tones";
+import FireVerdict from "../components/fire/FireVerdict";
+import useLiveDetections from "../hooks/useLiveDetections";
+import { SEVERITY_TONE, toneFor } from "../components/ui/tones";
 import { formatStatus } from "../components/ui/format";
 import { useAppData } from "../context/AppDataContext";
 import { formatTime, timeAgo } from "../utils/format";
@@ -22,7 +25,7 @@ const pct = (v) => Number(Number(v).toFixed(1));
 
 export default function FireAssessment() {
   useNow(5000);
-  const { site, fireSnapshots, analyzing, captureSnapshot, clearSnapshots, deleteSnapshot, videoSource } =
+  const { fireSnapshots, analyzing, captureSnapshot, clearSnapshots, deleteSnapshot, videoSource } =
     useAppData();
   const isWebcam = videoSource === "webcam";
   const detector = useDetectorControl();
@@ -34,9 +37,6 @@ export default function FireAssessment() {
   const selected = fireSnapshots.find((s) => s.id === selectedId);
   const snap = selected;
   const isLatest = Boolean(snap && snap.id === latest?.id);
-  const detections = snap
-    ? [...snap.detections].sort((a, b) => b.confidence - a.confidence)
-    : [];
 
   const selectSnapshot = (id) => {
     setSelectedId(id);
@@ -68,6 +68,10 @@ export default function FireAssessment() {
 
   // Live result from the detector, which runs whenever a camera is connected
   const { result: latestDetection, live } = useLatestDetection();
+
+  // The table lists the selected frame's boxes, or the detector's current ones on the live view
+  const liveBoxes = useLiveDetections(!snap && live);
+  const detections = [...(snap ? snap.detections : liveBoxes)].sort((a, b) => b.confidence - a.confidence);
 
   // A selected webcam snapshot shows its saved assessment; otherwise the live one
   const result = snap?.assessment ? toModelResult(snap.assessment) : latestDetection;
@@ -103,7 +107,7 @@ export default function FireAssessment() {
 
       <TopBar
         title="Fire assessment"
-        subtitle={`${site.area}, ${site.city}`}
+        subtitle={<LocationLine />}
         actions={
           <>
             {snap && (
@@ -143,12 +147,14 @@ export default function FireAssessment() {
               detectorState={detector.state}
             />
 
-            <Card title={`Detections (${detections.length})`}>
+            <Card title={`Detections (${detections.length})`} meta={snap ? `Frame ${snap.frame}` : "Current frame"}>
               {detections.length === 0 ? (
                 <p className={table.empty}>
                   {snap
                     ? "No fire detected in this frame"
-                    : "Live view — select a snapshot to see its detections"}
+                    : live
+                      ? "Nothing detected in the current frame"
+                      : "The detector isn't sending frames"}
                 </p>
               ) : (
                 <table className={table.table}>
@@ -194,273 +200,11 @@ export default function FireAssessment() {
           </div>
 
           <div className={styles.column}>
-<Card
-              title="Model result"
-              meta={
-                snap ? (
-                  <span>
-                    Frame <span className="mono">{snap.frame}</span>
-                  </span>
-                ) : (
-                  <span>Live</span>
-                )
-              }
-            >
-              <div
-                style={{
-                  background: "#1e222d",
-                  borderRadius: "8px",
-                  padding: "16px 20px",
-                  border: "1px solid #2a2e39",
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  color: "#ffffff",
-                }}
-              >
-                {/* Left: Detection Label */}
-                <div>
-                  <p
-                    style={{
-                      margin: "0 0 4px 0",
-                      fontSize: "12px",
-                      color: "#848e9c",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    Detected Object
-                  </p>
-                  <span
-                    style={{
-                      fontSize: "24px",
-                      fontWeight: "bold",
-                      textTransform: "uppercase",
-                      color: result?.primaryHazard
-                        ? "#ef4444"
-                        : "#848e9c",
-                    }}
-                  >
-                    {result?.primaryHazard || "None"}
-                  </span>
-                </div>
-
-                {/* Right: Confidence Score */}
-                <div style={{ textAlign: "right" }}>
-                  <p
-                    style={{
-                      margin: "0 0 4px 0",
-                      fontSize: "12px",
-                      color: "#848e9c",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    Confidence
-                  </p>
-                  <span
-                    style={{
-                      fontSize: "24px",
-                      fontWeight: "bold",
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    {(() => {
-                      const activeHazard =
-                        result?.primaryHazard === "fire"
-                          ? result?.fire
-                          : result?.smoke;
-                      return activeHazard?.confidence
-                        ? `${activeHazard.confidence}%`
-                        : "0.0%";
-                    })()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Highlighted Threat Fusion Summary Card */}
-              {(() => {
-                const score = result?.threatScore ?? 0;
-                const isCritical = score > 75;
-                const isElevated = score > 40;
-
-                const theme = isCritical
-                  ? {
-                      border: "rgba(239, 68, 68, 0.45)",
-                      bg: "linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(26, 20, 24, 0.95) 100%)",
-                      text: "#ef4444",
-                      glow: "0 0 18px rgba(239, 68, 68, 0.25)",
-                      badgeBg: "rgba(239, 68, 68, 0.22)",
-                      badgeBorder: "rgba(239, 68, 68, 0.5)",
-                      label: "CRITICAL RISK",
-                      barColor: "linear-gradient(90deg, #f87171, #ef4444)",
-                    }
-                  : isElevated
-                  ? {
-                      border: "rgba(245, 158, 11, 0.45)",
-                      bg: "linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(26, 24, 20, 0.95) 100%)",
-                      text: "#f59e0b",
-                      glow: "0 0 18px rgba(245, 158, 11, 0.25)",
-                      badgeBg: "rgba(245, 158, 11, 0.22)",
-                      badgeBorder: "rgba(245, 158, 11, 0.5)",
-                      label: "ELEVATED THREAT",
-                      barColor: "linear-gradient(90deg, #fbbf24, #f59e0b)",
-                    }
-                  : {
-                      border: "rgba(16, 185, 129, 0.35)",
-                      bg: "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(18, 26, 23, 0.95) 100%)",
-                      text: "#10b981",
-                      glow: "0 0 14px rgba(16, 185, 129, 0.18)",
-                      badgeBg: "rgba(16, 185, 129, 0.2)",
-                      badgeBorder: "rgba(16, 185, 129, 0.35)",
-                      label: "NOMINAL",
-                      barColor: "linear-gradient(90deg, #34d399, #10b981)",
-                    };
-
-                return (
-                  <div
-                    style={{
-                      margin: "14px 0 16px 0",
-                      padding: "16px 18px",
-                      borderRadius: "10px",
-                      background: theme.bg,
-                      border: `1px solid ${theme.border}`,
-                      boxShadow: theme.glow,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "10px",
-                      transition: "all 0.3s ease",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: "700",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.8px",
-                          color: "#9ca3af",
-                        }}
-                      >
-                        Overall Threat Fusion Score
-                      </span>
-                      <span
-                        style={{
-                          padding: "3px 10px",
-                          borderRadius: "6px",
-                          fontSize: "10px",
-                          fontWeight: "800",
-                          letterSpacing: "0.6px",
-                          textTransform: "uppercase",
-                          backgroundColor: theme.badgeBg,
-                          color: theme.text,
-                          border: `1px solid ${theme.badgeBorder}`,
-                        }}
-                      >
-                        {theme.label}
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "baseline",
-                        gap: "6px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "36px",
-                          fontWeight: "900",
-                          fontFamily: "monospace",
-                          lineHeight: "1",
-                          color: theme.text,
-                          textShadow: `0 0 12px ${theme.border}`,
-                        }}
-                      >
-                        {score}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: "#6b7280",
-                        }}
-                      >
-                        / 100
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "6px",
-                        backgroundColor: "rgba(255, 255, 255, 0.08)",
-                        borderRadius: "3px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${Math.min(Math.max(score, 0), 100)}%`,
-                          height: "100%",
-                          background: theme.barColor,
-                          borderRadius: "3px",
-                          transition: "width 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div className={styles.verdict}>
-                <KeyValue
-                  rows={[
-                    {
-                      label: "Severity",
-                      value: result?.fire?.severity ? (
-                        <Chip
-                          tone={toneFor(SEVERITY_TONE, result.fire.severity)}
-                          value={`${result.fire.severity}${result.fire.severityConf ? ` · ${result.fire.severityConf}%` : ""}`}
-                        />
-                      ) : (
-                        <Chip tone="ok">None detected</Chip>
-                      ),
-                    },
-                    {
-                      label: "Fire Behaviour",
-                      value: result?.fire?.trend ? (
-                        <Chip
-                          tone={toneFor(BEHAVIOR_TONE, result.fire.trend)}
-                          value={result.fire.trend}
-                        />
-                      ) : (
-                        <Chip tone="neutral">Standby</Chip>
-                      ),
-                    },
-                    {
-                      label: "Smoke Plume",
-                      value: result?.smoke?.trend ? (
-                        <Chip
-                          tone={toneFor(BEHAVIOR_TONE, result.smoke.trend)}
-                          value={result.smoke.trend}
-                        />
-                      ) : (
-                        <Chip tone="ok">Clear air</Chip>
-                      ),
-                    },
-                  ]}
-                />
-              </div>
-            </Card>
+            <FireVerdict
+              result={result}
+              live={Boolean(snap) || live}
+              meta={snap ? <span>Frame <span className="mono">{snap.frame}</span></span> : live ? "Live" : "Detector not sending"}
+            />
 
             <Card>
               <KeyValue

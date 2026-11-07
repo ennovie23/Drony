@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styles from './MapPage.module.css';
 import TopBar from '../components/shared/TopBar';
+import LocationLine from '../components/shared/LocationLine';
 import TacticalMap from '../components/shared/TacticalMap';
 import { Card, Chip, KeyValue, Segmented } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
@@ -34,7 +35,7 @@ export default function MapPage() {
         <div className={styles.page}>
             <TopBar
                 title="Site map"
-                subtitle={`${site.area} · ${site.coords}`}
+                subtitle={<LocationLine />}
                 actions={<Segmented options={LAYERS} value={layers} onChange={toggle} multi />}
             />
 

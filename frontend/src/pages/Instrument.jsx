@@ -165,7 +165,8 @@ function InstrumentView({ drone }) {
 
     const t = telemetry;
     const filledCells = Math.round((t.battery / 100) * CELL_COUNT);
-    const cellTone = t.battery < LOW_BATTERY ? styles.cellLow : styles.cellFilled;
+    const lowBattery = t.battery < LOW_BATTERY;
+    const cellTone = lowBattery ? styles.cellLow : styles.cellFilled;
 
     return (
         <div className={styles.page}>
@@ -175,7 +176,7 @@ function InstrumentView({ drone }) {
                 actions={
                     <>
                         <Chip tone={t.armed ? 'ok' : 'off'}>{t.armed ? 'Armed' : 'Disarmed'}</Chip>
-                        <Chip tone="off">Mode · {formatStatus(t.mode)}</Chip>
+                        <Chip tone="off">Mode: {formatStatus(t.mode)}</Chip>
                         <Button className={demo ? styles.demoActive : ''} onClick={() => setDemo(!demo)}>
                             {demo ? 'Stop demo' : 'Demo state'}
                         </Button>
@@ -186,13 +187,22 @@ function InstrumentView({ drone }) {
             <div className={styles.content}>
                 <div className={styles.instrumentGrid}>
                     <div className={styles.side}>
-                        <Card title="Power" meta="Flight controller">
+                        <Card title="Battery" meta={`${t.voltage.toFixed(1)} V`} className={lowBattery ? styles.lowCard : ''}>
                             <Readout
-                                label="Battery"
-                                value={`${t.battery}% · ${t.voltage.toFixed(1)}`}
-                                unit="V"
-                                sub={`${t.minutesLeft} min estimated remaining`}
+                                label={lowBattery ? 'Low battery: plan the return' : 'Charge'}
+                                value={t.battery}
+                                unit="%"
+                                size="hero"
+                                tone={lowBattery ? 'warn' : undefined}
                             />
+                            <div className={styles.cells} aria-hidden>
+                                {Array.from({ length: CELL_COUNT }, (_, i) => (
+                                    <span key={i} className={`${styles.cell} ${i < filledCells ? cellTone : ''}`}></span>
+                                ))}
+                            </div>
+                            <div className={styles.endurance}>
+                                <span className={styles.enduranceNum}>{t.minutesLeft}</span> min of flight left
+                            </div>
                         </Card>
                         <Card title="Position">
                             <Readout
@@ -215,14 +225,6 @@ function InstrumentView({ drone }) {
                         <p className={styles.viewLabel}><span className="mono">{t.id}</span> · top view</p>
                         <DroneView heading={t.heading} />
 
-                        <div className={styles.cellBar}>
-                            <div className={styles.cells}>
-                                {Array.from({ length: CELL_COUNT }, (_, i) => (
-                                    <span key={i} className={`${styles.cell} ${i < filledCells ? cellTone : ''}`}></span>
-                                ))}
-                            </div>
-                            <span><span className="mono">{t.battery}%</span> cell capacity</span>
-                        </div>
                     </div>
 
                     <div className={styles.side}>

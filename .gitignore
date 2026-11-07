@@ -18,6 +18,10 @@ dist/
 
 .superpowers/
 
+# Logs
+*.log
+setup-log.txt
+
 # Webcam test snapshots (local only)
 backend/ML/snapshots/
 

@@ -1,0 +1,144 @@
+.map {
+    position: relative;
+    flex: 1;
+    min-height: 240px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-sunken);
+    user-select: none;
+}
+
+.tile {
+    position: absolute;
+    width: 256px;
+    height: 256px;
+    max-width: none;
+}
+
+/* Tiles are light; dim them a little in the dark theme so the map doesn't glare */
+:global([data-theme='dark']) .tile {
+    filter: brightness(0.8) contrast(1.05);
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.trail {
+    fill: none;
+    stroke: var(--water);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-opacity: 0.55;
+}
+
+/* The sensor: always at the centre of the map */
+.pin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+}
+
+.dot {
+    position: absolute;
+    left: -9px;
+    top: -9px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--water);
+    border: 3px solid #FFFFFF;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+}
+
+/* One slow ring: says "this is live" without blinking */
+.ring {
+    position: absolute;
+    left: -20px;
+    top: -20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--water);
+    animation: ring 2.4s ease-out infinite;
+}
+
+@keyframes ring {
+    from { transform: scale(0.4); opacity: 0.9; }
+    to { transform: scale(1.4); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ring { animation: none; opacity: 0.5; }
+}
+
+.zoom {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.zoom button {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    background: var(--surface);
+    color: var(--text-strong);
+    cursor: pointer;
+}
+
+.zoom button + button {
+    border-top: 1px solid var(--line);
+}
+
+.zoom button:disabled {
+    color: var(--text-faint);
+    cursor: default;
+}
+
+.zoom svg {
+    width: 15px;
+    height: 15px;
+}
+
+.offline {
+    position: absolute;
+    left: 50%;
+    bottom: 34px;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+    color: var(--text-strong);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+
+.credit {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: #333;
+    background: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+}

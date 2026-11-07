@@ -7,7 +7,7 @@
 .table th {
     text-align: left;
     font-weight: 500;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
     padding: 6px 8px;
     border-bottom: 1px solid var(--line);
@@ -44,7 +44,7 @@
     width: 70px;
     height: 5px;
     margin-right: 8px;
-    border-radius: 3px;
+    border-radius: var(--radius);
     background: var(--line);
     overflow: hidden;
 }
@@ -52,7 +52,7 @@
 .bar span {
     display: block;
     height: 100%;
-    background: var(--attention);
+    background: var(--text-strong);
 }
 
 .empty {

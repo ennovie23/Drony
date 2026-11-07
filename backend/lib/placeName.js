@@ -10,11 +10,21 @@ export function toPlaceName(body) {
   return parts.length ? parts.join(', ') : null;
 }
 
-export async function fetchPlaceName({ lat, lon, fetchImpl = fetch }) {
-  const q = new URLSearchParams({ format: 'jsonv2', lat, lon, zoom: 14, 'accept-language': 'en' });
+// Street level, for a sensor's exact spot: "Malapitan Road, Bagong Silang, Caloocan"
+export function toStreetName(body) {
+  const a = body?.address ?? {};
+  const road = a.road ?? a.pedestrian ?? a.footway ?? a.path ?? a.waterway;
+  const area = toPlaceName(body);
+  const parts = [road, area].filter((p) => p && !(area && p !== area && area.startsWith(`${p},`)));
+  return parts.length ? parts.join(', ') : null;
+}
+
+// zoom 14 names the neighbourhood; 18 names the street. `format` turns the answer into a name.
+export async function fetchPlaceName({ lat, lon, fetchImpl = fetch, zoom = 14, format = toPlaceName }) {
+  const q = new URLSearchParams({ format: 'jsonv2', lat, lon, zoom, 'accept-language': 'en' });
   const res = await fetchImpl(`https://nominatim.openstreetmap.org/reverse?${q}`, {
     headers: { 'User-Agent': USER_AGENT },
   });
   if (!res.ok) throw new Error(`Nominatim responded ${res.status}`);
-  return toPlaceName(await res.json());
+  return format(await res.json());
 }

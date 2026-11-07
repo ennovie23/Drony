@@ -11,19 +11,17 @@ function App() {
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <SideBar />
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, height: '100vh', overflow: 'hidden' }}>
-        <main style={{ flex: 1, overflowY: 'auto' }}>
-          <Routes>
-            <Route path="/live" element={<Live />} />
-            <Route path="/fire" element={<FireAssessment />} />
-            <Route path="/flood" element={<FloodAssessment />} />
-            <Route path="/flight" element={<Instrument />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/history" element={<History />} />
-            <Route path="*" element={<Navigate to="/live" replace />} />
-          </Routes>
-        </main>
-      </div>
+      <main style={{ flex: 1, minWidth: 0, height: '100vh', overflowY: 'auto' }}>
+        <Routes>
+          <Route path="/live" element={<Live />} />
+          <Route path="/fire" element={<FireAssessment />} />
+          <Route path="/flood" element={<FloodAssessment />} />
+          <Route path="/flight" element={<Instrument />} />
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/history" element={<History />} />
+          <Route path="*" element={<Navigate to="/live" replace />} />
+        </Routes>
+      </main>
     </div>
   );
 }

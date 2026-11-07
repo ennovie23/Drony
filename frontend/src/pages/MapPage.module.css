@@ -7,9 +7,9 @@
 .layout {
     flex: 1;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
-    gap: 14px;
-    padding: 14px;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 16px;
+    padding: 16px 22px 22px;
 }
 
 .mapArea {
@@ -21,7 +21,7 @@
 .side {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     min-width: 0;
 }
 
@@ -40,7 +40,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text);
 }
 
@@ -51,7 +51,7 @@
     box-sizing: border-box;
 }
 
-.swDrone { border: 2px solid var(--attention); border-radius: 50%; }
+.swDrone { border: 2px solid var(--text-strong); border-radius: 50%; }
 .swPath { height: 0; border-top: 2px dashed var(--text-muted); }
 .swHome { border: 2px solid var(--text-strong); }
 .swModule { background: var(--water); border-radius: 50%; width: 10px; height: 10px; margin: 0 2px; }

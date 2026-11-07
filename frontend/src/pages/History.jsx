@@ -6,13 +6,14 @@ import {
 import styles from './History.module.css';
 import table from '../components/ui/Table.module.css';
 import TopBar from '../components/shared/TopBar';
+import LocationLine from '../components/shared/LocationLine';
 import LineChart from '../components/shared/LineChart';
 import ImagePreview from '../components/shared/ImagePreview';
 import { Card, Chip, Button, Modal } from '../components/ui';
 import { useAppData } from '../context/AppDataContext';
 import { formatTime, formatDate } from '../utils/format';
 import { formatStatus } from '../components/ui/format';
-import { SEVERITY_TONE, toneFor } from '../components/ui/tones';
+import { SEVERITY_TONE, FLOOD_LEVELS, toneFor } from '../components/ui/tones';
 import {
     filterHistory, paginate, cloudinaryThumb, toCSV, toFramesCSV, hazardLabel, isActive, formatDuration,
 } from '../utils/history';
@@ -22,11 +23,6 @@ const PAGE_SIZES = [10, 25, 50];
 const NO_FILTERS = { date: '', hazard: 'all', status: 'all' };
 // Snapshots shown in an expanded incident before "Show more"
 const GALLERY_STEP = 24;
-const FLOOD_LEVELS = [
-    { label: 'Minor', value: 50, color: 'var(--attention)' },
-    { label: 'Moderate', value: 100, color: 'var(--attention-text)' },
-    { label: 'Severe', value: 150, color: 'var(--bad)' },
-];
 const COLS = 10;
 
 function saveCSV(content, name) {
@@ -209,7 +205,7 @@ function IncidentDetail({ incident, onPreview, onDelete, onResolve, onExportFram
 }
 
 export default function History() {
-    const { site, destroySnapshot } = useAppData();
+    const { destroySnapshot } = useAppData();
 
     const [incidents, setIncidents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -245,6 +241,7 @@ export default function History() {
     const filtersOn = filters.date || filters.hazard !== 'all' || filters.status !== 'all';
 
     const filtered = useMemo(() => filterHistory(incidents, filters), [incidents, filters]);
+    const activeIncidents = useMemo(() => incidents.filter(isActive), [incidents]);
     const view = paginate(filtered, page, pageSize);
 
     // ── expand, preview, delete, resolve, export ─────────────────────────
@@ -349,8 +346,8 @@ export default function History() {
             <ImagePreview src={preview?.src} caption={preview?.caption} alt="Drone snapshot" onClose={() => setPreview(null)} />
 
             <TopBar
-                title="Hazard History"
-                subtitle={`${site.area}, ${site.city}`}
+                title="History"
+                subtitle={<LocationLine />}
                 actions={
                     <>
                         <Button
@@ -370,6 +367,35 @@ export default function History() {
             />
 
             <div className={styles.body}>
+                {!loading && !error && (
+                    <section className={styles.activeStrip} aria-label="Active incidents">
+                        {activeIncidents.length === 0 ? (
+                            <p className={styles.noneActive}>No active incidents</p>
+                        ) : (
+                            activeIncidents.map((r) => {
+                                const tone = toneFor(SEVERITY_TONE, r.severity);
+                                return (
+                                    <button
+                                        key={r.id}
+                                        type="button"
+                                        className={`${styles.activeTile} ${styles[`tile_${tone}`] ?? ''}`}
+                                        onClick={() => { setFilters(NO_FILTERS); setExpandedId(r.id); setPage(Math.floor(incidents.indexOf(r) / pageSize) + 1); }}
+                                    >
+                                        <span className={styles.activeHead}>
+                                            {r.hazardType === 'flood' ? <Waves size={16} /> : <Flame size={16} />}
+                                            {hazardLabel(r.hazardType)} · {r.severity ? formatStatus(r.severity) : 'Active'}
+                                        </span>
+                                        <span className={styles.activeValue}>{peakReading(r)}</span>
+                                        <span className={styles.activeMeta}>
+                                            Since {clock(r.startedAt)} · {formatDuration(r.durationMs)}
+                                        </span>
+                                    </button>
+                                );
+                            })
+                        )}
+                    </section>
+                )}
+
                 <Card
                     className={styles.tableCard}
                     title="Incidents"
@@ -431,7 +457,7 @@ export default function History() {
                                     return (
                                         <Fragment key={r.id}>
                                             <tr
-                                                className={`${table.clickable} ${open ? styles.rowActive : ''}`}
+                                                className={`${table.clickable} ${open ? styles.rowActive : ''} ${isActive(r) ? styles.rowLive : ''}`}
                                                 onClick={() => setExpandedId(open ? null : r.id)}
                                                 aria-expanded={open}
                                             >

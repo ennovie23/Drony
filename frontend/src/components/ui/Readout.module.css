@@ -3,37 +3,38 @@
 }
 
 .label {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
 .value {
-    font-family: var(--font-mono);
+    font-family: var(--font-cond);
     font-variant-numeric: tabular-nums;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-strong);
-    line-height: 1.15;
+    line-height: 1.1;
     white-space: nowrap;
 }
 
-.md { font-size: 24px; }
-.hero { font-size: 34px; }
+.md { font-size: 28px; }
+.hero { font-size: 48px; letter-spacing: -0.01em; }
 
 .ok { color: var(--ok); }
-.warn { color: var(--attention-text); }
-.danger { color: var(--bad); }
-.off { color: var(--text-muted); }
+.caution { color: var(--yellow-text); }
+.warn { color: var(--orange-text); }
+.danger { color: var(--red-text); }
+.off { color: var(--text-faint); }
 
 .unit {
     font-family: var(--font-sans);
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--text-faint);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
     margin-left: 4px;
 }
 
 .sub {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
     margin-top: 2px;
 }

@@ -76,10 +76,26 @@ test('positions keep the last fix per sensor, newest sensor first', () => {
     assert.deepEqual(list[0].fix, { lat: 14.65, lng: 121.05, satellites: 7, timestamp: 1_000 });
     assert.equal(list[0].current, false);
     assert.equal(list[1].fix, null);
+    assert.equal(typeof list[1].chars, 'number');
 });
 
 test('map url centres on the fix with a marker', () => {
     const url = mapEmbedUrl(14.65, 121.05);
     assert.match(url, /bbox=121\.0480,14\.6480,121\.0520,14\.6520/);
     assert.match(url, /marker=14\.6500,121\.0500$/);
+});
+
+test('floodSummary reports height and liveness', async () => {
+    const { floodSummary, DEFAULT_SETTINGS } = await import('../src/utils/floodSensor.js');
+    const settings = { ...DEFAULT_SETTINGS, medium: 'air' };
+    const now = 100_000;
+    const readings = [
+        { source: 'lora', timestamp: 30_000, distanceCm: 40 },
+        { source: 'lora', timestamp: 95_000, distanceCm: 50 },
+    ];
+    const s = floodSummary({ status: 'connected', readings, settings }, now);
+    assert.equal(s.live, true);
+    assert.equal(s.height, 50);
+    assert.equal(s.trend.direction, 'RISING');
+    assert.equal(floodSummary({ status: 'disconnected', readings: [], settings }, now).height, null);
 });

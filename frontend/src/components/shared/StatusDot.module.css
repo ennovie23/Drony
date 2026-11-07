@@ -1,12 +1,14 @@
 .dot {
     display: inline-block;
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     flex: none;
 }
 
 .ok { background-color: var(--ok); }
-.warn { background-color: var(--attention); }
-.danger { background-color: var(--bad); }
-.off { background-color: var(--text-muted); }
+.caution { background-color: var(--yellow); }
+.warn { background-color: var(--orange); }
+.danger { background-color: var(--red); }
+.off,
+.neutral { background-color: var(--line-strong); }

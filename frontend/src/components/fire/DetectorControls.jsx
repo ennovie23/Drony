@@ -21,7 +21,7 @@ export default function DetectorControls({ detector, source }) {
         : managed ? undefined : 'detect.py was started by hand (DETECTOR_AUTOSTART=0)';
 
     return (
-        <div className={styles.controls} role="group" aria-label="Detector controls">
+        <div className={`${styles.controls} ${TONE[state] === 'danger' ? styles.alert : ''}`} role="group" aria-label="Detector controls">
             <span className={styles.state} title={handHint}>
                 <span className={styles.label}>Detector</span>
                 <StatusDot tone={TONE[state]} />

@@ -7,16 +7,16 @@
 .layout {
     flex: 1;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
-    gap: 14px;
-    padding: 14px;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 16px;
+    padding: 16px 22px 22px;
     min-height: 0;
 }
 
 .feedColumn {
     display: grid;
     grid-template-rows: minmax(320px, 1fr) auto;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
 }
 
@@ -38,10 +38,65 @@
     min-height: 0;
 }
 
-.readouts {
+/* One instrument strip under the feed, not a row of cards */
+.instruments {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+
+.instruments > div {
+    padding: 10px 14px 11px;
+    border-left: 1px solid var(--line);
+    min-width: 0;
+}
+
+.instruments > div:first-child {
+    border-left: 0;
+}
+
+.instruments dt {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.instruments dd {
+    margin: 2px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 3px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.instruments small {
+    flex-basis: 100%;
+    font-size: 12.5px;
+    color: var(--text-faint);
+}
+
+.num {
+    font-family: var(--font-cond);
+    font-variant-numeric: tabular-nums;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--text-strong);
+}
+
+/* Low battery: the cell takes the orange warning, with the number in its text colour */
+.instruments > .low {
+    background: var(--orange-soft);
+    box-shadow: inset 0 3px 0 var(--orange);
+}
+
+.low .num {
+    color: var(--orange-text);
 }
 
 /* height: 0 + min-height: 100% → the panel takes the feed column's height instead of
@@ -49,7 +104,7 @@
 .side {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     min-width: 0;
     height: 0;
     min-height: 100%;

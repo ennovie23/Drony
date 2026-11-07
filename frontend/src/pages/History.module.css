@@ -7,8 +7,8 @@
 .body {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 14px;
+    gap: 16px;
+    padding: 16px 22px 22px;
     flex: 1;
 }
 
@@ -23,15 +23,15 @@
     padding: 6px 10px;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 4px;
-    font-size: 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
     color: var(--text);
     font-family: var(--font-sans);
     cursor: pointer;
     outline: none;
 }
 
-.select:focus { border-color: var(--attention); }
+.select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 
 .filterRow th {
     padding-top: 6px;
@@ -50,12 +50,12 @@
     align-items: center;
     gap: 5px;
     padding: 6px 10px;
-    font-size: 12px;
+    font-size: 13px;
     font-family: var(--font-sans);
     color: var(--text-muted);
     background: none;
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: var(--radius);
     cursor: pointer;
     white-space: nowrap;
 }
@@ -82,7 +82,7 @@
 }
 
 .rowActive td {
-    background: color-mix(in srgb, var(--attention) 8%, transparent) !important;
+    background: var(--surface-sunken) !important;
 }
 
 .chevron {
@@ -100,13 +100,13 @@
 }
 
 .timeSmall {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text-muted);
-    font-family: var(--font-mono, monospace);
+    font-variant-numeric: tabular-nums;
 }
 
 .evidence {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted) !important;
 }
 
@@ -117,13 +117,14 @@
     font-weight: 500;
 }
 
-.fire { color: var(--bad); }
+.fire { color: var(--red-text); }
 .flood { color: var(--water); }
 
 .sev { font-weight: 500; }
 .ok { color: var(--ok); }
-.warn { color: var(--attention-text); }
-.danger { color: var(--bad); }
+.caution { color: var(--yellow-text); }
+.warn { color: var(--orange-text); }
+.danger { color: var(--red-text); }
 .off { color: var(--text-muted); }
 .neutral { color: var(--text-muted); }
 
@@ -136,14 +137,14 @@
     height: 41px;
     padding: 0;
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: var(--radius);
     overflow: hidden;
     background: var(--surface-sunken);
     color: var(--text-faint);
 }
 
 button.thumb { cursor: zoom-in; }
-button.thumb:hover { border-color: var(--attention); }
+button.thumb:hover { border-color: var(--text-strong); }
 
 .thumb img {
     width: 100%;
@@ -162,7 +163,7 @@ button.thumb:hover { border-color: var(--attention); }
     width: 26px;
     height: 26px;
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: var(--radius);
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
@@ -232,7 +233,7 @@ button.thumb:hover { border-color: var(--attention); }
     display: flex;
     flex-direction: column;
     gap: 6px;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .fact {
@@ -242,7 +243,7 @@ button.thumb:hover { border-color: var(--attention); }
 }
 
 .fact dt { color: var(--text-muted); }
-.fact dd { margin: 0; color: var(--text-strong); text-align: right; font-family: var(--font-mono, monospace); }
+.fact dd { margin: 0; color: var(--text-strong); text-align: right; font-variant-numeric: tabular-nums; }
 
 .chart {
     display: flex;
@@ -258,7 +259,7 @@ button.thumb:hover { border-color: var(--attention); }
     display: flex;
     justify-content: space-between;
     width: 100%;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
@@ -278,13 +279,13 @@ button.thumb:hover { border-color: var(--attention); }
 
 .note {
     margin: 0;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
 .galleryTitle {
     margin: 0 0 8px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-strong);
 }
@@ -315,7 +316,7 @@ button.thumb:hover { border-color: var(--attention); }
     width: 100%;
     padding: 0;
     border: 0;
-    border-radius: 4px;
+    border-radius: var(--radius);
     overflow: hidden;
     background: var(--surface-sunken);
     cursor: zoom-in;
@@ -334,7 +335,7 @@ span.shotImg { cursor: default; }
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
@@ -358,7 +359,7 @@ span.shotImg { cursor: default; }
     padding-top: 10px;
     margin-top: auto;
     border-top: 1px solid var(--line);
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
     flex-wrap: wrap;
 }
@@ -388,4 +389,66 @@ span.shotImg { cursor: default; }
 @media (max-width: 860px) {
     .detailTop { grid-template-columns: 1fr; }
     .detail { padding-left: 16px; }
+}
+
+/* ── Active incidents, above the table ───────────────────────── */
+.activeStrip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.noneActive {
+    margin: 0;
+    padding: 10px 14px;
+    color: var(--ok);
+    font-weight: 600;
+    background: var(--ok-soft);
+    border-radius: var(--radius);
+}
+
+.activeTile {
+    display: grid;
+    min-width: 240px;
+    padding: 10px 16px 12px;
+    text-align: left;
+    font-family: inherit;
+    border: 0;
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: var(--red);
+    color: var(--on-red);
+}
+
+.activeTile:hover {
+    filter: brightness(1.05);
+}
+
+.tile_caution { background: var(--yellow); color: var(--on-yellow); }
+.tile_warn { background: var(--orange); color: var(--on-orange); }
+.tile_danger { background: var(--red); color: var(--on-red); }
+
+.activeHead {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.activeValue {
+    font-family: var(--font-cond);
+    font-variant-numeric: tabular-nums;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.activeMeta {
+    font-size: 13px;
+}
+
+/* Rows of incidents still open carry a red edge */
+.rowLive td:first-child {
+    box-shadow: inset 4px 0 0 var(--red);
 }

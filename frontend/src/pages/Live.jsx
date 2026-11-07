@@ -4,21 +4,21 @@ import styles from './Live.module.css';
 import TopBar from '../components/shared/TopBar';
 import CameraFeed from '../components/shared/CameraFeed';
 import FlightWeather from '../components/shared/FlightWeather';
-import { Card, Readout, Chip, KeyValue, Segmented, Button } from '../components/ui';
+import { Segmented, Button, Chip } from '../components/ui';
+import FireVerdict from '../components/fire/FireVerdict';
 import { useAppData } from '../context/AppDataContext';
 import useLatestDetection from '../hooks/useLatestDetection';
-import useDeviceLocation from '../hooks/useDeviceLocation';
-import useFlightWeather from '../hooks/useFlightWeather';
 import useVideoUrl, { switchVideoSource } from '../hooks/useVideoUrl';
-import { threatTone } from '../components/ui/tones';
 import { formatElapsed } from '../utils/format';
-import { formatCoords, isLiveLocation } from '../utils/flightWeather';
+import LocationLine from '../components/shared/LocationLine';
+import { useLocation } from '../context/LocationContext';
 import useNow from '../hooks/useNow';
 
 const MODES = [
     { key: 'rgb', label: 'RGB' },
     { key: 'thermal', label: 'Thermal' },
 ];
+const LOW_BATTERY = 30;
 const SOURCES = [
     { key: 'file', label: 'Video file' },
     { key: 'webcam', label: 'Webcam' },
@@ -30,11 +30,7 @@ export default function Live() {
     // The Live page is where detection is watched: feed boxes + this summary
     const { result, live } = useLatestDetection();
     // Where this device is: the header names it and the weather card forecasts for it
-    const device = useDeviceLocation();
-    const { weather, error: weatherError } = useFlightWeather(device.coords);
-    const liveLocation = isLiveLocation(device, weather);
-    const hazard = result.primaryHazard;
-    const confidence = hazard === 'fire' ? result.fire?.confidence : result.smoke?.confidence;
+    const { device, weather, weatherError } = useLocation();
     const [mode, setMode] = useState('rgb');
     const [showDetections, setShowDetections] = useState(true);
     // Switching restarts detect.py on the other source
@@ -51,17 +47,7 @@ export default function Live() {
         <div className={styles.page}>
             <TopBar
                 title="Live feed"
-                subtitle={
-                    liveLocation ? (
-                        <span className={styles.location}>
-                            <span className={styles.liveDot} aria-hidden />
-                            {weather.location.name ?? 'This device'}
-                            {' · '}<span className="mono">{formatCoords(device.coords.lat, device.coords.lon, 3)}</span>
-                        </span>
-                    ) : (
-                        `${site.area}, ${site.city}`
-                    )
-                }
+                subtitle={<LocationLine />}
                 actions={
                     <span>
                         Elapsed <span className="mono">{formatElapsed(site.startedAt)}</span>
@@ -85,42 +71,36 @@ export default function Live() {
                         </div>
                     </div>
 
-                    <div className={styles.readouts}>
-                        <Card><Readout label="Battery" value={drone.battery} unit="%" /></Card>
-                        <Card><Readout label="Altitude" value={drone.altitudeRel} unit="m" /></Card>
-                        <Card><Readout label="Speed" value={drone.velocity} unit="m/s" /></Card>
-                        <Card><Readout label="Heading" value={String(drone.heading).padStart(3, '0')} unit="°" /></Card>
-                    </div>
+                    <dl className={styles.instruments} aria-label="Drone instruments">
+                        <div className={drone.battery < LOW_BATTERY ? styles.low : ''}>
+                            <dt>Battery</dt>
+                            <dd><span className={styles.num}>{drone.battery}</span>%<small>{drone.minutesLeft} min left</small></dd>
+                        </div>
+                        <div>
+                            <dt>Altitude</dt>
+                            <dd><span className={styles.num}>{drone.altitudeRel}</span>m<small>above home</small></dd>
+                        </div>
+                        <div>
+                            <dt>Speed</dt>
+                            <dd><span className={styles.num}>{drone.velocity}</span>m/s</dd>
+                        </div>
+                        <div>
+                            <dt>Heading</dt>
+                            <dd><span className={styles.num}>{String(drone.heading).padStart(3, '0')}</span>°</dd>
+                        </div>
+                        <div>
+                            <dt>GPS</dt>
+                            <dd><Chip value={drone.gps} /><small>{drone.satellites} satellites</small></dd>
+                        </div>
+                        <div>
+                            <dt>Link</dt>
+                            <dd><Chip value={drone.link} /><small>{drone.signal} dBm</small></dd>
+                        </div>
+                    </dl>
                 </div>
 
                 <aside className={styles.side}>
-                    <Card title="Detection" meta={<span>{live ? 'Live' : 'No camera'}</span>}>
-                        <KeyValue
-                            rows={[
-                                {
-                                    label: 'Detected',
-                                    value: hazard
-                                        ? <Chip tone="danger">{hazard === 'fire' ? 'Fire' : 'Smoke'}</Chip>
-                                        : <Chip tone={live ? 'ok' : 'off'}>{live ? 'Clear' : '—'}</Chip>,
-                                },
-                                { label: 'Confidence', value: <span className="mono">{confidence ? `${confidence}%` : '—'}</span> },
-                                {
-                                    label: 'Threat',
-                                    value: <Chip tone={live ? threatTone(result.threatScore) : 'off'}>{`${result.threatScore} / 100`}</Chip>,
-                                },
-                            ]}
-                        />
-                    </Card>
-
-                    <Card>
-                        <KeyValue
-                            rows={[
-                                { label: 'GPS', value: <Chip value={drone.gps} /> },
-                                { label: 'Link', value: <Chip value={drone.link} /> },
-                            ]}
-                        />
-                    </Card>
-
+                    <FireVerdict result={result} live={live} compact meta={live ? 'Live' : 'Detector not sending'} />
                     <FlightWeather device={device} weather={weather} error={weatherError} className={styles.weather} />
                 </aside>
             </div>

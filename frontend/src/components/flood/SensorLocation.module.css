@@ -1,0 +1,124 @@
+.card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.picker {
+    margin-bottom: 10px;
+}
+
+/* Satellites, latitude, longitude: one row of big live numbers */
+.readout {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    align-items: end;
+    gap: 36px;
+    margin: 0 0 12px;
+}
+
+.readout dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.readout dt svg {
+    width: 14px;
+    height: 14px;
+}
+
+.readout dd {
+    margin: 2px 0 0;
+    font-family: var(--font-cond);
+    font-variant-numeric: tabular-nums;
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--text-strong);
+    white-space: nowrap;
+}
+
+.sats dd {
+    font-size: 34px;
+    line-height: 0.95;
+}
+
+.readout dd.low {
+    color: var(--yellow-text);
+}
+
+.readout dd.none {
+    color: var(--text-faint);
+}
+
+/* Each new value lights up for a moment */
+.flash {
+    display: inline-block;
+    padding: 0 3px;
+    margin: 0 -3px;
+    border-radius: 2px;
+    animation: flash 1.4s ease-out;
+}
+
+@keyframes flash {
+    0%, 25% { background: var(--yellow); color: var(--on-yellow); }
+    100% { background: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flash { animation: none; }
+}
+
+.note {
+    margin: 0 0 10px;
+    color: var(--text-muted);
+}
+
+.noteBig {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    min-height: 120px;
+    margin: 0;
+    padding: 12px;
+    text-align: center;
+    background: var(--surface-sunken);
+    border-radius: var(--radius);
+}
+
+.place {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.place > svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    color: var(--water);
+}
+
+.place > div {
+    flex: 1;
+    min-width: 0;
+}
+
+.placeName {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-strong);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.placeSub {
+    font-size: 13px;
+    color: var(--text-muted);
+}

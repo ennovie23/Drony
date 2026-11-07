@@ -137,7 +137,7 @@ export function sensorPositions(readings) {
         if (!r.node || !r.gps) continue;
         const prev = byNode.get(r.node);
         const fix = r.gps.fix ? { lat: r.gps.lat, lng: r.gps.lng, satellites: r.gps.satellites, timestamp: r.timestamp } : prev?.fix ?? null;
-        byNode.set(r.node, { node: r.node, fix, current: r.gps.fix, satellites: r.gps.satellites, lastHeard: r.timestamp });
+        byNode.set(r.node, { node: r.node, fix, current: r.gps.fix, satellites: r.gps.satellites, chars: r.gps.chars, lastHeard: r.timestamp });
     }
     return [...byNode.values()].sort((a, b) => b.lastHeard - a.lastHeard);
 }
@@ -149,4 +149,36 @@ export function mapEmbedUrl(lat, lng, span = 0.002) {
     const lo = lng.toFixed(4);
     const bbox = [lng - span, lat - span, lng + span, lat + span].map((v) => v.toFixed(4)).join(',');
     return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${la},${lo}`;
+}
+
+// One line of truth about the flood sensor right now, for the Flood page and the sidebar:
+// whether it's connected and sending, the newest height (cm) and the trend over ~1 minute.
+export function floodSummary({ status, readings, settings }, now) {
+    const connected = status === 'connected';
+    const last = readings.at(-1);
+    const lastValid = readings.findLast((r) => r.distanceCm != null);
+    const live = Boolean(connected && last && now - last.timestamp < staleAfter(last));
+    const points = readings
+        .filter((r) => r.distanceCm != null)
+        .map((r) => ({ timestamp: r.timestamp, heightCm: floodHeight(r.distanceCm, settings) }));
+    const height = lastValid ? floodHeight(lastValid.distanceCm, settings) : null;
+    return { connected, live, last, lastValid, points, height, trend: live ? floodTrend(points) : null };
+}
+
+// 4_000 → '4 s ago'
+export const secondsAgo = (ms) => (ms < 1000 ? 'just now' : ms < 60_000 ? `${Math.floor(ms / 1000)} s ago` : `${Math.floor(ms / 60_000)} min ago`);
+
+// Where a reading came from, in words: 'USB sensor', 'LoRa · N1'
+export function sourceLabel(item) {
+    if (!item) return '—';
+    if (item.source === 'serial') return 'USB sensor';
+    return `${item.source === 'usb' ? 'USB' : 'LoRa'} · ${item.node}`;
+}
+
+// Distance in metres between two { lat, lng } points; plenty accurate for a sensor drifting
+export function metresBetween(a, b) {
+    const rad = Math.PI / 180;
+    const x = (b.lng - a.lng) * rad * Math.cos(((a.lat + b.lat) / 2) * rad);
+    const y = (b.lat - a.lat) * rad;
+    return Math.sqrt(x * x + y * y) * 6_371_000;
 }

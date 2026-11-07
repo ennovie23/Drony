@@ -1,85 +1,205 @@
+/* Dark "housing" in both themes. Each nav item is a status tile: it names the page and
+   shows that system's state. A tile fills with its hazard colour only when it needs a look. */
 .container {
     height: 100vh;
-    width: 64px;
+    width: 212px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    padding: 0 0 14px;
     box-sizing: border-box;
     background: var(--rail);
-    border-right: 1px solid var(--line);
+    color: var(--rail-text);
 }
 
-.mark {
+.head {
     height: var(--topbar-h);
     flex-shrink: 0;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: baseline;
+    gap: 8px;
+    padding: 0 16px;
     box-sizing: border-box;
-    border-bottom: 1px solid var(--line);
-    margin-bottom: 8px;
-    font-weight: 600;
+    border-bottom: 1px solid var(--rail-line);
+    padding-top: 19px;
+}
+
+.mark {
+    font-family: var(--font-cond);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+}
+
+.site {
     font-size: 13px;
-    color: var(--text-strong);
+    color: var(--rail-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .nav {
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    padding: 8px 0;
     overflow-y: auto;
 }
 
-.item {
+.tile {
     position: relative;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    column-gap: 10px;
     align-items: center;
-    gap: 4px;
-    padding: 10px 0;
-    font-family: inherit;
-    font-size: 10.5px;
-    color: var(--text-muted);
+    padding: 9px 16px 10px;
+    color: var(--rail-text);
     text-decoration: none;
-    background: none;
-    border: none;
-    cursor: pointer;
 }
 
-.item svg {
+.tile:hover {
+    background: var(--rail-raised);
+}
+
+.icon {
     width: 18px;
     height: 18px;
     stroke-width: 1.75;
+    grid-row: 1;
+    color: var(--rail-muted);
 }
 
-.item:hover {
-    color: var(--text-strong);
+.label {
+    grid-column: 2;
+    font-size: 13px;
+    color: var(--rail-muted);
 }
 
+.value {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-cond);
+    font-variant-numeric: tabular-nums;
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.value.muted {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--rail-muted);
+}
+
+.trend {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2.5;
+}
+
+.sub {
+    grid-column: 2;
+    font-size: 12.5px;
+    color: var(--rail-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Current page: lifted, with a notch that points into the page */
 .active {
-    background: var(--surface);
-    color: var(--text-strong);
-    box-shadow: inset 2px 0 0 var(--attention);
+    background: var(--rail-raised);
 }
 
-.active svg {
-    color: var(--attention-text);
-}
-
-.dot {
+.active::after {
+    content: '';
     position: absolute;
-    top: 7px;
-    right: 13px;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
+    right: 0;
+    top: 50%;
+    margin-top: -8px;
+    border: 8px solid transparent;
+    border-right-color: var(--bg);
 }
 
-.ok { background: var(--ok); }
-.warn { background: var(--attention); }
-.danger { background: var(--bad); }
-.water { background: var(--water); }
+.active .label,
+.active .icon {
+    color: var(--rail-text);
+}
 
-.bottom {
+/* Hazard tiles: full fill, dark or white text for contrast */
+.caution,
+.caution:hover { background: var(--yellow); }
+.warn,
+.warn:hover { background: var(--orange); }
+.danger,
+.danger:hover { background: var(--red); }
+
+.caution, .caution .label, .caution .sub, .caution .icon, .caution .muted { color: var(--on-yellow); }
+.warn, .warn .label, .warn .sub, .warn .icon, .warn .muted { color: var(--on-orange); }
+.danger, .danger .label, .danger .sub, .danger .icon, .danger .muted { color: var(--on-red); }
+
+.system {
     margin-top: auto;
+    padding: 12px 16px 14px;
+    border-top: 1px solid var(--rail-line);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--rail-muted);
+}
+
+.sysRow {
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.sysRow strong {
+    font-weight: 600;
+    color: var(--rail-text);
+}
+
+.sysRow .down {
+    color: #FF8A8D;
+}
+
+.clock {
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+.clock :global(.mono) {
+    font-family: var(--font-cond);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--rail-text);
+}
+
+.theme {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--rail-muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    align-self: flex-start;
+}
+
+.theme:hover {
+    color: var(--rail-text);
+}
+
+.theme svg {
+    width: 15px;
+    height: 15px;
 }

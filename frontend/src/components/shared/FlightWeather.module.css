@@ -6,7 +6,7 @@
 
 .small {
     margin: 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
@@ -32,13 +32,13 @@
 }
 
 .banner {
-    border-radius: 4px;
+    border-radius: var(--radius);
     padding: 8px 10px;
     border-left: 3px solid currentColor;
 }
 
 .banner.ok { color: var(--ok); background: var(--ok-soft); }
-.banner.warn { color: var(--attention-text); background: var(--warn-soft); }
+.banner.warn { color: var(--yellow-text); background: var(--yellow-soft); }
 .banner.danger { color: var(--bad); background: var(--bad-soft); }
 
 .bannerLabel {
@@ -57,7 +57,7 @@
     font-size: 12px;
 }
 
-.worsens.warn { color: var(--attention-text); }
+.worsens.warn { color: var(--yellow-text); }
 .worsens.danger { color: var(--bad); }
 
 .tabs {
@@ -74,11 +74,9 @@
 
 .section {
     margin: 8px 0 4px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text-strong);
 }
 
 .readings {
@@ -89,7 +87,7 @@
 }
 
 .readings dt {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
@@ -107,7 +105,7 @@
 
 .reasons li + li { margin-top: 2px; }
 .reasons li.ok { color: var(--ok); }
-.reasons li.warn { color: var(--attention-text); }
+.reasons li.warn { color: var(--yellow-text); }
 .reasons li.danger { color: var(--bad); }
 
 .hours {
@@ -120,7 +118,7 @@
 .hours th {
     text-align: left;
     font-weight: 500;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-muted);
     padding: 2px 0 4px;
     border-bottom: 1px solid var(--line);
@@ -137,11 +135,11 @@
 
 .hours td.why {
     padding: 0 0 4px 18px;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .why.ok { color: var(--ok); }
-.why.warn { color: var(--attention-text); }
+.why.warn { color: var(--yellow-text); }
 .why.danger { color: var(--bad); }
 
 .unit { color: var(--text-muted); }
@@ -154,7 +152,7 @@
 }
 
 .dot.ok { background: var(--ok); }
-.dot.warn { background: var(--attention); }
+.dot.warn { background: var(--yellow); }
 .dot.danger { background: var(--bad); }
 
 .source {

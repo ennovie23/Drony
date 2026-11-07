@@ -1,0 +1,18 @@
+/* Inline (not flex) so the header's ellipsis still applies when it runs out of room */
+.line {
+    white-space: nowrap;
+}
+
+.liveDot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 6px;
+    vertical-align: 1px;
+    border-radius: 50%;
+    background: var(--ok);
+}
+
+.note {
+    color: var(--text-faint);
+}
